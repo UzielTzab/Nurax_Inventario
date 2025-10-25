@@ -151,7 +151,7 @@ const notifications = computed<Notification[]>(() => {
     .map(product => ({
       sku: product.sku,
       product,
-      severity: product.quantity === 0 ? 'critical' : 'warning',
+      severity: (product.quantity === 0 ? 'critical' : 'warning') as 'critical' | 'warning',
       message: product.quantity === 0 
         ? '⚠️ Producto agotado. Se requiere reabastecimiento inmediato.'
         : `⚠️ Stock bajo. Solo quedan ${product.quantity} unidades disponibles.`
