@@ -70,19 +70,51 @@
                 </div>
               </div>
 
-              <!-- Quantity and Price -->
+              <!-- Tracking Mode Info (Read-only) -->
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <span class="text-2xl mr-3">{{ formData.trackingMode === 'serialized' ? '🔢' : '📦' }}</span>
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900">
+                        Modo de Rastreo: {{ formData.trackingMode === 'serialized' ? 'Serializado' : 'Agrupado (Bulk)' }}
+                      </p>
+                      <p class="text-xs text-gray-600">
+                        {{ formData.trackingMode === 'serialized' 
+                          ? 'Cada unidad tiene número de serie único' 
+                          : 'Se cuenta solo la cantidad total' }}
+                      </p>
+                    </div>
+                  </div>
+                  <span 
+                    :class="[
+                      'px-3 py-1 rounded-full text-xs font-semibold',
+                      formData.trackingMode === 'serialized' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                    ]"
+                  >
+                    No modificable
+                  </span>
+                </div>
+              </div>
+
+              <!-- Quantity (Read-only) and Price -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Cantidad *
+                    Cantidad Actual
                   </label>
-                  <input 
-                    v-model.number="formData.quantity" 
-                    type="number" 
-                    required
-                    min="0"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  >
+                  <div class="relative">
+                    <input 
+                      v-model.number="formData.quantity" 
+                      type="number" 
+                      disabled
+                      class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
+                    >
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">
+                    📦 Para agregar inventario usa "Recibir Inventario"<br>
+                    🛒 Las ventas reducen automáticamente el stock
+                  </p>
                 </div>
 
                 <div>
@@ -171,6 +203,8 @@ interface Product {
   supplier: string;
   status: string;
   image: string;
+  barcode: string;
+  trackingMode: 'bulk' | 'serialized';
 }
 
 const props = defineProps<{
@@ -187,7 +221,8 @@ const formData = ref({
   quantity: 0,
   price: '',
   supplier: '',
-  image: ''
+  image: '',
+  trackingMode: 'bulk' as 'bulk' | 'serialized'
 });
 
 // Load product data when modal opens
@@ -200,7 +235,8 @@ watch(() => props.product, (newProduct) => {
       quantity: newProduct.quantity,
       price: newProduct.price.replace('$', ''),
       supplier: newProduct.supplier,
-      image: newProduct.image
+      image: newProduct.image,
+      trackingMode: newProduct.trackingMode
     };
   }
 }, { immediate: true });
@@ -242,7 +278,9 @@ const handleSubmit = () => {
     price: formattedPrice,
     supplier: formData.value.supplier,
     status: status,
-    image: formData.value.image
+    image: formData.value.image,
+    barcode: props.product?.barcode || '',
+    trackingMode: formData.value.trackingMode
   };
 
   emit('productUpdated', updatedProduct);

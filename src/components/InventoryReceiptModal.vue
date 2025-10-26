@@ -32,7 +32,7 @@
               </label>
               <div class="relative">
                 <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
+                <input                    
                   v-model="searchQuery"
                   type="text"
                   placeholder="Buscar por nombre o SKU..."
@@ -41,10 +41,13 @@
               </div>
             </div>
 
-            <!-- Product List -->
-            <div v-if="searchQuery" class="mb-4 max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+            <!-- Product List - Ahora se muestra siempre -->
+            <div class="mb-4 max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+              <div v-if="displayedProducts.length === 0" class="p-4 text-center text-gray-500">
+                No se encontraron productos
+              </div>
               <div
-                v-for="product in filteredProducts"
+                v-for="product in displayedProducts"
                 :key="product.sku"
                 @click="selectProduct(product)"
                 class="p-3 hover:bg-gray-50 cursor-pointer flex items-center border-b last:border-b-0"
@@ -62,9 +65,6 @@
                     {{ product.trackingMode === 'serialized' ? '🔢 Serializado' : '📦 Agrupado' }}
                   </span>
                 </div>
-              </div>
-              <div v-if="filteredProducts.length === 0" class="p-4 text-center text-gray-500">
-                No se encontraron productos
               </div>
             </div>
 
@@ -252,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { XMarkIcon, TruckIcon, MagnifyingGlassIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 
 interface SerializedItem {
@@ -276,11 +276,16 @@ interface Product {
   barcode: string;
   trackingMode: 'bulk' | 'serialized';
   serializedItems?: SerializedItem[];
+  barcodeType: 'generated' | 'factory';
+  factoryBarcode?: string;
+  brand?: string;
+  model?: string;
 }
 
 const props = defineProps<{
   isOpen: boolean;
   products: Product[];
+  preSelectedProduct?: Product | null; // Producto pre-seleccionado desde notificaciones
 }>();
 
 const emit = defineEmits<{
@@ -315,6 +320,17 @@ const filteredProducts = computed(() => {
   );
 });
 
+// Mostrar todos los productos o solo los filtrados
+const displayedProducts = computed(() => {
+  if (searchQuery.value) {
+    // Si hay búsqueda, mostrar solo los filtrados
+    return filteredProducts.value;
+  } else {
+    // Si no hay búsqueda, mostrar todos los productos
+    return props.products;
+  }
+});
+
 const canSave = computed(() => {
   if (!selectedProduct.value) return false;
   
@@ -324,6 +340,17 @@ const canSave = computed(() => {
     return serialNumbers.value.length > 0;
   }
 });
+
+// Watch for pre-selected product from notifications
+watch(() => props.preSelectedProduct, (product) => {
+  if (product && props.isOpen) {
+    selectProduct(product);
+    // Auto-advance to step 2
+    setTimeout(() => {
+      goToStep2();
+    }, 300);
+  }
+}, { immediate: true });
 
 // Methods
 const selectProduct = (product: Product) => {

@@ -157,6 +157,166 @@
                 </p>
               </div>
 
+              <!-- Barcode Type Section -->
+              <div class="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-dashed border-green-300 rounded-lg p-4">
+                <label class="block text-sm font-medium text-gray-900 mb-3">
+                  Tipo de Código de Barras *
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <!-- Generated Barcode Option -->
+                  <label 
+                    :class="[
+                      'relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all',
+                      formData.barcodeType === 'generated' 
+                        ? 'border-teal-500 bg-teal-50' 
+                        : 'border-gray-300 bg-white hover:border-teal-300'
+                    ]"
+                  >
+                    <input 
+                      v-model="formData.barcodeType" 
+                      type="radio" 
+                      value="generated"
+                      class="sr-only"
+                    >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-2xl">🏷️</span>
+                      <span 
+                        v-if="formData.barcodeType === 'generated'"
+                        class="text-teal-600"
+                      >
+                        <CheckCircleIcon class="h-6 w-6" />
+                      </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">Generar SKU Interno</h3>
+                    <p class="text-xs text-gray-600">
+                      La app genera un código único para rastreo interno.
+                    </p>
+                  </label>
+
+                  <!-- Factory Barcode Option -->
+                  <label 
+                    :class="[
+                      'relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all',
+                      formData.barcodeType === 'factory' 
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-gray-300 bg-white hover:border-green-300'
+                    ]"
+                  >
+                    <input 
+                      v-model="formData.barcodeType" 
+                      type="radio" 
+                      value="factory"
+                      class="sr-only"
+                    >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-2xl">📦</span>
+                      <span 
+                        v-if="formData.barcodeType === 'factory'"
+                        class="text-green-600"
+                      >
+                        <CheckCircleIcon class="h-6 w-6" />
+                      </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">Código de Fábrica</h3>
+                    <p class="text-xs text-gray-600">
+                      Usa el código de barras original del producto.
+                    </p>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Factory Barcode Input (only if factory type selected) -->
+              <div v-if="formData.barcodeType === 'factory'" class="space-y-4">
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-blue-700">
+                        <strong>Importante:</strong> Si un producto con el mismo código de barras, marca y modelo ya existe, se agregará al inventario existente.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Código de Barras de Fábrica *
+                    </label>
+                    <div class="flex gap-2">
+                      <input 
+                        v-model="formData.factoryBarcode" 
+                        type="text" 
+                        :required="formData.barcodeType === 'factory'"
+                        placeholder="7501234567890"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      >
+                      <button 
+                        type="button"
+                        @click="scanFactoryBarcode"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
+                        title="Escanear con cámara"
+                      >
+                        <QrCodeIcon class="h-5 w-5" />
+                      </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Ingresa manualmente o escanea con la cámara</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Marca
+                    </label>
+                    <input 
+                      v-model="formData.brand" 
+                      type="text" 
+                      placeholder="Ej: Sony, Samsung, Apple"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Modelo
+                  </label>
+                  <input 
+                    v-model="formData.model" 
+                    type="text" 
+                    placeholder="Ej: WH-1000XM5, Galaxy S23, iPhone 15"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                  <p class="text-xs text-gray-500 mt-1">Marca y modelo ayudan a agrupar productos idénticos de diferentes proveedores</p>
+                </div>
+
+                <!-- Duplicate Product Warning -->
+                <div v-if="duplicateProduct" class="bg-amber-50 border-l-4 border-amber-400 p-4">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-amber-800">Producto Similar Encontrado</h3>
+                      <div class="mt-2 text-sm text-amber-700">
+                        <p>Ya existe un producto con este código de barras:</p>
+                        <ul class="list-disc list-inside mt-1">
+                          <li><strong>{{ duplicateProduct.name }}</strong></li>
+                          <li>SKU: {{ duplicateProduct.sku }}</li>
+                          <li>Stock actual: {{ duplicateProduct.quantity }} unidades</li>
+                        </ul>
+                        <p class="mt-2">¿Deseas agregar inventario al producto existente en lugar de crear uno nuevo?</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Quantity and Price -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -262,8 +422,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { XMarkIcon, PlusCircleIcon, PlusIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
+import { ref, watch, computed } from 'vue';
+import { XMarkIcon, PlusCircleIcon, PlusIcon, ArrowPathIcon, CheckCircleIcon, QrCodeIcon } from '@heroicons/vue/24/outline';
+
+interface SerializedItem {
+  serialNumber: string;
+  barcode: string;
+  status: 'available' | 'sold' | 'reserved';
+  soldTo?: string;
+  soldDate?: string;
+  saleTicket?: string;
+}
 
 interface Product {
   name: string;
@@ -276,10 +445,16 @@ interface Product {
   image: string;
   barcode: string;
   trackingMode: 'bulk' | 'serialized';
+  serializedItems?: SerializedItem[];
+  barcodeType: 'generated' | 'factory';
+  factoryBarcode?: string;
+  brand?: string;
+  model?: string;
 }
 
 const props = defineProps<{
   isOpen: boolean;
+  existingProducts?: Product[]; // Para verificar duplicados
 }>();
 
 const emit = defineEmits(['close', 'productAdded']);
@@ -292,10 +467,27 @@ const formData = ref({
   price: '',
   supplier: '',
   image: 'https://via.placeholder.com/150',
-  trackingMode: 'bulk' as 'bulk' | 'serialized'
+  trackingMode: 'bulk' as 'bulk' | 'serialized',
+  barcodeType: 'generated' as 'generated' | 'factory',
+  factoryBarcode: '',
+  brand: '',
+  model: ''
 });
 
 const imagePreview = ref('');
+
+// Check for duplicate products based on factory barcode
+const duplicateProduct = computed(() => {
+  if (formData.value.barcodeType === 'factory' && formData.value.factoryBarcode && props.existingProducts) {
+    return props.existingProducts.find(p => 
+      p.barcodeType === 'factory' && 
+      p.factoryBarcode === formData.value.factoryBarcode &&
+      p.brand === formData.value.brand &&
+      p.model === formData.value.model
+    );
+  }
+  return null;
+});
 
 // Reset form when modal closes
 watch(() => props.isOpen, (newVal) => {
@@ -308,7 +500,11 @@ watch(() => props.isOpen, (newVal) => {
       price: '',
       supplier: '',
       image: 'https://via.placeholder.com/150',
-      trackingMode: 'bulk'
+      trackingMode: 'bulk',
+      barcodeType: 'generated',
+      factoryBarcode: '',
+      brand: '',
+      model: ''
     };
     imagePreview.value = '';
   }
@@ -334,7 +530,35 @@ const generateSKU = () => {
   formData.value.sku = `SKU-${randomNum}`;
 };
 
+const scanFactoryBarcode = () => {
+  // Esta función puede integrar una librería de escaneo como html5-qrcode
+  // Por ahora, mostramos un prompt simple
+  const scannedCode = prompt('Ingresa o escanea el código de barras:');
+  if (scannedCode) {
+    formData.value.factoryBarcode = scannedCode;
+    
+    // Auto-check for duplicates
+    if (duplicateProduct.value) {
+      const addToExisting = confirm(
+        `Ya existe un producto con este código:\n${duplicateProduct.value.name}\n\n¿Deseas agregar inventario al producto existente en lugar de crear uno nuevo?`
+      );
+      
+      if (addToExisting) {
+        // Close modal and emit event to add to existing
+        emit('close');
+        alert('Por favor, usa "Recibir Inventario" para agregar stock al producto existente.');
+      }
+    }
+  }
+};
+
 const handleSubmit = () => {
+  // Check for duplicates if using factory barcode
+  if (duplicateProduct.value) {
+    alert('Ya existe un producto con este código de barras. Usa "Recibir Inventario" para agregar stock.');
+    return;
+  }
+
   // Determine status based on quantity
   let status = 'En Stock';
   if (formData.value.quantity === 0) {
@@ -349,8 +573,8 @@ const handleSubmit = () => {
     formattedPrice = `$${formattedPrice}`;
   }
 
-  // Generate barcode (unique identifier)
-  const barcode = `BC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Generate internal barcode (unique identifier)
+  const internalBarcode = `BC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   const newProduct: Product = {
     name: formData.value.name,
@@ -361,8 +585,14 @@ const handleSubmit = () => {
     supplier: formData.value.supplier,
     status: status,
     image: formData.value.image || 'https://via.placeholder.com/150',
-    barcode: barcode,
-    trackingMode: formData.value.trackingMode
+    barcode: formData.value.barcodeType === 'factory' && formData.value.factoryBarcode 
+      ? formData.value.factoryBarcode 
+      : internalBarcode,
+    trackingMode: formData.value.trackingMode,
+    barcodeType: formData.value.barcodeType,
+    factoryBarcode: formData.value.barcodeType === 'factory' ? formData.value.factoryBarcode : undefined,
+    brand: formData.value.brand || undefined,
+    model: formData.value.model || undefined
   };
 
   emit('productAdded', newProduct);

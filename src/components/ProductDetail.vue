@@ -53,6 +53,17 @@
                 {{ product.status }}
               </span>
             </div>
+
+            <!-- Action Button: Reabastecer -->
+            <div class="flex justify-center">
+              <button 
+                @click="$emit('restock', product)"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <TruckIcon class="h-5 w-5" />
+                Reabastecer Producto
+              </button>
+            </div>
           </div>
         </div>
       </Transition>
@@ -61,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { XMarkIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, TruckIcon } from '@heroicons/vue/24/outline';
 
 defineProps({
   product: Object
 });
-defineEmits(['close']);
+defineEmits(['close', 'restock']);
 </script>
 
 <style scoped>

@@ -1,22 +1,7 @@
 <template>
   <aside class="w-64 bg-indigo-900 text-white flex flex-col">
     <div class="p-4">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
-        <button 
-          @click="$emit('openNotifications')" 
-          class="relative p-2 hover:bg-indigo-800 rounded-lg transition-colors"
-          title="Alertas de inventario"
-        >
-          <BellAlertIcon class="h-6 w-6" />
-          <span 
-            v-if="alertCount > 0" 
-            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse"
-          >
-            {{ alertCount }}
-          </span>
-        </button>
-      </div>
+      <h1 class="text-2xl font-bold">Dashboard</h1>
     </div>
     <nav class="flex-1 px-2 space-y-2">
       <a href="#" class="flex items-center px-4 py-2 text-gray-100 bg-indigo-600 rounded-md">
@@ -50,15 +35,10 @@
 </template>
 
 <script setup lang="ts">
-import { CubeIcon, TruckIcon, ChartBarIcon, Cog6ToothIcon, PlusIcon, BellAlertIcon } from '@heroicons/vue/24/outline';
-
-defineProps<{
-  alertCount: number;
-}>();
+import { CubeIcon, TruckIcon, ChartBarIcon, Cog6ToothIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
 defineEmits<{
   openAddProduct: [];
-  openNotifications: [];
   openInventoryReceipt: [];
 }>();
 </script>

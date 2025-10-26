@@ -137,6 +137,10 @@ interface Product {
   barcode: string;
   trackingMode: 'bulk' | 'serialized';
   serializedItems?: SerializedItem[];
+  barcodeType: 'generated' | 'factory';
+  factoryBarcode?: string;
+  brand?: string;
+  model?: string;
 }
 
 interface Notification {
