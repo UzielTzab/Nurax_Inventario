@@ -234,7 +234,18 @@
                               </div>
                             </div>
                           </td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.sku }}</td>
+                          <td class="px-6 py-4 whitespace-nowrap" @click.stop>
+                            <div class="flex items-center gap-2">
+                              <span class="text-sm text-gray-500 font-mono">{{ product.sku }}</span>
+                              <button 
+                                @click="copyToClipboard(product.sku)"
+                                class="text-gray-400 hover:text-indigo-600 transition-colors"
+                                title="Copiar SKU"
+                              >
+                                <ClipboardIcon class="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
                           <td class="px-6 py-4 whitespace-nowrap">
                             <span 
                               :class="[
@@ -324,7 +335,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
-import { MagnifyingGlassIcon, QrCodeIcon, FunnelIcon, BarsArrowUpIcon, PencilIcon, TrashIcon, BellAlertIcon } from '@heroicons/vue/24/outline';
+import { MagnifyingGlassIcon, QrCodeIcon, FunnelIcon, BarsArrowUpIcon, PencilIcon, TrashIcon, BellAlertIcon, ClipboardIcon } from '@heroicons/vue/24/outline';
 import Sidebar from '../components/layout/Sidebar.vue';
 import ProductDetail from '../components/ProductDetail.vue';
 import BarcodeScanner from '../components/BarcodeScanner.vue';
@@ -536,6 +547,29 @@ const getStatusClass = (status: string) => {
   if (status === 'Bajo Stock') return 'bg-yellow-100 text-yellow-800';
   if (status === 'Agotado') return 'bg-red-100 text-red-800';
   return 'bg-gray-100 text-gray-800';
+};
+
+// Copy SKU to clipboard
+const copyToClipboard = async (sku: string) => {
+  try {
+    await navigator.clipboard.writeText(sku);
+    alert(`✅ SKU copiado al portapapeles:\n${sku}`);
+  } catch (err) {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = sku;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert(`✅ SKU copiado al portapapeles:\n${sku}`);
+    } catch (e) {
+      alert('❌ Error al copiar el SKU');
+    }
+    document.body.removeChild(textArea);
+  }
 };
 
 const handleProductSold = (product: Product, serialItem?: SerializedItem, quantity: number = 1) => {
