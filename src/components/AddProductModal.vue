@@ -80,11 +80,88 @@
                 </div>
               </div>
 
+              <!-- Tracking Mode -->
+              <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-lg p-4">
+                <label class="block text-sm font-medium text-gray-900 mb-3">
+                  Modo de Rastreo *
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <!-- Bulk Option -->
+                  <label 
+                    :class="[
+                      'relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all',
+                      formData.trackingMode === 'bulk' 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300 bg-white hover:border-blue-300'
+                    ]"
+                  >
+                    <input 
+                      v-model="formData.trackingMode" 
+                      type="radio" 
+                      value="bulk"
+                      class="sr-only"
+                    >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-2xl">📦</span>
+                      <span 
+                        v-if="formData.trackingMode === 'bulk'"
+                        class="text-blue-600"
+                      >
+                        <CheckCircleIcon class="h-6 w-6" />
+                      </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">Agrupado (Bulk)</h3>
+                    <p class="text-xs text-gray-600">
+                      Solo cuenta cantidad total. Ideal para productos de bajo valor.
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">
+                      Ej: Cables, fundas, auriculares genéricos
+                    </p>
+                  </label>
+
+                  <!-- Serialized Option -->
+                  <label 
+                    :class="[
+                      'relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all',
+                      formData.trackingMode === 'serialized' 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-300 bg-white hover:border-purple-300'
+                    ]"
+                  >
+                    <input 
+                      v-model="formData.trackingMode" 
+                      type="radio" 
+                      value="serialized"
+                      class="sr-only"
+                    >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-2xl">🔢</span>
+                      <span 
+                        v-if="formData.trackingMode === 'serialized'"
+                        class="text-purple-600"
+                      >
+                        <CheckCircleIcon class="h-6 w-6" />
+                      </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">Serializado</h3>
+                    <p class="text-xs text-gray-600">
+                      Cada unidad tiene número único. Rastreo individual completo.
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">
+                      Ej: Laptops, smartphones, tablets
+                    </p>
+                  </label>
+                </div>
+                <p class="text-xs text-gray-600 mt-3">
+                  💡 <strong>Tip:</strong> Usa "Serializado" para productos con garantía o de alto valor (&gt;$200)
+                </p>
+              </div>
+
               <!-- Quantity and Price -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Cantidad Inicial *
+                    Cantidad Inicial
                   </label>
                   <input 
                     v-model.number="formData.quantity" 
@@ -92,8 +169,18 @@
                     required
                     min="0"
                     placeholder="0"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    :disabled="formData.trackingMode === 'serialized'"
+                    :class="[
+                      'w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
+                      formData.trackingMode === 'serialized' ? 'bg-gray-100 cursor-not-allowed' : ''
+                    ]"
                   >
+                  <p v-if="formData.trackingMode === 'serialized'" class="text-xs text-amber-600 mt-1">
+                    ⚠️ Para productos serializados, agrega el inventario después usando "Recibir Inventario"
+                  </p>
+                  <p v-else class="text-xs text-gray-500 mt-1">
+                    Puedes agregar más inventario después con "Recibir Inventario"
+                  </p>
                 </div>
 
                 <div>
@@ -176,7 +263,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { XMarkIcon, PlusCircleIcon, PlusIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PlusCircleIcon, PlusIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 
 interface Product {
   name: string;
@@ -187,6 +274,8 @@ interface Product {
   supplier: string;
   status: string;
   image: string;
+  barcode: string;
+  trackingMode: 'bulk' | 'serialized';
 }
 
 const props = defineProps<{
@@ -202,7 +291,8 @@ const formData = ref({
   quantity: 0,
   price: '',
   supplier: '',
-  image: 'https://via.placeholder.com/150'
+  image: 'https://via.placeholder.com/150',
+  trackingMode: 'bulk' as 'bulk' | 'serialized'
 });
 
 const imagePreview = ref('');
@@ -217,7 +307,8 @@ watch(() => props.isOpen, (newVal) => {
       quantity: 0,
       price: '',
       supplier: '',
-      image: 'https://via.placeholder.com/150'
+      image: 'https://via.placeholder.com/150',
+      trackingMode: 'bulk'
     };
     imagePreview.value = '';
   }
@@ -258,6 +349,9 @@ const handleSubmit = () => {
     formattedPrice = `$${formattedPrice}`;
   }
 
+  // Generate barcode (unique identifier)
+  const barcode = `BC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
   const newProduct: Product = {
     name: formData.value.name,
     category: formData.value.category,
@@ -266,7 +360,9 @@ const handleSubmit = () => {
     price: formattedPrice,
     supplier: formData.value.supplier,
     status: status,
-    image: formData.value.image || 'https://via.placeholder.com/150'
+    image: formData.value.image || 'https://via.placeholder.com/150',
+    barcode: barcode,
+    trackingMode: formData.value.trackingMode
   };
 
   emit('productAdded', newProduct);
