@@ -116,6 +116,15 @@
 import { computed } from 'vue';
 import { BellAlertIcon, XMarkIcon, ExclamationTriangleIcon, CubeIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 
+interface SerializedItem {
+  serialNumber: string;
+  barcode: string;
+  status: 'available' | 'sold' | 'reserved';
+  soldTo?: string;
+  soldDate?: string;
+  saleTicket?: string;
+}
+
 interface Product {
   name: string;
   category: string;
@@ -125,6 +134,9 @@ interface Product {
   supplier: string;
   status: string;
   image: string;
+  barcode: string;
+  trackingMode: 'bulk' | 'serialized';
+  serializedItems?: SerializedItem[];
 }
 
 interface Notification {

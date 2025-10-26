@@ -36,7 +36,11 @@
         Configuración
       </a>
     </nav>
-    <div class="p-4">
+    <div class="p-4 space-y-2">
+      <button @click="$emit('openInventoryReceipt')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition-colors">
+        <TruckIcon class="h-5 w-5 mr-2" />
+        Recibir Inventario
+      </button>
       <button @click="$emit('openAddProduct')" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition-colors">
         <PlusIcon class="h-5 w-5 mr-2" />
         Nuevo Producto
@@ -55,5 +59,6 @@ defineProps<{
 defineEmits<{
   openAddProduct: [];
   openNotifications: [];
+  openInventoryReceipt: [];
 }>();
 </script>

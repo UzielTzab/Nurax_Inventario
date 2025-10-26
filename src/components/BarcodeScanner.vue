@@ -33,16 +33,33 @@
             <!-- Manual Input -->
             <div class="mb-6">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                O ingrese el código manualmente
+                O ingrese el SKU manualmente
               </label>
               <input 
                 v-model="barcode" 
                 @keyup.enter="scanProduct"
                 type="text" 
-                placeholder="Ej: SKU-34789"
+                placeholder="Ingresa el SKU completo (ej: SKU-34789)"
                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 :disabled="isScanning"
               >
+              <p class="text-xs text-gray-500 mt-1">
+                💡 Tip: Copia y pega el SKU exactamente como aparece en la tabla
+              </p>
+            </div>
+
+            <!-- Available Products Hint -->
+            <div v-if="!scannedProduct && !errorMessage" class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-xs font-medium text-gray-700 mb-2">Productos disponibles para venta:</p>
+              <div class="space-y-1">
+                <p 
+                  v-for="product in props.products.filter(p => p.quantity > 0).slice(0, 3)" 
+                  :key="product.sku"
+                  class="text-xs text-gray-600"
+                >
+                  • <span class="font-mono font-semibold">{{ product.sku }}</span> - {{ product.name }}
+                </p>
+              </div>
             </div>
 
             <!-- Product Found -->
@@ -54,6 +71,23 @@
                   <p class="text-sm text-green-700">SKU: {{ scannedProduct.sku }}</p>
                   <p class="text-sm text-green-700">Stock actual: {{ scannedProduct.quantity }} unidades</p>
                   <p class="text-lg font-bold text-green-900 mt-2">{{ scannedProduct.price }}</p>
+                  
+                  <!-- Serialized Product Selection -->
+                  <div v-if="scannedProduct.trackingMode === 'serialized' && scannedProduct.serializedItems" class="mt-3 pt-3 border-t border-green-300">
+                    <p class="text-xs font-medium text-green-800 mb-2">🔢 Producto Serializado - Selecciona unidad:</p>
+                    <select 
+                      v-model="selectedSerialItem" 
+                      class="w-full px-3 py-2 text-sm border border-green-300 rounded-md bg-white focus:ring-2 focus:ring-green-500"
+                    >
+                      <option 
+                        v-for="item in scannedProduct.serializedItems.filter(i => i.status === 'available')" 
+                        :key="item.serialNumber"
+                        :value="item"
+                      >
+                        {{ item.serialNumber }}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -99,6 +133,15 @@
 import { ref, watch } from 'vue';
 import { QrCodeIcon, XMarkIcon, CheckCircleIcon, XCircleIcon, MagnifyingGlassIcon, ShoppingCartIcon } from '@heroicons/vue/24/outline';
 
+interface SerializedItem {
+  serialNumber: string;
+  barcode: string;
+  status: 'available' | 'sold' | 'reserved';
+  soldTo?: string;
+  soldDate?: string;
+  saleTicket?: string;
+}
+
 interface Product {
   name: string;
   category: string;
@@ -108,6 +151,9 @@ interface Product {
   supplier: string;
   status: string;
   image: string;
+  barcode: string;
+  trackingMode: 'bulk' | 'serialized';
+  serializedItems?: SerializedItem[];
 }
 
 const props = defineProps<{
@@ -120,6 +166,7 @@ const emit = defineEmits(['close', 'productSold']);
 const barcode = ref('');
 const isScanning = ref(false);
 const scannedProduct = ref<Product | null>(null);
+const selectedSerialItem = ref<SerializedItem | null>(null);
 const errorMessage = ref('');
 
 // Reset when modal opens
@@ -127,6 +174,7 @@ watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     barcode.value = '';
     scannedProduct.value = null;
+    selectedSerialItem.value = null;
     errorMessage.value = '';
     isScanning.value = false;
   }
@@ -138,20 +186,35 @@ const scanProduct = () => {
   isScanning.value = true;
   errorMessage.value = '';
   scannedProduct.value = null;
+  selectedSerialItem.value = null;
 
   // Simulate scanning delay
   setTimeout(() => {
-    const product = props.products.find(p => p.sku === barcode.value.toUpperCase());
+    const searchTerm = barcode.value.trim().toUpperCase();
+    
+    // Search by SKU or barcode
+    const product = props.products.find(p => 
+      p.sku.toUpperCase() === searchTerm || 
+      p.barcode === barcode.value.trim()
+    );
     
     if (product) {
       if (product.quantity > 0) {
         scannedProduct.value = product;
         errorMessage.value = '';
+        
+        // If serialized, auto-select first available item
+        if (product.trackingMode === 'serialized' && product.serializedItems) {
+          const available = product.serializedItems.find(item => item.status === 'available');
+          if (available) {
+            selectedSerialItem.value = available;
+          }
+        }
       } else {
-        errorMessage.value = 'Este producto está agotado.';
+        errorMessage.value = 'Este producto está agotado. No hay unidades disponibles para vender.';
       }
     } else {
-      errorMessage.value = `No se encontró ningún producto con el código "${barcode.value}"`;
+      errorMessage.value = `No se encontró ningún producto con el código "${barcode.value}". Verifica que el SKU o código de barras sea correcto.`;
     }
     
     isScanning.value = false;
@@ -160,10 +223,17 @@ const scanProduct = () => {
 
 const processTransaction = () => {
   if (scannedProduct.value) {
-    emit('productSold', scannedProduct.value);
+    // Emit with serial number if available
+    if (scannedProduct.value.trackingMode === 'serialized' && selectedSerialItem.value) {
+      emit('productSold', scannedProduct.value, selectedSerialItem.value);
+    } else {
+      emit('productSold', scannedProduct.value);
+    }
+    
     // Reset
     barcode.value = '';
     scannedProduct.value = null;
+    selectedSerialItem.value = null;
     errorMessage.value = '';
   }
 };

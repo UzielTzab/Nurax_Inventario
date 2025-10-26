@@ -4,6 +4,7 @@
       :alertCount="lowStockCount" 
       @openAddProduct="showAddProductModal = true" 
       @openNotifications="showNotifications = true"
+      @openInventoryReceipt="showInventoryReceipt = true"
     />
     <div class="flex-1 flex flex-col overflow-hidden">
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
@@ -46,6 +47,7 @@
                         <tr>
                           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
                           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modo</th>
                           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
                           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
                           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
@@ -67,6 +69,16 @@
                             </div>
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.sku }}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <span 
+                              :class="[
+                                'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                product.trackingMode === 'serialized' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                              ]"
+                            >
+                              {{ product.trackingMode === 'serialized' ? '🔢 Serial' : '📦 Bulk' }}
+                            </span>
+                          </td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.quantity }}</td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.price }}</td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.supplier }}</td>
@@ -126,6 +138,12 @@
         @viewProduct="viewProductFromNotification"
         @restock="restockProduct"
       />
+      <InventoryReceiptModal 
+        :isOpen="showInventoryReceipt"
+        :products="products"
+        @close="showInventoryReceipt = false"
+        @inventoryAdded="handleInventoryAdded"
+      />
     </div>
   </div>
 </template>
@@ -141,6 +159,17 @@ import AddProductModal from '../components/AddProductModal.vue';
 import EditProductModal from '../components/EditProductModal.vue';
 import DeleteConfirmModal from '../components/DeleteConfirmModal.vue';
 import NotificationPanel from '../components/NotificationPanel.vue';
+import InventoryReceiptModal from '../components/InventoryReceiptModal.vue';
+
+// Tipos de datos
+interface SerializedItem {
+  serialNumber: string;
+  barcode: string;
+  status: 'available' | 'sold' | 'reserved';
+  soldTo?: string;
+  soldDate?: string;
+  saleTicket?: string;
+}
 
 interface Product {
   name: string;
@@ -151,14 +180,81 @@ interface Product {
   supplier: string;
   status: string;
   image: string;
+  barcode: string;
+  trackingMode: 'bulk' | 'serialized'; // Nuevo: modo de rastreo
+  serializedItems?: SerializedItem[]; // Nuevo: items individuales
 }
 
 const products: Ref<Product[]> = ref([
-  { name: 'Laptop Gamer X1', category: 'Laptop', sku: 'SKU-84562', quantity: 120, price: '$1,250.00', supplier: 'TechSupplier Inc.', status: 'En Stock', image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg' },
-  { name: 'Smartphone Pro', category: 'Smartphone', sku: 'SKU-34789', quantity: 350, price: '$899.99', supplier: 'Gadgetron', status: 'En Stock', image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg' },
-  { name: 'Auriculares Inalámbricos', category: 'Audio', sku: 'SKU-11234', quantity: 10, price: '$199.50', supplier: 'AudioPhile Co.', status: 'Bajo Stock', image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg' },
-  { name: 'Smartwatch Fit 2', category: 'Wearable', sku: 'SKU-55678', quantity: 0, price: '$250.00', supplier: 'Gadgetron', status: 'Agotado', image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg' },
-  { name: 'Cámara DSLR Pro', category: 'Fotografía', sku: 'SKU-99876', quantity: 75, price: '$1,800.00', supplier: 'PhotoGear Ltd.', status: 'En Stock', image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg' },
+  { 
+    name: 'Laptop Gamer X1', 
+    category: 'Laptop', 
+    sku: 'SKU-84562', 
+    quantity: 3, 
+    price: '$1,250.00', 
+    supplier: 'TechSupplier Inc.', 
+    status: 'En Stock', 
+    image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg',
+    barcode: '7891234567890',
+    trackingMode: 'serialized',
+    serializedItems: [
+      { serialNumber: 'SN-LAP-001', barcode: '7891234567891', status: 'available' },
+      { serialNumber: 'SN-LAP-002', barcode: '7891234567892', status: 'available' },
+      { serialNumber: 'SN-LAP-003', barcode: '7891234567893', status: 'available' }
+    ]
+  },
+  { 
+    name: 'Smartphone Pro', 
+    category: 'Smartphone', 
+    sku: 'SKU-34789', 
+    quantity: 2, 
+    price: '$899.99', 
+    supplier: 'Gadgetron', 
+    status: 'En Stock', 
+    image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg',
+    barcode: '7891234567894',
+    trackingMode: 'serialized',
+    serializedItems: [
+      { serialNumber: 'IMEI-123456789', barcode: '7891234567895', status: 'available' },
+      { serialNumber: 'IMEI-123456790', barcode: '7891234567896', status: 'available' }
+    ]
+  },
+  { 
+    name: 'Auriculares Inalámbricos', 
+    category: 'Audio', 
+    sku: 'SKU-11234', 
+    quantity: 10, 
+    price: '$199.50', 
+    supplier: 'AudioPhile Co.', 
+    status: 'Bajo Stock', 
+    image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg',
+    barcode: '7891234567897',
+    trackingMode: 'bulk'
+  },
+  { 
+    name: 'Smartwatch Fit 2', 
+    category: 'Wearable', 
+    sku: 'SKU-55678', 
+    quantity: 0, 
+    price: '$250.00', 
+    supplier: 'Gadgetron', 
+    status: 'Agotado', 
+    image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg',
+    barcode: '7891234567898',
+    trackingMode: 'bulk'
+  },
+  { 
+    name: 'Cámara DSLR Pro', 
+    category: 'Fotografía', 
+    sku: 'SKU-99876', 
+    quantity: 75, 
+    price: '$1,800.00', 
+    supplier: 'PhotoGear Ltd.', 
+    status: 'En Stock', 
+    image: 'https://m.media-amazon.com/images/I/71RjIshY0GL.jpg',
+    barcode: '7891234567899',
+    trackingMode: 'bulk'
+  },
 ]);
 
 const selectedProduct: Ref<Product | null> = ref(null);
@@ -167,6 +263,7 @@ const showAddProductModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showNotifications = ref(false);
+const showInventoryReceipt = ref(false);
 const productToEdit: Ref<Product | null> = ref(null);
 const productToDelete: Ref<Product | null> = ref(null);
 
@@ -182,12 +279,32 @@ const getStatusClass = (status: string) => {
   return 'bg-gray-100 text-gray-800';
 };
 
-const handleProductSold = (product: Product) => {
-  // Find the product in the array and decrease quantity
+const handleProductSold = (product: Product, serialItem?: SerializedItem) => {
+  // Find the product in the array
   const productIndex = products.value.findIndex(p => p.sku === product.sku);
   if (productIndex !== -1 && products.value[productIndex]) {
     const currentProduct = products.value[productIndex];
-    currentProduct.quantity -= 1;
+    
+    if (product.trackingMode === 'serialized' && serialItem) {
+      // Serialized mode: mark the specific item as sold
+      if (currentProduct.serializedItems) {
+        const itemIndex = currentProduct.serializedItems.findIndex(
+          item => item.serialNumber === serialItem.serialNumber
+        );
+        if (itemIndex !== -1 && currentProduct.serializedItems[itemIndex]) {
+          currentProduct.serializedItems[itemIndex].status = 'sold';
+          currentProduct.serializedItems[itemIndex].soldDate = new Date().toISOString();
+          currentProduct.serializedItems[itemIndex].saleTicket = `VT-${Date.now()}`;
+        }
+        // Update quantity based on available items
+        currentProduct.quantity = currentProduct.serializedItems.filter(
+          item => item.status === 'available'
+        ).length;
+      }
+    } else {
+      // Bulk mode: decrease quantity
+      currentProduct.quantity -= 1;
+    }
     
     // Update status based on new quantity
     if (currentProduct.quantity === 0) {
@@ -199,8 +316,9 @@ const handleProductSold = (product: Product) => {
     // Close the scanner
     showBarcodeScanner.value = false;
     
-    // Show success notification (you can enhance this with a toast notification)
-    alert(`✅ Venta exitosa!\n${product.name}\nPrecio: ${product.price}\nStock restante: ${currentProduct.quantity}`);
+    // Show success notification
+    const serialInfo = serialItem ? `\nNúmero de serie: ${serialItem.serialNumber}` : '';
+    alert(`✅ Venta exitosa!\n${product.name}\nPrecio: ${product.price}${serialInfo}\nStock restante: ${currentProduct.quantity}`);
   }
 };
 
@@ -274,5 +392,41 @@ const restockProduct = (product: Product) => {
   alert(`📦 Abriendo formulario de edición para reabastecer:\n${product.name}\nStock actual: ${product.quantity} unidades`);
 };
 
+const handleInventoryAdded = (product: Product, quantity: number, serialNumbers?: SerializedItem[]) => {
+  // Find the product in the array
+  const productIndex = products.value.findIndex(p => p.sku === product.sku);
+  
+  if (productIndex !== -1) {
+    const existingProduct = products.value[productIndex];
+    
+    if (existingProduct) {
+      if (product.trackingMode === 'bulk') {
+        // Bulk mode: just add the quantity
+        existingProduct.quantity += quantity;
+      } else {
+        // Serialized mode: add the serial numbers
+        if (serialNumbers) {
+          if (!existingProduct.serializedItems) {
+            existingProduct.serializedItems = [];
+          }
+          existingProduct.serializedItems.push(...serialNumbers);
+          existingProduct.quantity = existingProduct.serializedItems.length;
+        }
+      }
+      
+      // Update status based on new quantity
+      if (existingProduct.quantity === 0) {
+        existingProduct.status = 'Agotado';
+      } else if (existingProduct.quantity <= 10) {
+        existingProduct.status = 'Bajo Stock';
+      } else {
+        existingProduct.status = 'En Stock';
+      }
+    }
+  }
+  
+  // Close the modal
+  showInventoryReceipt.value = false;
+};
 
 </script>
