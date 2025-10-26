@@ -328,6 +328,15 @@
         @close="showInventoryReceipt = false; productToRestock = null"
         @inventoryAdded="handleInventoryAdded"
       />
+      <SaleSuccessModal 
+        :isOpen="showSaleSuccess"
+        :productName="saleDetails.productName"
+        :unitPrice="saleDetails.unitPrice"
+        :quantity="saleDetails.quantity"
+        :remainingStock="saleDetails.remainingStock"
+        :serialNumber="saleDetails.serialNumber"
+        @close="showSaleSuccess = false"
+      />
     </div>
   </div>
 </template>
@@ -344,6 +353,7 @@ import EditProductModal from '../components/EditProductModal.vue';
 import DeleteConfirmModal from '../components/DeleteConfirmModal.vue';
 import NotificationPanel from '../components/NotificationPanel.vue';
 import InventoryReceiptModal from '../components/InventoryReceiptModal.vue';
+import SaleSuccessModal from '../components/SaleSuccessModal.vue';
 
 // Tipos de datos
 interface SerializedItem {
@@ -458,9 +468,19 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showNotifications = ref(false);
 const showInventoryReceipt = ref(false);
+const showSaleSuccess = ref(false);
 const productToEdit: Ref<Product | null> = ref(null);
 const productToDelete: Ref<Product | null> = ref(null);
 const productToRestock: Ref<Product | null> = ref(null);
+
+// Sale details for success modal
+const saleDetails = ref({
+  productName: '',
+  unitPrice: '',
+  quantity: 1,
+  remainingStock: 0,
+  serialNumber: ''
+});
 
 // Search and filter states
 const searchQuery = ref('');
@@ -613,16 +633,17 @@ const handleProductSold = (product: Product, serialItem?: SerializedItem, quanti
     // Close the scanner
     showBarcodeScanner.value = false;
     
-    // Play success sound
-    const audio = new Audio('/Fx_Sucess.wav');
-    audio.play();
+    // Prepare sale details for modal
+    saleDetails.value = {
+      productName: product.name,
+      unitPrice: product.price,
+      quantity: quantity,
+      remainingStock: currentProduct.quantity,
+      serialNumber: serialItem ? serialItem.serialNumber : ''
+    };
     
-    // Show success notification with quantity info
-    const serialInfo = serialItem ? `\nNúmero de serie: ${serialItem.serialNumber}` : '';
-    const quantityInfo = quantity > 1 ? `\nCantidad vendida: ${quantity} unidades` : '';
-    const totalPrice = quantity > 1 ? `\nTotal: $${(parseFloat(product.price.replace('$', '').replace(',', '')) * quantity).toFixed(2)}` : '';
-    
-    alert(`✅ Venta exitosa!\n${product.name}\nPrecio unitario: ${product.price}${quantityInfo}${totalPrice}${serialInfo}\nStock restante: ${currentProduct.quantity}`);
+    // Show success modal
+    showSaleSuccess.value = true;
   }
 };
 

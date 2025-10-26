@@ -291,6 +291,10 @@ const scanProduct = () => {
 
 const processTransaction = () => {
   if (scannedProduct.value) {
+    // Play success sound FIRST (before emitting event)
+    const audio = new Audio('/Fx_Sucess.wav');
+    audio.play();
+    
     // Emit with serial number if serialized
     if (scannedProduct.value.trackingMode === 'serialized' && selectedSerialItem.value) {
       emit('productSold', scannedProduct.value, selectedSerialItem.value, 1);
