@@ -80,6 +80,21 @@
                 </div>
               </div>
 
+              <!-- Brand (Marca) - Campo obligatorio -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Marca *
+                </label>
+                <input 
+                  v-model="formData.brand" 
+                  type="text"
+                  required
+                  placeholder="Ej: Sony, Samsung, Apple, Logitech"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                <p class="text-xs text-gray-500 mt-1">La marca ayuda a identificar y agrupar productos similares</p>
+              </div>
+
               <!-- Tracking Mode -->
               <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-lg p-4">
                 <label class="block text-sm font-medium text-gray-900 mb-3">
@@ -242,42 +257,28 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Código de Barras de Fábrica *
-                    </label>
-                    <div class="flex gap-2">
-                      <input 
-                        v-model="formData.factoryBarcode" 
-                        type="text" 
-                        :required="formData.barcodeType === 'factory'"
-                        placeholder="7501234567890"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      >
-                      <button 
-                        type="button"
-                        @click="scanFactoryBarcode"
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
-                        title="Escanear con cámara"
-                      >
-                        <QrCodeIcon class="h-5 w-5" />
-                      </button>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">Ingresa manualmente o escanea con la cámara</p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Marca
-                    </label>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Código de Barras de Fábrica *
+                  </label>
+                  <div class="flex gap-2">
                     <input 
-                      v-model="formData.brand" 
+                      v-model="formData.factoryBarcode" 
                       type="text" 
-                      placeholder="Ej: Sony, Samsung, Apple"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      :required="formData.barcodeType === 'factory'"
+                      placeholder="7501234567890"
+                      class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
+                    <button 
+                      type="button"
+                      @click="scanFactoryBarcode"
+                      class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
+                      title="Escanear con cámara"
+                    >
+                      <QrCodeIcon class="h-5 w-5" />
+                    </button>
                   </div>
+                  <p class="text-xs text-gray-500 mt-1">Ingresa manualmente o escanea con la cámara</p>
                 </div>
 
                 <div>
