@@ -538,7 +538,7 @@ const getStatusClass = (status: string) => {
   return 'bg-gray-100 text-gray-800';
 };
 
-const handleProductSold = (product: Product, serialItem?: SerializedItem) => {
+const handleProductSold = (product: Product, serialItem?: SerializedItem, quantity: number = 1) => {
   // Find the product in the array
   const productIndex = products.value.findIndex(p => p.sku === product.sku);
   if (productIndex !== -1 && products.value[productIndex]) {
@@ -561,8 +561,12 @@ const handleProductSold = (product: Product, serialItem?: SerializedItem) => {
         ).length;
       }
     } else {
-      // Bulk mode: decrease quantity
-      currentProduct.quantity -= 1;
+      // Bulk mode: decrease quantity by the specified amount
+      if (quantity > currentProduct.quantity) {
+        alert(`❌ Error: No hay suficiente inventario.\n\nSolicitado: ${quantity}\nDisponible: ${currentProduct.quantity}`);
+        return;
+      }
+      currentProduct.quantity -= quantity;
     }
     
     // Update status based on new quantity
@@ -575,9 +579,16 @@ const handleProductSold = (product: Product, serialItem?: SerializedItem) => {
     // Close the scanner
     showBarcodeScanner.value = false;
     
-    // Show success notification
+    // Play success sound
+    const audio = new Audio('/Fx_Sucess.wav');
+    audio.play();
+    
+    // Show success notification with quantity info
     const serialInfo = serialItem ? `\nNúmero de serie: ${serialItem.serialNumber}` : '';
-    alert(`✅ Venta exitosa!\n${product.name}\nPrecio: ${product.price}${serialInfo}\nStock restante: ${currentProduct.quantity}`);
+    const quantityInfo = quantity > 1 ? `\nCantidad vendida: ${quantity} unidades` : '';
+    const totalPrice = quantity > 1 ? `\nTotal: $${(parseFloat(product.price.replace('$', '').replace(',', '')) * quantity).toFixed(2)}` : '';
+    
+    alert(`✅ Venta exitosa!\n${product.name}\nPrecio unitario: ${product.price}${quantityInfo}${totalPrice}${serialInfo}\nStock restante: ${currentProduct.quantity}`);
   }
 };
 

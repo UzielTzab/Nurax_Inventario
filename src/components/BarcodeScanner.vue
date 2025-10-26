@@ -88,6 +88,59 @@
                       </option>
                     </select>
                   </div>
+
+                  <!-- Bulk Product Quantity Selection -->
+                  <div v-if="scannedProduct.trackingMode === 'bulk'" class="mt-3 pt-3 border-t border-green-300">
+                    <p class="text-xs font-medium text-green-800 mb-2">📦 Producto Bulk - Cantidad a vender:</p>
+                    <div class="flex items-center gap-3">
+                      <button
+                        @click="decreaseQuantity"
+                        :disabled="quantityToSell <= 1"
+                        class="w-10 h-10 flex items-center justify-center rounded-md border-2 transition-colors"
+                        :class="[
+                          quantityToSell <= 1
+                            ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                            : 'border-green-400 text-green-700 hover:bg-green-100'
+                        ]"
+                      >
+                        <span class="text-xl font-bold">−</span>
+                      </button>
+
+                      <input
+                        v-model.number="quantityToSell"
+                        type="number"
+                        min="1"
+                        :max="scannedProduct.quantity"
+                        class="w-20 text-center text-lg font-bold px-3 py-2 border-2 border-green-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+
+                      <button
+                        @click="increaseQuantity"
+                        :disabled="quantityToSell >= scannedProduct.quantity"
+                        class="w-10 h-10 flex items-center justify-center rounded-md border-2 transition-colors"
+                        :class="[
+                          quantityToSell >= scannedProduct.quantity
+                            ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                            : 'border-green-400 text-green-700 hover:bg-green-100'
+                        ]"
+                      >
+                        <span class="text-xl font-bold">+</span>
+                      </button>
+                    </div>
+                    
+                    <!-- Total Price Display -->
+                    <div class="mt-3 bg-green-100 rounded-md p-2">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-green-800">Total a cobrar:</span>
+                        <span class="text-lg font-bold text-green-900">
+                          ${{ (parseFloat(scannedProduct.price.replace('$', '').replace(',', '')) * quantityToSell).toFixed(2) }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-green-700 mt-1">
+                        {{ quantityToSell }} {{ quantityToSell === 1 ? 'unidad' : 'unidades' }} × {{ scannedProduct.price }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -167,6 +220,7 @@ const barcode = ref('');
 const isScanning = ref(false);
 const scannedProduct = ref<Product | null>(null);
 const selectedSerialItem = ref<SerializedItem | null>(null);
+const quantityToSell = ref(1);
 const errorMessage = ref('');
 
 // Reset when modal opens
@@ -175,10 +229,24 @@ watch(() => props.isOpen, (newVal) => {
     barcode.value = '';
     scannedProduct.value = null;
     selectedSerialItem.value = null;
+    quantityToSell.value = 1;
     errorMessage.value = '';
     isScanning.value = false;
   }
 });
+
+// Increase/decrease quantity for bulk products
+const increaseQuantity = () => {
+  if (scannedProduct.value && quantityToSell.value < scannedProduct.value.quantity) {
+    quantityToSell.value++;
+  }
+};
+
+const decreaseQuantity = () => {
+  if (quantityToSell.value > 1) {
+    quantityToSell.value--;
+  }
+};
 
 const scanProduct = () => {
   if (!barcode.value) return;
@@ -223,17 +291,19 @@ const scanProduct = () => {
 
 const processTransaction = () => {
   if (scannedProduct.value) {
-    // Emit with serial number if available
+    // Emit with serial number if serialized
     if (scannedProduct.value.trackingMode === 'serialized' && selectedSerialItem.value) {
-      emit('productSold', scannedProduct.value, selectedSerialItem.value);
+      emit('productSold', scannedProduct.value, selectedSerialItem.value, 1);
     } else {
-      emit('productSold', scannedProduct.value);
+      // Bulk product - emit with quantity
+      emit('productSold', scannedProduct.value, null, quantityToSell.value);
     }
     
     // Reset
     barcode.value = '';
     scannedProduct.value = null;
     selectedSerialItem.value = null;
+    quantityToSell.value = 1;
     errorMessage.value = '';
   }
 };
