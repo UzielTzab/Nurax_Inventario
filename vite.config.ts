@@ -1,13 +1,15 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import VueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(), 
+    vue(),
+    VueDevTools(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -15,17 +17,17 @@ export default defineConfig({
         enabled: true
       },
       manifest: {
-        name: 'TeknoGadget - Inventario',
-        short_name: 'TeknoGadget',
+        name: 'Nurax - Inventario',
+        short_name: 'Nurax Inventario',
         description: 'Sistema de gestión de inventario de productos',
-        theme_color: '#4F46E5',
-        background_color: '#ffffff',
+        theme_color: '#22c55e',
+        background_color: '#22c55e',
         display: 'standalone',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/nurax_logo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'

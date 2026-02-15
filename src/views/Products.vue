@@ -1,22 +1,22 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="flex h-screen bg-dark-main text-white">
     <Sidebar 
       @openAddProduct="showAddProductModal = true" 
       @openInventoryReceipt="showInventoryReceipt = true"
     />
     <div class="flex-1 flex flex-col overflow-hidden">
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
+      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-dark-main">
         <div class="container mx-auto px-6 py-8">
           <!-- Header con título y notificaciones -->
           <div class="flex items-center justify-between mb-2">
             <div>
-              <h3 class="text-gray-700 text-3xl font-medium">Inventario de Productos</h3>
-              <p class="text-gray-500">Administra y visualiza la información de los productos</p>
+              <h3 class="text-white text-3xl font-bold tracking-tight">Inventario de Productos</h3>
+              <p class="text-gray-400">Administra y visualiza la información de los productos</p>
             </div>
             <!-- Botón de notificaciones -->
             <button 
               @click="showNotifications = true" 
-              class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              class="relative p-2 text-gray-400 hover:bg-white/10 rounded-full transition-colors"
               title="Notificaciones"
             >
               <BellAlertIcon class="h-6 w-6" />
@@ -31,17 +31,17 @@
           
           <!-- Contenedor para botón y búsqueda/filtros en la misma fila -->
           <div class="mt-6 flex flex-col lg:flex-row gap-4 items-center">            
-            <!-- Contenedor blanco con sombra para búsqueda y filtros -->
-            <div class="flex-1 bg-white rounded-lg shadow-sm p-4">
+            <!-- Contenedor oscuro con sombra para búsqueda y filtros -->
+            <div class="flex-1 bg-dark-card rounded-xl border border-dark-border p-4">
               <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <!-- Buscador -->
                 <div class="relative flex-1 max-w-lg">
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
+                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-500" />
                   </span>
                   <input 
                     v-model="searchQuery"
-                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
+                    class="w-full pl-10 pr-4 py-2 bg-dark-input border border-dark-border text-white rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent placeholder-gray-500 transition-all" 
                     type="text" 
                     placeholder="Buscar por nombre, SKU o proveedor"
                   >
@@ -53,31 +53,31 @@
                   <div class="relative">
                     <button 
                       @click="showCategoryFilter = !showCategoryFilter"
-                      class="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      class="flex items-center px-4 py-2 bg-dark-input border border-dark-border rounded-lg hover:bg-white/5 transition-colors"
                     >
-                      <FunnelIcon class="h-5 w-5 mr-2 text-gray-600" />
-                      <span class="text-gray-700">{{ selectedCategory || 'Categoría' }}</span>
+                      <FunnelIcon class="h-5 w-5 mr-2 text-gray-400" />
+                      <span class="text-white">{{ selectedCategory || 'Categoría' }}</span>
                     </button>
-                    <div 
-                      v-if="showCategoryFilter" 
-                      class="absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
-                    >
-                      <button 
-                        @click="selectedCategory = ''; showCategoryFilter = false"
-                        class="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-t-lg"
+                      <div 
+                        v-if="showCategoryFilter" 
+                        class="absolute z-10 mt-2 w-48 bg-dark-card rounded-lg shadow-xl border border-dark-border overflow-hidden"
                       >
-                        Todas las categorías
-                      </button>
-                      <button 
-                        v-for="category in categories" 
-                        :key="category"
-                        @click="selectedCategory = category; showCategoryFilter = false"
-                        class="w-full text-left px-4 py-2 hover:bg-gray-50"
-                        :class="{ 'bg-indigo-50 text-indigo-600': selectedCategory === category }"
-                      >
-                        {{ category }}
-                      </button>
-                    </div>
+                        <button 
+                          @click="selectedCategory = ''; showCategoryFilter = false"
+                          class="w-full text-left px-4 py-2 hover:bg-white/5"
+                        >
+                          Todas las categorías
+                        </button>
+                        <button 
+                          v-for="category in categories" 
+                          :key="category"
+                          @click="selectedCategory = category; showCategoryFilter = false"
+                          class="w-full text-left px-4 py-2 hover:bg-white/5"
+                          :class="{ 'bg-brand-primary/20 text-brand-primary': selectedCategory === category }"
+                        >
+                          {{ category }}
+                        </button>
+                      </div>
                   </div>
           
                   <!-- Filtro por estado -->
@@ -182,9 +182,9 @@
             </div>
             <!-- Botón Escanear Barcode -->
             <div class="lg:flex-shrink-0">
-              <button @click="showBarcodeScanner = true" class="w-full lg:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg flex items-center justify-center transition-colors shadow-md">
-                <QrCodeIcon class="h- w-5 mr-2" />
-                Escanear Barcode
+              <button @click="showBarcodeScanner = true" class="w-full lg:w-auto bg-brand-primary hover:bg-brand-primary/90 text-white px-6 py-3 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-primary/20 font-bold uppercase tracking-wide text-sm">
+                <QrCodeIcon class="h-5 w-5 mr-2" />
+                Vender
               </button>
             </div>
           </div>
@@ -193,21 +193,21 @@
             <div class="flex flex-col">
               <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                  <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                      <thead class="bg-gray-50">
+                  <div class="shadow-2xl overflow-hidden border border-dark-border sm:rounded-xl bg-dark-card">
+                    <table class="min-w-full divide-y divide-dark-border">
+                      <thead class="bg-white/5">
                         <tr>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modo</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Producto</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">SKU</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Modo</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Cantidad</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Precio</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Proveedor</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</th>
+                          <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Acciones</th>
                         </tr>
                       </thead>
-                      <tbody class="bg-white divide-y divide-gray-200">
+                      <tbody class="divide-y divide-dark-border">
                         <tr v-if="filteredProducts.length === 0">
                           <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                             <div class="flex flex-col items-center">
@@ -221,25 +221,25 @@
                           v-for="product in filteredProducts" 
                           :key="product.sku" 
                           @click="selectedProduct = product"
-                          class="hover:bg-gray-50 cursor-pointer"
+                          class="hover:bg-white/5 cursor-pointer transition-colors"
                         >
                           <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                               <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full object-cover" :src="product.image" alt="">
+                                <img class="h-10 w-10 rounded-lg object-cover ring-1 ring-white/10" :src="product.image" alt="">
                               </div>
                               <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                                <div class="text-sm text-gray-500">{{ product.category }}</div>
+                                <div class="text-sm font-bold text-white">{{ product.name }}</div>
+                                <div class="text-xs text-gray-500">{{ product.category }}</div>
                               </div>
                             </div>
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                             <div class="flex items-center gap-2">
-                              <span class="text-sm text-gray-500 font-mono">{{ product.sku }}</span>
+                              <span class="text-sm text-gray-400 font-mono">{{ product.sku }}</span>
                               <button 
                                 @click="copyToClipboard(product.sku)"
-                                class="text-gray-400 hover:text-indigo-600 transition-colors"
+                                class="text-gray-500 hover:text-brand-primary transition-colors"
                                 title="Copiar SKU"
                               >
                                 <ClipboardIcon class="h-4 w-4" />
@@ -249,8 +249,8 @@
                           <td class="px-6 py-4 whitespace-nowrap">
                             <span 
                               :class="[
-                                'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                product.trackingMode === 'serialized' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                'px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full',
+                                product.trackingMode === 'serialized' ? 'bg-purple-500/10 text-purple-400' : 'bg-brand-accent/10 text-brand-accent'
                               ]"
                             >
                               {{ product.trackingMode === 'serialized' ? 'Serial' : 'Bulk' }}
@@ -265,11 +265,11 @@
                             </span>
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @click.stop>
-                            <div class="flex gap-2">
-                              <button @click="openEditModal(product)" class="text-indigo-600 hover:text-indigo-900 transition-colors" title="Editar">
+                            <div class="flex gap-4">
+                              <button @click="openEditModal(product)" class="text-gray-400 hover:text-white transition-colors" title="Editar">
                                 <PencilIcon class="h-5 w-5" />
                               </button>
-                              <button @click="confirmDelete(product)" class="text-red-600 hover:text-red-900 transition-colors" title="Eliminar">
+                              <button @click="confirmDelete(product)" class="text-gray-400 hover:text-status-danger transition-colors" title="Eliminar">
                                 <TrashIcon class="h-5 w-5" />
                               </button>
                             </div>
@@ -563,10 +563,10 @@ const lowStockCount = computed(() => {
 });
 
 const getStatusClass = (status: string) => {
-  if (status === 'En Stock') return 'bg-green-100 text-green-800';
-  if (status === 'Bajo Stock') return 'bg-yellow-100 text-yellow-800';
-  if (status === 'Agotado') return 'bg-red-100 text-red-800';
-  return 'bg-gray-100 text-gray-800';
+  if (status === 'En Stock') return 'bg-brand-secondary/10 text-brand-secondary';
+  if (status === 'Bajo Stock') return 'bg-brand-primary/10 text-brand-primary';
+  if (status === 'Agotado') return 'bg-status-danger/10 text-status-danger';
+  return 'bg-gray-100/10 text-gray-400';
 };
 
 // Copy SKU to clipboard

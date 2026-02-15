@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+@theme {
+  /* Marca - Colores Principales (Nueva Paleta) */
+  --color-brand-primary: #22C55E;    /* Verde (Color primario) */
+  --color-brand-secondary: #1C252E;  /* Gris oscuro (Color secundario) */
+  --color-brand-accent: #3B82F6;     /* Azul (Botones) */
+  --color-brand-contrast: #22C55E;   /* Verde (Contraste del secundario) */
+  
+  /* Fondos y Diseño */
+  --color-background: #FCFCFC;       /* Fondo principal claro */
+  --color-card-fill: #FFFFFF;        /* Relleno de cards blanco */
+  --color-card-border: #F1F5F9;      /* Borde de cards */
+  
+  /* Estados */
+  --color-status-success: #22C55E;
+  --color-status-warning: #F97316;
+  --color-status-danger: #EF4444;
+  
+  /* Tema Claro (Configuración nueva) */
+  --color-dark-main: #FCFCFC;        /* Fondo principal */
+  --color-dark-card: #FFFFFF;        /* Tarjetas blanco */
+  --color-dark-sidebar: #FFFFFF;     /* Sidebar blanco */
+  --color-dark-border: #F1F5F9;      /* Bordes en modo claro */
+  --color-dark-input: #FFFFFF;       /* Fondo de inputs */
+}
+
+/* Opcional: Estilo global para scrollbars oscuros si quieres ese look pro */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

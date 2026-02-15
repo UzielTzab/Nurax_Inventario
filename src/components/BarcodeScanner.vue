@@ -4,35 +4,35 @@
     <div v-if="isOpen" @click="$emit('close')" class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
       <!-- Modal -->
       <Transition name="modal">
-        <div v-if="isOpen" @click.stop class="bg-white rounded-lg shadow-2xl max-w-md w-full">
-          <div class="p-6">
+        <div v-if="isOpen" @click.stop class="bg-dark-card rounded-2xl shadow-2xl max-w-md w-full border border-dark-border overflow-hidden">
+          <div class="p-8">
             <!-- Header -->
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex justify-between items-start mb-6">
               <div class="flex items-center">
-                <QrCodeIcon class="h-8 w-8 text-indigo-600 mr-3" />
-                <h2 class="text-2xl font-bold text-gray-900">Escanear Producto</h2>
+                <QrCodeIcon class="h-8 w-8 text-brand-primary mr-3" />
+                <h2 class="text-2xl font-bold text-white tracking-tight">Escanear Producto</h2>
               </div>
-              <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <button @click="$emit('close')" class="p-2 text-gray-500 hover:bg-white/10 rounded-full transition-all">
                 <XMarkIcon class="h-6 w-6" />
               </button>
             </div>
             
             <!-- Scanner Animation -->
-            <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-8 mb-6 text-center">
+            <div class="bg-white/5 rounded-xl p-8 mb-6 text-center border border-white/5">
               <div class="relative inline-block">
-                <QrCodeIcon class="h-32 w-32 text-indigo-600 mx-auto" :class="{ 'animate-pulse': isScanning }" />
+                <QrCodeIcon class="h-32 w-32 text-brand-primary mx-auto opacity-80" :class="{ 'animate-pulse': isScanning }" />
                 <div v-if="isScanning" class="absolute inset-0 flex items-center justify-center">
-                  <div class="h-1 w-full bg-red-500 animate-scan"></div>
+                  <div class="h-1 w-full bg-brand-primary shadow-lg shadow-brand-primary/50 animate-scan"></div>
                 </div>
               </div>
-              <p class="mt-4 text-gray-600 font-medium">
-                {{ isScanning ? 'Escaneando...' : 'Escanee el código de barras del producto' }}
+              <p class="mt-4 text-gray-400 font-bold uppercase tracking-widest text-xs">
+                {{ isScanning ? 'Escaneando...' : 'Apunta al código de barras' }}
               </p>
             </div>
 
             <!-- Manual Input -->
             <div class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 O ingrese el SKU manualmente
               </label>
               <input 
@@ -40,44 +40,45 @@
                 @keyup.enter="scanProduct"
                 type="text" 
                 placeholder="Ingresa el SKU completo (ej: SKU-34789)"
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full px-4 py-3 bg-dark-input border border-dark-border text-white rounded-xl focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all placeholder-gray-600"
                 :disabled="isScanning"
               >
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-gray-600 mt-2 italic">
                 💡 Tip: Copia y pega el SKU exactamente como aparece en la tabla
               </p>
             </div>
 
             <!-- Available Products Hint -->
-            <div v-if="!scannedProduct && !errorMessage" class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p class="text-xs font-medium text-gray-700 mb-2">Productos disponibles para venta:</p>
-              <div class="space-y-1">
+            <div v-if="!scannedProduct && !errorMessage" class="mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
+              <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Sugerencias:</p>
+              <div class="space-y-2">
                 <p 
                   v-for="product in props.products.filter(p => p.quantity > 0).slice(0, 3)" 
                   :key="product.sku"
-                  class="text-xs text-gray-600"
+                  class="text-xs text-gray-400 flex justify-between"
                 >
-                  • <span class="font-mono font-semibold">{{ product.sku }}</span> - {{ product.name }}
+                  <span>• {{ product.name }}</span>
+                  <span class="font-mono text-brand-primary">{{ product.sku }}</span>
                 </p>
               </div>
             </div>
 
             <!-- Product Found -->
-            <div v-if="scannedProduct" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div v-if="scannedProduct" class="mb-6 p-5 bg-brand-secondary/10 border border-brand-secondary/20 rounded-xl">
               <div class="flex items-start">
-                <CheckCircleIcon class="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+                <CheckCircleIcon class="h-6 w-6 text-brand-secondary mr-3 flex-shrink-0 mt-0.5" />
                 <div class="flex-1">
-                  <h3 class="font-semibold text-green-900">{{ scannedProduct.name }}</h3>
-                  <p class="text-sm text-green-700">SKU: {{ scannedProduct.sku }}</p>
-                  <p class="text-sm text-green-700">Stock actual: {{ scannedProduct.quantity }} unidades</p>
-                  <p class="text-lg font-bold text-green-900 mt-2">{{ scannedProduct.price }}</p>
+                  <h3 class="font-bold text-white">{{ scannedProduct.name }}</h3>
+                  <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest font-mono">SKU: {{ scannedProduct.sku }}</p>
+                  <p class="text-sm text-brand-secondary font-bold mt-1">Stock: {{ scannedProduct.quantity }} unidades</p>
+                  <p class="text-2xl font-black text-white mt-3">{{ scannedProduct.price }}</p>
                   
                   <!-- Serialized Product Selection -->
-                  <div v-if="scannedProduct.trackingMode === 'serialized' && scannedProduct.serializedItems" class="mt-3 pt-3 border-t border-green-300">
-                    <p class="text-xs font-medium text-green-800 mb-2">🔢 Producto Serializado - Selecciona unidad:</p>
+                  <div v-if="scannedProduct.trackingMode === 'serialized' && scannedProduct.serializedItems" class="mt-4 pt-4 border-t border-brand-secondary/20">
+                    <p class="text-xs font-bold text-brand-secondary uppercase tracking-wider mb-2">🔢 Selecciona unidad:</p>
                     <select 
                       v-model="selectedSerialItem" 
-                      class="w-full px-3 py-2 text-sm border border-green-300 rounded-md bg-white focus:ring-2 focus:ring-green-500"
+                      class="w-full px-3 py-2 text-sm border border-brand-secondary/30 rounded-lg bg-dark-input text-white focus:ring-2 focus:ring-brand-secondary focus:border-transparent outline-none"
                     >
                       <option 
                         v-for="item in scannedProduct.serializedItems.filter(i => i.status === 'available')" 
@@ -90,54 +91,54 @@
                   </div>
 
                   <!-- Bulk Product Quantity Selection -->
-                  <div v-if="scannedProduct.trackingMode === 'bulk'" class="mt-3 pt-3 border-t border-green-300">
-                    <p class="text-xs font-medium text-green-800 mb-2">📦 Producto Bulk - Cantidad a vender:</p>
-                    <div class="flex items-center gap-3">
+                  <div v-if="scannedProduct.trackingMode === 'bulk'" class="mt-4 pt-4 border-t border-brand-secondary/20">
+                    <p class="text-xs font-bold text-brand-secondary uppercase tracking-wider mb-3">📦 Cantidad a vender:</p>
+                    <div class="flex items-center gap-4">
                       <button
                         @click="decreaseQuantity"
                         :disabled="quantityToSell <= 1"
-                        class="w-10 h-10 flex items-center justify-center rounded-md border-2 transition-colors"
+                        class="w-12 h-12 flex items-center justify-center rounded-xl border-2 transition-all"
                         :class="[
                           quantityToSell <= 1
-                            ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                            : 'border-green-400 text-green-700 hover:bg-green-100'
+                            ? 'border-white/10 text-gray-600 cursor-not-allowed'
+                            : 'border-brand-secondary/30 text-brand-secondary hover:bg-brand-secondary/10'
                         ]"
                       >
-                        <span class="text-xl font-bold">−</span>
+                        <span class="text-2xl font-bold">−</span>
                       </button>
-
+ 
                       <input
                         v-model.number="quantityToSell"
                         type="number"
                         min="1"
                         :max="scannedProduct.quantity"
-                        class="w-20 text-center text-lg font-bold px-3 py-2 border-2 border-green-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        class="w-20 text-center text-xl font-black bg-dark-input text-white py-2 border-2 border-brand-secondary/20 rounded-xl focus:ring-2 focus:ring-brand-secondary focus:border-transparent outline-none shadow-inner"
                       />
-
+ 
                       <button
                         @click="increaseQuantity"
                         :disabled="quantityToSell >= scannedProduct.quantity"
-                        class="w-10 h-10 flex items-center justify-center rounded-md border-2 transition-colors"
+                        class="w-12 h-12 flex items-center justify-center rounded-xl border-2 transition-all"
                         :class="[
                           quantityToSell >= scannedProduct.quantity
-                            ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                            : 'border-green-400 text-green-700 hover:bg-green-100'
+                            ? 'border-white/10 text-gray-600 cursor-not-allowed'
+                            : 'border-brand-secondary/30 text-brand-secondary hover:bg-brand-secondary/10'
                         ]"
                       >
-                        <span class="text-xl font-bold">+</span>
+                        <span class="text-2xl font-bold">+</span>
                       </button>
                     </div>
                     
                     <!-- Total Price Display -->
-                    <div class="mt-3 bg-green-100 rounded-md p-2">
+                    <div class="mt-5 bg-white/5 rounded-xl p-4 border border-white/5 shadow-inner">
                       <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-green-800">Total a cobrar:</span>
-                        <span class="text-lg font-bold text-green-900">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Total a cobrar:</span>
+                        <span class="text-2xl font-black text-white">
                           ${{ (parseFloat(scannedProduct.price.replace('$', '').replace(',', '')) * quantityToSell).toFixed(2) }}
                         </span>
                       </div>
-                      <p class="text-xs text-green-700 mt-1">
-                        {{ quantityToSell }} {{ quantityToSell === 1 ? 'unidad' : 'unidades' }} × {{ scannedProduct.price }}
+                      <p class="text-xs text-gray-500 mt-1 font-medium">
+                        {{ quantityToSell }} × {{ scannedProduct.price }}
                       </p>
                     </div>
                   </div>
@@ -157,19 +158,19 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-3">
+            <div class="flex gap-4">
               <button 
                 @click="scanProduct" 
                 :disabled="!barcode || isScanning"
-                class="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center"
+                class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-white py-4 px-4 rounded-xl font-bold transition-all flex items-center justify-center uppercase tracking-widest text-xs"
               >
-                <MagnifyingGlassIcon class="h-5 w-5 mr-2" />
-                {{ isScanning ? 'Escaneando...' : 'Buscar' }}
+                <MagnifyingGlassIcon class="h-5 w-5 mr-2 text-brand-primary" />
+                {{ isScanning ? 'Buscando...' : 'Buscar' }}
               </button>
               <button 
                 v-if="scannedProduct"
                 @click="processTransaction" 
-                class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center"
+                class="flex-1 bg-brand-secondary hover:bg-brand-secondary/90 text-white py-4 px-4 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-brand-secondary/20 uppercase tracking-widest text-xs"
               >
                 <ShoppingCartIcon class="h-5 w-5 mr-2" />
                 Vender
