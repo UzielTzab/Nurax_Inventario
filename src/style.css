@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -23,6 +24,12 @@
   --color-dark-sidebar: #FFFFFF;     /* Sidebar blanco */
   --color-dark-border: #F1F5F9;      /* Bordes en modo claro */
   --color-dark-input: #FFFFFF;       /* Fondo de inputs */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Opcional: Estilo global para scrollbars oscuros si quieres ese look pro */

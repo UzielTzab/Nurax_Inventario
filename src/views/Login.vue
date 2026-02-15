@@ -130,12 +130,11 @@
 import { ref, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLoadingScreen } from '@/composables/useLoadingScreen'
-import { useRouter } from 'vue-router'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
 const { login } = useAuth()
-const router = useRouter()
+
 const { showLoadingScreen } = useLoadingScreen()
 
 const email = ref('')

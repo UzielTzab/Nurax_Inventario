@@ -89,6 +89,15 @@
 
         <!-- Product Table -->
         <ProductTable
+          v-if="viewMode === 'list'"
+          :products="filteredProducts"
+          @edit="handleEditProduct"
+          @delete="handleDeleteProduct"
+        />
+
+        <!-- Product Grid -->
+        <ProductGrid
+          v-else
           :products="filteredProducts"
           @edit="handleEditProduct"
           @delete="handleDeleteProduct"
@@ -134,6 +143,7 @@ import StatsCard from '@/components/dashboard/StatsCard.vue';
 import TabGroup, { type Tab } from '@/components/ui/TabGroup.vue';
 import FilterBar, { type Filters } from '@/components/dashboard/FilterBar.vue';
 import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
+import ProductGrid from '@/components/dashboard/ProductGrid.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';

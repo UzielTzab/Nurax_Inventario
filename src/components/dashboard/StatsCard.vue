@@ -75,7 +75,7 @@ const trendClass = computed(() => {
 .stats-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-brand-secondary);
+  color: #474bc3;
   line-height: 1;
 }
 
