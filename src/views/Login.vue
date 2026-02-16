@@ -551,31 +551,92 @@ const handleLogin = async () => {
 }
 
 /* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .login-container {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
   }
 
   .branding-section {
+    display: flex;
+    padding: 2rem;
+    min-height: auto;
+    /* Reduce height on tablet/mobile */
+  }
+  
+  .branding-content {
+    gap: 1.5rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-container {
+    gap: 1rem;
+    flex-direction: column;
+  }
+
+  .logo-text {
+    font-size: 2.5rem;
+  }
+
+  .hero-content {
+    align-items: center;
+    display: none; /* Hide hero text on tablet to save space, or keep small? Let's hide detailed text */
+  }
+
+  .branding-footer {
     display: none;
+  }
+
+  .form-section {
+    padding: 2rem;
+    align-items: flex-start; /* Align to top */
+    background: white;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    margin-top: -20px; /* Overlap effect */
+    z-index: 10;
+  }
+  
+  .form-container {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .branding-section {
+    padding: 2rem 1.5rem 3rem; /* Extra bottom padding for overlap */
+  }
+
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-text {
+    font-size: 1.75rem;
   }
 
   .form-section {
     padding: 2rem 1.5rem;
   }
-}
-
-@media (max-width: 640px) {
-  .form-section {
-    padding: 1.5rem 1rem;
-  }
 
   .form-title {
     font-size: 1.5rem;
+    text-align: center;
   }
 
   .form-subtitle {
     font-size: 0.875rem;
+    text-align: center;
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
   }
 }
 </style>
