@@ -13,74 +13,77 @@
 
       <!-- Body -->
       <div class="modal-body">
-        <!-- Search Section -->
-        <div class="search-section">
-          <div class="input-group">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="search-icon">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input 
-              v-model="searchQuery"
-              type="text" 
-              placeholder="Buscar producto por nombre o código/SKU..." 
-              class="search-input"
-              autofocus
-            />
-            <button class="scan-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
         <div class="sale-layout">
-          <!-- Products List / Search Results -->
-          <div class="products-list">
-             <div v-if="filteredProducts.length === 0" class="empty-state">
-               <svg v-if="!searchQuery" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-               </svg>
-               <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
-               </svg>
-               <p v-if="!searchQuery">Empieza a escribir para buscar productos</p>
-               <p v-else>No se encontraron productos con "{{ searchQuery }}"</p>
-             </div>
+          <!-- Left Panel: Search + Grid -->
+          <div class="left-panel">
+            <!-- Search Section -->
+            <div class="search-section">
+              <div class="input-group">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="search-icon">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <input 
+                  v-model="searchQuery"
+                  type="text" 
+                  placeholder="Buscar producto por nombre o código/SKU..." 
+                  class="search-input"
+                  autofocus
+                />
+                <button class="scan-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-             <div v-else class="products-grid">
-               <div 
-                 v-for="product in filteredProducts" 
-                 :key="product.id" 
-                 class="product-card"
-                 @click="addToCart(product)"
-               >
-                 <div class="product-image">
-                   <img :src="product.image" :alt="product.name">
-                 </div>
-                 <div class="product-info">
-                   <div class="product-header">
-                     <h4 class="product-name">{{ product.name }}</h4>
-                     <span class="product-sku">{{ product.sku }}</span>
-                   </div>
-                   <div class="product-footer">
-                     <span class="product-price">${{ product.price.toFixed(2) }}</span>
-                     <span 
-                        class="product-stock"
-                        :class="{ 'stock-low': product.stock <= 10, 'stock-out': product.stock === 0 }"
-                     >
-                        {{ product.stock }} en stock
-                     </span>
-                   </div>
-                 </div>
-                 <button class="add-btn" @click.stop="addToCart(product)">
-                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                   </svg>
-                 </button>
+            <!-- Products List -->
+            <div class="products-list">
+               <div v-if="filteredProducts.length === 0" class="empty-state">
+                 <svg v-if="!searchQuery" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                 </svg>
+                 <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                 </svg>
+                 <p v-if="!searchQuery">Empieza a escribir para buscar productos</p>
+                 <p v-else>No se encontraron productos con "{{ searchQuery }}"</p>
                </div>
-             </div>
+
+               <div v-else class="products-grid">
+                 <div 
+                   v-for="product in filteredProducts" 
+                   :key="product.id" 
+                   class="product-card"
+                   @click="addToCart(product)"
+                 >
+                   <div class="product-image">
+                     <img :src="product.image" :alt="product.name">
+                   </div>
+                   <div class="product-info">
+                     <div class="product-header">
+                       <h4 class="product-name">{{ product.name }}</h4>
+                       <span class="product-sku">{{ product.sku }}</span>
+                     </div>
+                     <div class="product-footer">
+                       <span class="product-price">${{ product.price.toFixed(2) }}</span>
+                       <span 
+                          class="product-stock"
+                          :class="{ 'stock-low': product.stock <= 10, 'stock-out': product.stock === 0 }"
+                       >
+                          {{ product.stock }} en stock
+                       </span>
+                     </div>
+                   </div>
+                   <button class="add-btn" @click.stop="addToCart(product)">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                     </svg>
+                   </button>
+                 </div>
+               </div>
+            </div>
           </div>
 
           <!-- Current Sale / Cart -->
@@ -156,7 +159,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
+import { useSnackbar } from '@/composables/useSnackbar';
+import { useSalesStore } from '@/stores/sales.store';
 
+const { enqueueSnackbar } = useSnackbar();
+const salesStore = useSalesStore();
 interface Product {
   id: string;
   name: string;
@@ -176,7 +183,7 @@ const props = defineProps<{
   products?: Product[];
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'sale-completed']);
 
 const searchQuery = ref('');
 const cart = ref<CartItem[]>([]);
@@ -204,9 +211,28 @@ const addToCart = (product: Product) => {
   if (existingItem) {
     if (existingItem.quantity < product.stock) {
         existingItem.quantity++;
+        enqueueSnackbar({
+          type: 'success',
+          title: 'Cantidad Actualizada',
+          message: `Se agregó una unidad más de ${product.name}`,
+          duration: 1500
+        });
+    } else {
+        enqueueSnackbar({
+          type: 'warning',
+          title: 'Stock Insuficiente',
+          message: `No hay más stock disponible de ${product.name}`,
+          duration: 2000
+        });
     }
   } else {
     cart.value.push({ ...product, quantity: 1 });
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Producto Agregado',
+      message: `${product.name} agregado a la venta`,
+      duration: 1500
+    });
   }
 };
 
@@ -244,6 +270,18 @@ const handleCheckout = () => {
   // Play sound
   const audio = new Audio('/Fx_Sucess.wav');
   audio.play().catch(e => console.error('Error playing sound:', e));
+  
+  // Register sale in store
+  salesStore.addSale({
+    items: cart.value.map(item => ({ 
+        name: item.name, 
+        quantity: item.quantity 
+    })),
+    total: Number(total.value.toFixed(2))
+  });
+  
+  // Emit sale completed event
+  emit('sale-completed', [...cart.value]);
   
   // Show success modal
   showSuccessModal.value = true;
@@ -329,11 +367,20 @@ const handleCloseSuccess = () => {
   background: #f9fafb;
 }
 
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .search-section {
   background: white;
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .input-group {
@@ -355,6 +402,7 @@ const handleCloseSuccess = () => {
   width: 20px;
   height: 20px;
   color: #9CA3AF;
+  flex-shrink: 0;
 }
 
 .search-input {
@@ -364,6 +412,7 @@ const handleCloseSuccess = () => {
   font-size: 1rem;
   outline: none;
   color: #111827;
+  min-width: 0;
 }
 
 .scan-btn {
@@ -374,6 +423,7 @@ const handleCloseSuccess = () => {
   cursor: pointer;
   color: #6B7280;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .scan-btn:hover {
@@ -396,12 +446,11 @@ const handleCloseSuccess = () => {
 }
 
 .products-list {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid var(--color-card-border);
-  padding: 1.5rem;
+  background: transparent;
+  padding: 0 0.5rem 0 0;
   overflow-y: auto;
-  min-height: 400px;
+  min-height: 0;
+  flex: 1;
 }
 
 .empty-state {
@@ -530,20 +579,21 @@ const handleCloseSuccess = () => {
 
 .product-card {
   background: white;
-  border: 1px solid var(--color-card-border);
-  border-radius: 8px;
+  border: 1px solid #e2e8f0; /* Distinct light border */
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Stronger shadow */
 }
 
 .product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border-color: var(--color-brand-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .product-image {
@@ -637,6 +687,27 @@ const handleCloseSuccess = () => {
 .product-card:hover .add-btn {
   opacity: 1;
   transform: scale(1);
+}
+
+.product-card:hover::after {
+  content: 'Agregar a la venta';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .add-btn:hover {

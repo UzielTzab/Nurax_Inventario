@@ -11,7 +11,7 @@
   /* Fondos y Diseño */
   --color-background: #FCFCFC;       /* Fondo principal claro */
   --color-card-fill: #FFFFFF;        /* Relleno de cards blanco */
-  --color-card-border: #F1F5F9;      /* Borde de cards */
+  --color-card-border: #eaedf1;      /* Borde de cards */
   
   /* Estados */
   --color-status-success: #22C55E;
@@ -24,6 +24,8 @@
   --color-dark-sidebar: #FFFFFF;     /* Sidebar blanco */
   --color-dark-border: #F1F5F9;      /* Bordes en modo claro */
   --color-dark-input: #FFFFFF;       /* Fondo de inputs */
+  /* Tipografía */
+  --font-family-sans: "Inter", sans-serif;
 }
 
 body {

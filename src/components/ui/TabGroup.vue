@@ -7,6 +7,11 @@
       :class="{ 'tab-active': modelValue === tab.id }"
       @click="$emit('update:modelValue', tab.id)"
     >
+      <component 
+        v-if="tab.icon" 
+        :is="tab.icon" 
+        class="tab-icon"
+      />
       {{ tab.label }}
       <span v-if="tab.count !== undefined" class="tab-count">{{ tab.count }}</span>
     </button>
@@ -18,6 +23,7 @@ export interface Tab {
   id: string;
   label: string;
   count?: number;
+  icon?: any;
 }
 
 interface Props {
@@ -78,6 +84,11 @@ defineEmits<{
   font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
+}
+
+.tab-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .tab-active .tab-count {

@@ -1,6 +1,11 @@
 <template>
-  <div class="stats-card">
-    <div class="stats-label">{{ label }}</div>
+  <div class="stats-card" :class="`card-${variant}`">
+    <div class="stats-header">
+      <div class="stats-label">{{ label }}</div>
+      <div v-if="icon" class="stats-icon" :class="`icon-${iconType}`">
+        <component :is="icon" />
+      </div>
+    </div>
     <div class="stats-value">{{ formattedValue }}</div>
     <div v-if="subtitle" class="stats-subtitle">{{ subtitle }}</div>
     <div v-else-if="trend" class="stats-trend" :class="trendClass">
@@ -28,9 +33,15 @@ interface Props {
   value: number | string;
   subtitle?: string;
   trend?: Trend;
+  variant?: 'default' | 'danger' | 'success';
+  icon?: any;
+  iconType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'purple';
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  variant: 'default',
+  iconType: 'primary'
+});
 
 const formattedValue = computed(() => {
   if (typeof props.value === 'number') {
@@ -48,7 +59,7 @@ const trendClass = computed(() => {
 <style scoped>
 .stats-card {
   background: var(--color-card-fill);
-  border: 1px solid #d1d5db;
+  border: 2px solid var(--color-card-border);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   flex: 1;
@@ -65,17 +76,17 @@ const trendClass = computed(() => {
 }
 
 .stats-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-brand-primary);
+  font-size: 0.7875rem;
+  font-weight: 1000;
+  color: #b0b5c0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
 }
 
 .stats-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #474bc3;
+  font-size: 2.1rem;
+  font-weight: 1000;
+  color: var(--color-brand-secondarys);
   line-height: 1;
 }
 
@@ -115,5 +126,94 @@ const trendClass = computed(() => {
   .stats-value {
     font-size: 1.5rem;
   }
+
+}
+
+.card-danger {
+  background-color: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.card-danger .stats-value {
+  color: #DC2626;
+}
+
+.card-danger .stats-label {
+  color: #991B1B;
+}
+
+.card-danger .stats-subtitle {
+  color: #7F1D1D;
+  opacity: 0.8;
+}
+
+.card-success {
+  background-color: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+.card-success .stats-value {
+  color: #16A34A;
+}
+
+.card-success .stats-label {
+  color: #166534;
+}
+
+.card-success .stats-subtitle {
+  color: #14532d;
+  opacity: 0.8;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stats-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-primary {
+  background: #E0E7FF;
+  color: #4F46E5;
+}
+
+.icon-purple {
+  background: #F3E8FF;
+  color: #9333EA;
+}
+
+.icon-success {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.icon-warning {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.icon-danger {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.icon-info {
+  background: #DBEAFE;
+  color: #2563EB;
 }
 </style>

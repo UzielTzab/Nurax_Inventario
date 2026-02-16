@@ -10,11 +10,9 @@
         </div>
         <div class="logo-text-container">
           <span class="logo-text">Nurax</span>
-          <span class="logo-subtitle">INVENTARIO</span>
         </div>
       </div>
     </div>
-
     <!-- Main Menu -->
     <nav class="sidebar-nav">
       <div 
@@ -29,7 +27,7 @@
           href="#" 
           class="nav-item"
           :class="{ 'nav-item-active': activeItem === item.id }"
-          @click.prevent="setActive(item.id)"
+          @click.prevent="setActive(item)"
         >
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path :fill-rule="item.iconFillRule || 'evenodd'" :d="item.iconPath" :clip-rule="item.iconClipRule || 'evenodd'" />
@@ -101,11 +99,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
+const route = useRoute();
 const { logout } = useAuth();
 const emit = defineEmits(['quickSell']);
 
@@ -139,6 +138,7 @@ const handleLogout = () => {
 interface MenuItem {
   id: string;
   label: string;
+  route?: string;
   iconPath: string;
   iconFillRule?: 'evenodd' | 'nonzero' | 'inherit';
   iconClipRule?: 'evenodd' | 'nonzero' | 'inherit';
@@ -151,14 +151,26 @@ interface MenuSection {
 
 const activeItem = ref('inventory');
 
+// Sync active item with route
+watch(() => route.path, (path) => {
+  if (path.includes('/dashboard/sales')) {
+    activeItem.value = 'orders'; // 'orders' is the ID for Sales History in our menu
+  } else if (path.includes('/dashboard/suppliers')) {
+    activeItem.value = 'suppliers';
+  } else if (path.includes('/dashboard/inventory') || path === '/dashboard') {
+    activeItem.value = 'inventory';
+  }
+}, { immediate: true });
+
 // Configuración del menú
 const menuSections = ref<MenuSection[]>([
   {
-    label: 'MENÚ PRINCIPAL',
+    label: '',
     items: [
       {
         id: 'inventory',
         label: 'Inventario',
+        route: '/dashboard/inventory',
         iconPath: 'M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 001.972 0l.74-4.435A1 1 0 0110.853 2H13a1 1 0 011 1v2h.5A1.5 1.5 0 0115.5 6.5v9A1.5 1.5 0 0114 16.5H2A1.5 1.5 0 01.5 15v-9A1.5 1.5 0 012 4.5H2.5V3zm6 2v2h2V5H8z',
         iconFillRule: 'evenodd',
         iconClipRule: 'evenodd'
@@ -166,6 +178,7 @@ const menuSections = ref<MenuSection[]>([
       {
         id: 'orders',
         label: 'Historial de ventas',
+        route: '/dashboard/sales',
         iconPath: 'M3 4a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4zm3 6h6v2H6v-2zm0 4h6v2H6v-2z',
         iconFillRule: 'evenodd',
         iconClipRule: 'evenodd'
@@ -173,6 +186,7 @@ const menuSections = ref<MenuSection[]>([
       {
         id: 'suppliers',
         label: 'Proveedores',
+        route: '/dashboard/suppliers',
         iconPath: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
         iconFillRule: 'evenodd',
         iconClipRule: 'evenodd'
@@ -182,8 +196,11 @@ const menuSections = ref<MenuSection[]>([
  
 ]);
 
-const setActive = (id: string) => {
-  activeItem.value = id;
+const setActive = (item: MenuItem) => {
+  activeItem.value = item.id;
+  if (item.route) {
+    router.push(item.route);
+  }
 };
 </script>
 
@@ -327,7 +344,7 @@ const setActive = (id: string) => {
   flex-direction: column;
   gap: 2rem;
   overflow-y: auto;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
 .nav-section {
@@ -371,7 +388,7 @@ const setActive = (id: string) => {
   background: var(--color-brand-primary);
   color: white;
   border-left: 3px solid transparent;
-  font-weight: 600;
+  font-weight: 1000;
 }
 
 .nav-item-active::before {

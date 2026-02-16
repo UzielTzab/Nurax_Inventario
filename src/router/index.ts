@@ -5,6 +5,8 @@ import Login from '@/views/Login.vue'
 
 // Views - Dashboard
 import Dashboard from '@/views/Dashboard.vue'
+import SalesHistory from '@/views/SalesHistory.vue'
+import Suppliers from '@/views/Suppliers.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -18,8 +20,22 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard',
+    redirect: '/dashboard/inventory'
+  },
+  {
+    path: '/dashboard/inventory',
     component: Dashboard,
-    meta: { title: 'Dashboard' }
+    meta: { title: 'Inventario' }
+  },
+  {
+    path: '/dashboard/sales',
+    component: SalesHistory,
+    meta: { title: 'Historial de Ventas' }
+  },
+  {
+    path: '/dashboard/suppliers',
+    component: Suppliers,
+    meta: { title: 'Proveedores' }
   },
   {
     path: '/:pathMatch(.*)*',

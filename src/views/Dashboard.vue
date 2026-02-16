@@ -55,37 +55,59 @@
         <div class="stats-grid">
           <StatsCard
             label="Productos totales"
-            :value="1248"
+            :value="totalProducts"
             :trend="{ direction: 'up', value: '+12% vs last month' }"
+            :icon="CubeIcon"
+            icon-type="primary"
           />
           <StatsCard
             label="Valor del inventario"
-            value="$45,280 MXN"
+            :value="formatCurrency(inventoryValue) + ' MXN'"
             subtitle="Calculado diariamente"
+            :icon="CurrencyDollarIcon"
+            icon-type="success"
           />
           <StatsCard
-            label="Pedidos activos"
-            :value="12"
-            subtitle="Requiere acción"
-          />
-          <StatsCard
-            label="Alertas de proveedores"
-            value="02"
-            subtitle="Pending review"
+            label="Productos sin stock"
+            :value="outOfStockProducts.length"
+            :subtitle="outOfStockProducts.length > 0 ? 'Requiere atención' : 'Inventario saludable'"
+            :variant="outOfStockProducts.length > 0 ? 'danger' : 'success'"
+            :icon="ExclamationTriangleIcon"
+            :icon-type="outOfStockProducts.length > 0 ? 'danger' : 'success'"
           />
         </div>
 
-        <!-- Tabs -->
-        <TabGroup
-          v-model="activeTab"
-          :tabs="tabs"
-        />
-
-        <!-- Filter Bar -->
-        <FilterBar
-          v-model:filters="filters"
-          v-model:view="viewMode"
-        />
+        <!-- Tabs & View Toggle Row -->
+        <div class="tabs-actions-row">
+          <TabGroup
+            v-model="activeTab"
+            :tabs="tabs"
+            class="flex-1"
+          />
+          
+          <div class="view-toggle">
+            <button
+              class="view-btn"
+              :class="{ 'view-active': viewMode === 'list' }"
+              @click="viewMode = 'list'"
+              title="List View"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button
+              class="view-btn"
+              :class="{ 'view-active': viewMode === 'grid' }"
+              @click="viewMode = 'grid'"
+              title="Grid View"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M4.25 2A2.25 2.25 0 002 4.25v2.5A2.25 2.25 0 004.25 9h2.5A2.25 2.25 0 009 6.75v-2.5A2.25 2.25 0 006.75 2h-2.5zM4.25 11A2.25 2.25 0 002 13.25v2.5A2.25 2.25 0 004.25 18h2.5A2.25 2.25 0 009 15.75v-2.5A2.25 2.25 0 006.75 11h-2.5zM13.25 2A2.25 2.25 0 0011 4.25v2.5A2.25 2.25 0 0013.25 9h2.5A2.25 2.25 0 0018 6.75v-2.5A2.25 2.25 0 0015.75 2h-2.5zM13.25 11A2.25 2.25 0 0011 13.25v2.5A2.25 2.25 0 0013.25 18h2.5A2.25 2.25 0 0018 15.75v-2.5A2.25 2.25 0 0015.75 11h-2.5z" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
         <!-- Product Table -->
         <ProductTable
@@ -93,6 +115,8 @@
           :products="filteredProducts"
           @edit="handleEditProduct"
           @delete="handleDeleteProduct"
+          @delete-multiple="handleBulkDelete"
+          @restock="handleRestock"
         />
 
         <!-- Product Grid -->
@@ -101,6 +125,7 @@
           :products="filteredProducts"
           @edit="handleEditProduct"
           @delete="handleDeleteProduct"
+          @restock="handleRestock"
         />
 
         <!-- Pagination -->
@@ -110,62 +135,96 @@
           :total="totalProducts"
         />
 
-        <!-- Floating Action Button -->
-         <button class="fab-sell" @click="handleQuickSell">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 1.05.328 2.032.891 2.845a4.502 4.502 0 005.157 1.155A4.502 4.502 0 0013.5 19.5a4.502 4.502 0 00.99-9H6.18l-.51-1.912A1.984 1.984 0 003.886 6.75H2.25zM13.5 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-              <path d="M7.34 6.75L7.85 8.654h13.9a.75.75 0 00.58-1.218 5.755 5.755 0 00-4.08-1.921 7.252 7.252 0 00-4.755 0 5.755 5.755 0 00-4.08 1.921.75.75 0 00-.58 1.218z" />
-            </svg>
-         </button>
       </div>
     </main>
 
-    <SalesModal 
-      :is-open="showSalesModal" 
-      :products="allProducts"
-      @close="showSalesModal = false" 
-    />
+    <!-- SalesModal removed (handled by layout) -->
     
     <AddProductModal
       :is-open="showAddProductModal"
+      :product-to-edit="selectedProduct"
+      :existing-skus="allSkus"
       @close="showAddProductModal = false"
       @product-added="handleSaveNewProduct"
+      @product-updated="handleUpdateProduct"
+    />
+
+    <ConfirmationModal
+      :is-open="confirmationState.isOpen"
+      :title="confirmationState.title"
+      :message="confirmationState.message"
+      :type="confirmationState.type"
+      :confirm-text="confirmationState.confirmText"
+      @close="confirmationState.isOpen = false"
+      @confirm="handleConfirmation"
     />
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { 
+  CubeIcon, 
+  CurrencyDollarIcon, 
+  ExclamationTriangleIcon,
+  RectangleStackIcon,
+  ArchiveBoxXMarkIcon 
+} from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import TopBar from '@/components/layout/TopBar.vue';
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import TabGroup, { type Tab } from '@/components/ui/TabGroup.vue';
-import FilterBar, { type Filters } from '@/components/dashboard/FilterBar.vue';
 import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
 import ProductGrid from '@/components/dashboard/ProductGrid.vue';
-import SalesModal from '@/components/SalesModal.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useProductStore } from '@/stores/product.store';
+import { useSalesStore } from '@/stores/sales.store';
+import { storeToRefs } from 'pinia';
 
 // Snackbar
 const { enqueueSnackbar } = useSnackbar();
 
-const showSalesModal = ref(false);
+// Stores
+const productStore = useProductStore();
+const salesStore = useSalesStore();
+
+const { 
+  products: allProducts,
+  totalProducts,
+  lowStockProducts,
+  outOfStockProducts,
+  inventoryValue,
+  allSkus
+} = storeToRefs(productStore);
+
 const showAddProductModal = ref(false);
+const selectedProduct = ref<Product | null>(null);
+
+const confirmationState = ref({
+  isOpen: false,
+  title: '',
+  message: '',
+  type: 'info' as 'danger' | 'warning' | 'info' | 'success',
+  confirmText: 'Confirmar',
+  onConfirm: () => {}
+});
 
 // User data
 const userName = ref('Leonez');
 
 // Tabs
 const activeTab = ref('all');
-const tabs = ref<Tab[]>([
-  { id: 'all', label: 'Todos los productos', count: 45 },
-  { id: 'low-stock', label: 'Bajo inventario', count: 3 },
-  { id: 'out-of-stock', label: 'Sin inventario', count: 1 },
-  { id: 'categories', label: 'Categorias' }
-]);
+
+// Filters type definition
+interface Filters {
+  category: string;
+  supplier: string;
+  priceRange: string;
+}
 
 // Filters
 const filters = ref<Filters>({
@@ -179,57 +238,6 @@ const viewMode = ref<'list' | 'grid'>('list');
 // Pagination
 const currentPage = ref(1);
 const pageSize = ref(10);
-
-// Sample products data
-const allProducts = ref<Product[]>([
-  {
-    id: '1',
-    name: 'Wireless Headphones',
-    category: 'Audio',
-    sku: 'SKU-11234',
-    stock: 10,
-    price: 199.50,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop'
-  },
-  {
-    id: '2',
-    name: 'DSLR Camera Pro',
-    category: 'Photography',
-    sku: 'SKU-99876',
-    stock: 75,
-    price: 1800.00,
-    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=100&h=100&fit=crop'
-  },
-  {
-    id: '3',
-    name: 'Smartwatch Fit 2',
-    category: 'Wearable',
-    sku: 'SKU-55678',
-    stock: 0,
-    price: 250.00,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop'
-  },
-  {
-    id: '4',
-    name: 'Laptop Pro 15"',
-    category: 'Computing',
-    sku: 'SKU-44321',
-    stock: 25,
-    price: 1299.99,
-    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop'
-  },
-  {
-    id: '5',
-    name: 'Bluetooth Speaker',
-    category: 'Audio',
-    sku: 'SKU-77889',
-    stock: 50,
-    price: 89.99,
-    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=100&h=100&fit=crop'
-  }
-]);
-
-const totalProducts = computed(() => allProducts.value.length);
 
 const filteredProducts = computed(() => {
   let products = [...allProducts.value];
@@ -265,26 +273,28 @@ const filteredProducts = computed(() => {
   return products;
 });
 
-// Products with low stock (1-10 units)
-const lowStockProducts = computed(() => {
-  return allProducts.value.filter(p => p.stock > 0 && p.stock <= 10);
-});
+const tabs = computed<Tab[]>(() => [
+  { id: 'all', label: 'Todos los productos', count: totalProducts.value, icon: RectangleStackIcon },
+  { id: 'low-stock', label: 'Bajo inventario', count: lowStockProducts.value.length, icon: ExclamationTriangleIcon },
+  { id: 'out-of-stock', label: 'Sin inventario', count: outOfStockProducts.value.length, icon: ArchiveBoxXMarkIcon },
+]);
 
-// Products out of stock
-const outOfStockProducts = computed(() => {
-  return allProducts.value.filter(p => p.stock === 0);
-});
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
+};
+
 // Handlers
 const handleQuickSell = () => {
-  showSalesModal.value = true;
+  salesStore.openModal();
 };
 
 const handleAddProduct = () => {
+  selectedProduct.value = null; // Clear selected product for new addition
   showAddProductModal.value = true;
 };
 
 const handleSaveNewProduct = (newProduct: Product) => {
-  allProducts.value.push(newProduct); // Add to local state
+  productStore.addProduct(newProduct);
   enqueueSnackbar({
     type: 'success',
     title: 'Producto Agregado',
@@ -294,24 +304,74 @@ const handleSaveNewProduct = (newProduct: Product) => {
 };
 
 const handleEditProduct = (product: Product) => {
-  console.log('Edit product:', product);
-  // Implementar lógica de edición
+  selectedProduct.value = product;
+  showAddProductModal.value = true;
+};
+
+const handleUpdateProduct = (updatedProduct: Product) => {
+  productStore.updateProduct(updatedProduct);
+  enqueueSnackbar({
+    type: 'success',
+    title: 'Producto Actualizado',
+    message: `${updatedProduct.name} ha sido actualizado correctamente.`,
+    duration: 3000
+  });
 };
 
 const handleDeleteProduct = (product: Product) => {
-  console.log('Delete product:', product);
-  // Implementar lógica de eliminación
+  confirmationState.value = {
+    isOpen: true,
+    title: 'Eliminar Producto',
+    message: `¿Estás seguro de que deseas eliminar ${product.name}? Esta acción no se puede deshacer.`,
+    type: 'danger',
+    confirmText: 'Sí, eliminar',
+    onConfirm: () => {
+      productStore.deleteProduct(product.id);
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Producto Eliminado',
+        message: `${product.name} ha sido eliminado del inventario.`,
+        duration: 3000
+      });
+      confirmationState.value.isOpen = false;
+    }
+  };
 };
 
-// Show welcome message when dashboard loads
-onMounted(() => {
+const handleBulkDelete = (ids: string[]) => {
+  confirmationState.value = {
+    isOpen: true,
+    title: 'Eliminar Productos',
+    message: `¿Estás seguro de que deseas eliminar ${ids.length} productos seleccionados? Esta acción no se puede deshacer.`,
+    type: 'danger',
+    confirmText: `Sí, eliminar ${ids.length} productos`,
+    onConfirm: () => {
+      productStore.bulkDeleteProducts(ids);
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Productos Eliminados',
+        message: `${ids.length} productos han sido eliminados del inventario.`,
+        duration: 3000
+      });
+      confirmationState.value.isOpen = false;
+    }
+  };
+};
+
+const handleRestock = (product: Product) => {
+  selectedProduct.value = product;
+  showAddProductModal.value = true;
   enqueueSnackbar({
-    type: 'success',
-    title: `Bienvenido, ${userName.value}! 👋`,
-    message: 'El sistema esta en estado saludable. Tienes acciones de inventario pendientes que requieren tu atención para mantener niveles optimales de stock.',
-    duration: 12000
+    type: 'info',
+    title: 'Reabastecer Producto',
+    message: 'Actualiza el campo de "Stock" para agregar inventario.',
+    duration: 5000
   });
-});
+};
+
+const handleConfirmation = () => {
+  confirmationState.value.onConfirm();
+};
 </script>
 
 <style scoped>
@@ -332,6 +392,54 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+.tabs-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.view-btn {
+  padding: 0.5rem;
+  background: white;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.view-btn:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.view-active {
+  background: var(--color-brand-secondary) !important;
+  color: white !important;
+}
+
+.view-btn:not(:last-child) {
+  border-right: 1px solid #e5e7eb;
 }
 
 

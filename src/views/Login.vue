@@ -410,9 +410,8 @@ const handleLogin = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-brand-secondary);
+  border-color: #94a3b8;
   border-width: 1.5px;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .toggle-password {

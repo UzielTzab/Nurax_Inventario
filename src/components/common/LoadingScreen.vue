@@ -5,7 +5,7 @@
       <div class="spinner"></div>
 
       <!-- Brand Name -->
-      <h1 class="brand-name">ONUX</h1>
+      <h1 class="brand-name">NURAX</h1>
 
       <!-- Loading Text -->
       <div class="loading-text">

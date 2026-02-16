@@ -4,20 +4,41 @@
       <thead>
         <tr>
           <th class="th-checkbox">
-            <input type="checkbox" class="checkbox" />
+            <input 
+              type="checkbox" 
+              class="checkbox" 
+              :checked="allSelected"
+              :indeterminate="isIndeterminate"
+              @change="toggleAll"
+            />
           </th>
           <th class="th-product">PRODUCTO</th>
           <th class="th-sku">SKU</th>
           <th class="th-stock">STOCK</th>
           <th class="th-price">PRECIO</th>
           <th class="th-status">ESTADO</th>
-          <th class="th-actions">ACCIONES</th>
+          <th class="th-actions">
+            <div v-if="selectedIds.length > 0" class="bulk-actions">
+              <button class="btn-bulk-delete" @click="$emit('delete-multiple', selectedIds)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+                </svg>
+                <span>({{ selectedIds.length }})</span>
+              </button>
+            </div>
+            <span v-else>ACCIONES</span>
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="product in products" :key="product.id" class="product-row">
+        <tr v-for="product in products" :key="product.id" class="product-row" :class="{ 'row-out-of-stock': product.stock === 0 }">
           <td class="td-checkbox">
-            <input type="checkbox" class="checkbox" />
+            <input 
+              type="checkbox" 
+              class="checkbox" 
+              :checked="selectedIds.includes(product.id)"
+              @change="toggleSelection(product.id)"
+            />
           </td>
           <td class="td-product">
             <div class="product-info">
@@ -36,20 +57,21 @@
           <td class="td-stock">
             <div class="stock-info">
               <div class="stock-value">{{ product.stock }}</div>
-              <div class="stock-bar">
-                <div 
-                  class="stock-fill" 
-                  :style="{ width: `${getStockPercentage(product.stock)}%` }"
-                  :class="getStockClass(product.stock)"
-                ></div>
-              </div>
-              <div class="stock-label" :class="getStockClass(product.stock)">
-                {{ getStockLabel(product.stock) }}
-              </div>
+              <button 
+                v-if="product.stock === 0" 
+                class="btn-restock-sm"
+                @click="$emit('restock', product)"
+                title="Reabastecer inventario"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0v2.433l-.31-.31a7 7 0 00-11.712 3.138.75.75 0 001.449.39 5.5 5.5 0 019.201-2.466l.312.312H11.75a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clip-rule="evenodd" />
+                </svg>
+                Reabastecer
+              </button>
             </div>
           </td>
           <td class="td-price">
-            <span class="price">${{ formatPrice(product.price) }}</span>
+            <span class="price">${{ formatPrice(product.price) }} MXN</span>
           </td>
           <td class="td-status">
             <Badge :variant="getStatusVariant(product.stock)">
@@ -58,7 +80,7 @@
           </td>
           <td class="td-actions">
             <div class="action-buttons">
-              <button class="action-btn" title="Edit" @click="$emit('edit', product)">
+              <button class="action-btn action-btn-edit" title="Edit" @click="$emit('edit', product)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
                   <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
@@ -86,6 +108,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue';
 import Badge from '../ui/Badge.vue';
 
 export interface Product {
@@ -102,34 +125,45 @@ interface Props {
   products: Product[];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 defineEmits<{
   edit: [product: Product];
   delete: [product: Product];
+  'delete-multiple': [ids: string[]];
+  restock: [product: Product];
 }>();
+
+const selectedIds = ref<string[]>([]);
+
+const allSelected = computed(() => {
+  return props.products.length > 0 && selectedIds.value.length === props.products.length;
+});
+
+const isIndeterminate = computed(() => {
+  return selectedIds.value.length > 0 && selectedIds.value.length < props.products.length;
+});
+
+const toggleAll = (e: Event) => {
+  const isChecked = (e.target as HTMLInputElement).checked;
+  if (isChecked) {
+    selectedIds.value = props.products.map(p => p.id);
+  } else {
+    selectedIds.value = [];
+  }
+};
+
+const toggleSelection = (id: string) => {
+  const index = selectedIds.value.indexOf(id);
+  if (index === -1) {
+    selectedIds.value.push(id);
+  } else {
+    selectedIds.value.splice(index, 1);
+  }
+};
 
 const formatPrice = (price: number) => {
   return price.toFixed(2);
-};
-
-const getStockPercentage = (stock: number) => {
-  const max = 100;
-  return Math.min((stock / max) * 100, 100);
-};
-
-const getStockClass = (stock: number) => {
-  if (stock === 0) return 'stock-empty';
-  if (stock <= 10) return 'stock-low';
-  if (stock <= 50) return 'stock-medium';
-  return 'stock-high';
-};
-
-const getStockLabel = (stock: number) => {
-  if (stock === 0) return 'Empty';
-  if (stock <= 10) return 'Low';
-  if (stock <= 50) return 'Good';
-  return 'High';
 };
 
 const getStatusVariant = (stock: number): 'success' | 'warning' | 'danger' => {
@@ -155,12 +189,13 @@ const getStatusText = (stock: number) => {
 
 .product-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Changed from collapse to Fix radius clipping */
+  border-spacing: 0;
 }
 
 thead {
   background: var(--color-background);
-  border-bottom: 1px solid var(--color-card-border);
+  /* border-bottom removed, handled by th */
 }
 
 th {
@@ -171,6 +206,7 @@ th {
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-card-border); /* Added */
 }
 
 .th-checkbox {
@@ -203,7 +239,7 @@ th {
 }
 
 .product-row {
-  border-bottom: 1px solid var(--color-card-border);
+  /* border-bottom removed */
   transition: background 0.2s;
 }
 
@@ -211,8 +247,34 @@ th {
   background: var(--color-background);
 }
 
-.product-row:last-child {
-  border-bottom: none;
+.product-row td {
+  border-bottom: 1px solid var(--color-card-border); /* Added */
+}
+
+.product-row:last-child td {
+  border-bottom: none; /* Last row has no border */
+}
+
+.row-out-of-stock {
+  background-color: #FEF2F2 !important; /* Light red background */
+}
+
+.row-out-of-stock td:first-child {
+  box-shadow: inset 4px 0 0 #EF4444; /* Red border effect on left */
+}
+
+.row-out-of-stock td {
+  color: #7F1D1D; /* Dark red text */
+}
+
+.row-out-of-stock .product-name {
+  color: #991B1B; /* Dark red for product name */
+}
+
+.row-out-of-stock .sku-code {
+  background: white;
+  color: #991B1B;
+  border: 1px solid #FECACA;
 }
 
 td {
@@ -286,44 +348,36 @@ td {
   color: #111827;
 }
 
-.stock-bar {
-  width: 100%;
-  height: 6px;
-  background: var(--color-background);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.stock-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-
-.stock-empty {
-  background: #ef4444;
-}
-
-.stock-low {
-  background: #f97316;
-}
-
-.stock-medium {
-  background: #fbbf24;
-}
-
-.stock-high {
-  background: var(--color-brand-primary);
-}
-
-.stock-label {
+.btn-restock-sm {
+  background: white;
+  border: 1px solid #BBF7D0;
+  color: #16A34A;
   font-size: 0.75rem;
   font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s;
+  margin-top: 0.25rem;
+}
+
+.btn-restock-sm:hover {
+  background: #F0FDF4;
+  border-color: #16A34A;
+}
+
+.btn-restock-sm svg {
+  width: 12px;
+  height: 12px;
 }
 
 .price {
   font-size: 0.9375rem;
   font-weight: 600;
+  white-space: nowrap;
   color: #111827;
 }
 
@@ -354,13 +408,28 @@ td {
 
 .action-btn:hover {
   background: var(--color-background);
-  border-color: var(--color-brand-primary);
-  color: var(--color-brand-primary);
+}
+
+.action-btn-edit {
+  color: #3B82F6; /* Blue-500 */
+  border-color: #BFDBFE; /* Blue-200 */
+  background: #EFF6FF; /* Blue-50 */
+}
+
+.action-btn-edit:hover {
+  background: #DBEAFE; /* Blue-100 */
+  border-color: #3B82F6;
+}
+
+.action-btn-danger {
+  color: #EF4444; /* Red-500 */
+  border-color: #FECACA; /* Red-200 */
+  background: #FEF2F2; /* Red-50 */
 }
 
 .action-btn-danger:hover {
-  border-color: var(--color-status-danger);
-  color: var(--color-status-danger);
+  background: #FEE2E2; /* Red-100 */
+  border-color: #EF4444;
 }
 
 .empty-state {
@@ -399,5 +468,51 @@ td {
   .product-table {
     min-width: 900px;
   }
+}
+
+.bulk-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-bulk-delete {
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-bulk-delete:hover {
+  background: #FEE2E2;
+  border-color: #EF4444;
+}
+
+.btn-bulk-delete svg {
+  width: 14px;
+  height: 14px;
+}
+/* Corner radius fixes */
+thead tr:first-child th:first-child {
+  border-top-left-radius: 8px;
+}
+
+thead tr:first-child th:last-child {
+  border-top-right-radius: 8px;
+}
+
+tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
 }
 </style>
