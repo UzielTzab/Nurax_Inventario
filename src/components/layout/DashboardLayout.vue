@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import { useSalesStore } from '@/stores/sales.store';

@@ -57,7 +57,7 @@ interface Props {
   showCancel?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   type: 'info',
   confirmText: 'Confirmar',
   cancelText: 'Cancelar',

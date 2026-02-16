@@ -198,12 +198,13 @@ interface Product {
   name: string;
   category: string;
   sku: string;
-  quantity: number;
-  price: string;
+  quantity?: number;
+  stock?: number;
+  price: string | number;
   supplier: string;
   status: string;
   image: string;
-  barcode: string;
+  barcode?: string;
   trackingMode: 'bulk' | 'serialized';
 }
 
@@ -232,8 +233,8 @@ watch(() => props.product, (newProduct) => {
       name: newProduct.name,
       category: newProduct.category,
       sku: newProduct.sku,
-      quantity: newProduct.quantity,
-      price: newProduct.price.replace('$', ''),
+      quantity: newProduct.quantity ?? newProduct.stock ?? 0,
+      price: typeof newProduct.price === 'number' ? newProduct.price.toString() : newProduct.price.replace('$', ''),
       supplier: newProduct.supplier,
       image: newProduct.image,
       trackingMode: newProduct.trackingMode
@@ -270,16 +271,18 @@ const handleSubmit = () => {
     formattedPrice = `$${formattedPrice}`;
   }
 
-  const updatedProduct: Product = {
+  const updatedProduct = {
+    ...props.product, // Keep original fields
     name: formData.value.name,
     category: formData.value.category,
     sku: formData.value.sku,
     quantity: formData.value.quantity,
+    stock: formData.value.quantity, // Populate both
     price: formattedPrice,
+    priceVal: parseFloat(formData.value.price) || 0, // Helpful for store
     supplier: formData.value.supplier,
     status: status,
     image: formData.value.image,
-    barcode: props.product?.barcode || '',
     trackingMode: formData.value.trackingMode
   };
 

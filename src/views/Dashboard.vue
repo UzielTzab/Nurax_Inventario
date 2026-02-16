@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
@@ -213,8 +213,7 @@ const confirmationState = ref({
   onConfirm: () => {}
 });
 
-// User data
-const userName = ref('Leonez');
+
 
 // Tabs
 const activeTab = ref('all');

@@ -298,7 +298,7 @@
       />
       <AddProductModal 
         :isOpen="showAddProductModal"
-        :existingProducts="products"
+        :existingSkus="products.map(p => p.sku)"
         @close="showAddProductModal = false"
         @productAdded="handleProductAdded"
       />
@@ -330,11 +330,13 @@
       />
       <SaleSuccessModal 
         :isOpen="showSaleSuccess"
-        :productName="saleDetails.productName"
-        :unitPrice="saleDetails.unitPrice"
-        :quantity="saleDetails.quantity"
-        :remainingStock="saleDetails.remainingStock"
-        :serialNumber="saleDetails.serialNumber"
+        :cart="[{
+          id: 'sale-item',
+          name: saleDetails.productName,
+          price: parseFloat(saleDetails.unitPrice.replace(/[$,]/g, '')) || 0,
+          quantity: saleDetails.quantity
+        }]"
+        :total="(parseFloat(saleDetails.unitPrice.replace(/[$,]/g, '')) || 0) * saleDetails.quantity"
         @close="showSaleSuccess = false"
       />
     </div>
@@ -647,15 +649,36 @@ const handleProductSold = (product: Product, serialItem?: SerializedItem, quanti
   }
 };
 
-const handleProductAdded = (product: Product) => {
+const handleProductAdded = (product: any) => {
+  // Map incoming product (potentially from store/modal with different shape) to local shape
+  const quantity = product.quantity ?? product.stock ?? 0;
+  const price = typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price;
+  
+  // Determine status
+  let status = 'En Stock';
+  if (quantity === 0) status = 'Agotado';
+  else if (quantity <= 10) status = 'Bajo Stock';
+
+  const newProduct: Product = {
+    ...product,
+    quantity,
+    price,
+    status,
+    // ensure required fields if missing
+    supplier: product.supplier || 'Proveedor Desconocido',
+    image: product.image || 'https://via.placeholder.com/150',
+    barcode: product.barcode || '',
+    trackingMode: product.trackingMode || 'bulk'
+  };
+
   // Add the new product to the beginning of the array
-  products.value.unshift(product);
+  products.value.unshift(newProduct);
   
   // Close the modal
   showAddProductModal.value = false;
   
   // Show success notification
-  alert(`✅ Producto agregado exitosamente!\n${product.name}\nSKU: ${product.sku}\nCantidad: ${product.quantity}`);
+  alert(`✅ Producto agregado exitosamente!\n${newProduct.name}\nSKU: ${newProduct.sku}\nCantidad: ${newProduct.quantity}`);
 };
 
 const openEditModal = (product: Product) => {
