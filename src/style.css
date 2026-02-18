@@ -3,15 +3,17 @@
 
 @theme {
   /* Marca - Colores Principales (Nueva Paleta) */
-  --color-brand-primary: #22C55E;    /* Verde (Color primario) */
-  --color-brand-secondary: #1C252E;  /* Gris oscuro (Color secundario) */
-  --color-brand-accent: #3B82F6;     /* Azul (Botones) */
-  --color-brand-contrast: #22C55E;   /* Verde (Contraste del secundario) */
+  --color-brand-main: #F97316;
+  --color-brand-dark-main: #EA580C;
+  --color-brand-primary: #fe4365;    
+  --color-brand-secondary: #1C252E; 
+  --color-brand-accent: #3B82F6;     
+  --color-brand-contrast: #22C55E;   
   
   /* Fondos y Diseño */
-  --color-background: #FCFCFC;       /* Fondo principal claro */
-  --color-card-fill: #FFFFFF;        /* Relleno de cards blanco */
-  --color-card-border: #eaedf1;      /* Borde de cards */
+  --color-background: #F8F8F8;       
+  --color-card-fill: #FFFFFF;        
+  --color-card-border: #F1F5F9;      
   
   /* Estados */
   --color-status-success: #22C55E;
@@ -19,11 +21,12 @@
   --color-status-danger: #EF4444;
   
   /* Tema Claro (Configuración nueva) */
-  --color-dark-main: #FCFCFC;        /* Fondo principal */
-  --color-dark-card: #FFFFFF;        /* Tarjetas blanco */
-  --color-dark-sidebar: #FFFFFF;     /* Sidebar blanco */
-  --color-dark-border: #F1F5F9;      /* Bordes en modo claro */
-  --color-dark-input: #FFFFFF;       /* Fondo de inputs */
+  --color-dark-main: #FCFCFC;        
+  --color-dark-card: #FFFFFF;        
+  --color-dark-sidebar: #FFFFFF;     
+  --color-dark-border: #F1F5F9;      
+  --color-dark-input: #FFFFFF;       
+
   /* Tipografía */
   --font-family-sans: "Inter", sans-serif;
 }

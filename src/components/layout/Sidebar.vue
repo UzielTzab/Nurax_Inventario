@@ -1,5 +1,6 @@
 <template>
-  <aside class="sidebar">
+  <div class="sidebar-overlay" :class="{ active: isOpen }" @click="$emit('close')"></div>
+  <aside class="sidebar" :class="{ 'mobile-open': isOpen }">
     <!-- Logo -->
     <div class="sidebar-header">
       <div class="logo">
@@ -106,7 +107,7 @@ import { useAuth } from '@/composables/useAuth';
 const router = useRouter();
 const route = useRoute();
 const { logout } = useAuth();
-const emit = defineEmits(['quickSell']);
+const emit = defineEmits(['quickSell', 'close']);
 
 const showUserMenu = ref(false);
 const menuRef = ref<HTMLElement | null>(null);
@@ -201,13 +202,23 @@ const setActive = (item: MenuItem) => {
   if (item.route) {
     router.push(item.route);
   }
+  // Auto-close on mobile
+  if (window.innerWidth <= 1024) {
+    emit('close');
+  }
 };
+
+defineProps<{
+  isOpen?: boolean;
+}>();
+
+
 </script>
 
 <style scoped>
 .sidebar {
   width: 220px;
-  background: var(--color-brand-secondary);
+  background: var(--color-brand-main);
   color: white;
   display: flex;
   flex-direction: column;
@@ -317,7 +328,7 @@ const setActive = (item: MenuItem) => {
   justify-content: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);
+  background: var(--color-brand-main);
   color: white;
   border: none;
   border-radius: 12px;
@@ -379,13 +390,13 @@ const setActive = (item: MenuItem) => {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #93471e;
   color: white;
   cursor: pointer;
 }
 
 .nav-item-active {
-  background: var(--color-brand-primary);
+  background: #c5632f;
   color: white;
   border-left: 3px solid transparent;
   font-weight: 1000;
@@ -399,12 +410,12 @@ const setActive = (item: MenuItem) => {
   transform: translateY(-50%);
   width: 3px;
   height: 20px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-brand-dark-main);
   border-radius: 2px;
 }
 
 .nav-item-active:hover {
-  background: rgba(34, 197, 94, 0.9);
+  background: var(--color-brand-dark-main);
   color: white;
 }
 
@@ -657,9 +668,33 @@ const setActive = (item: MenuItem) => {
   border-radius: 50%;
 }
 
+/* Mobile Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  display: none;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
   }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 12px rgba(0,0,0,0.2);
+  }
 }
 </style>
+
+
+

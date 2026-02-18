@@ -68,10 +68,10 @@ const trendClass = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  box-shadow: 0 9px 8px rgba(0, 0, 0, 0.01);
 }
 
 .stats-card:hover {
-  border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 

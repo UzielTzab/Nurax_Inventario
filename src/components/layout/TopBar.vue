@@ -80,8 +80,9 @@ const handleSearch = () => {
 <style scoped>
 .top-bar {
   background: var(--color-background);
-  border-bottom: 1px solid var(--color-card-border);
-  padding: 1.5rem 2rem;
+  padding-bottom: 2rem;
+  /* border-bottom: 1px solid var(--color-card-border); */
+  /* padding: 1.5rem 2rem; */
 }
 
 .top-bar-content {
@@ -96,7 +97,7 @@ const handleSearch = () => {
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.25rem 0;

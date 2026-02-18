@@ -1,20 +1,31 @@
 <template>
   <DashboardLayout @quick-sell="handleQuickSell">
-    <!-- Top Bar -->
-    <TopBar
-      title="Administración de inventario y ventas"
-      description="SISTEMA EN LÍNEA
-      "
-      :show-alerts="true"
-      :low-stock-count="lowStockProducts.length"
-      :out-of-stock-count="outOfStockProducts.length"
-      @quick-sell="handleQuickSell"
-      @add-product="handleAddProduct"
-    />
+
 
     <!-- Main Content -->
     <main class="dashboard-main">
       <div class="dashboard-container">
+        <!-- Header -->
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Inventario</h1>
+            <p class="page-subtitle">Administración de inventario y ventas</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-action primary" @click="handleQuickSell">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+                Vender
+            </button>
+            <button class="btn-action secondary" @click="handleAddProduct">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                Nuevo Producto
+            </button>
+          </div>
+        </div>
         <!-- Welcome Card -->
         <!-- <div class="welcome-card">
           <div class="welcome-card-content">
@@ -171,7 +182,7 @@ import {
   ArchiveBoxXMarkIcon 
 } from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import TopBar from '@/components/layout/TopBar.vue';
+
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import TabGroup, { type Tab } from '@/components/ui/TabGroup.vue';
@@ -321,7 +332,7 @@ const handleDeleteProduct = (product: Product) => {
   confirmationState.value = {
     isOpen: true,
     title: 'Eliminar Producto',
-    message: `¿Estás seguro de que deseas eliminar ${product.name}? Esta acción no se puede deshacer.`,
+    message: `¿Estás seguro de que deseas eliminar ${product.name}?`,
     type: 'danger',
     confirmText: 'Sí, eliminar',
     onConfirm: () => {
@@ -330,7 +341,17 @@ const handleDeleteProduct = (product: Product) => {
         type: 'success',
         title: 'Producto Eliminado',
         message: `${product.name} ha sido eliminado del inventario.`,
-        duration: 3000
+        duration: 5000,
+        actionLabel: 'Deshacer',
+        onAction: () => {
+          productStore.addProduct(product);
+          enqueueSnackbar({
+            type: 'info',
+            title: 'Acción deshecha',
+            message: `El producto ${product.name} ha sido restaurado.`,
+            duration: 3000
+          });
+        }
       });
       confirmationState.value.isOpen = false;
     }
@@ -341,16 +362,29 @@ const handleBulkDelete = (ids: string[]) => {
   confirmationState.value = {
     isOpen: true,
     title: 'Eliminar Productos',
-    message: `¿Estás seguro de que deseas eliminar ${ids.length} productos seleccionados? Esta acción no se puede deshacer.`,
+    message: `¿Estás seguro de que deseas eliminar ${ids.length} productos seleccionados?`,
     type: 'danger',
     confirmText: `Sí, eliminar ${ids.length} productos`,
     onConfirm: () => {
+      // Store products to restore before deleting
+      const productsToRestore = allProducts.value.filter(p => ids.includes(p.id));
+      
       productStore.bulkDeleteProducts(ids);
       enqueueSnackbar({
         type: 'success',
         title: 'Productos Eliminados',
         message: `${ids.length} productos han sido eliminados del inventario.`,
-        duration: 3000
+        duration: 5000,
+        actionLabel: 'Deshacer',
+        onAction: () => {
+          productsToRestore.forEach(p => productStore.addProduct(p));
+          enqueueSnackbar({
+            type: 'info',
+            title: 'Acción deshecha',
+            message: `Se han restaurado ${ids.length} productos.`,
+            duration: 3000
+          });
+        }
       });
       confirmationState.value.isOpen = false;
     }
@@ -374,16 +408,16 @@ const handleConfirmation = () => {
 </script>
 
 <style scoped>
+
 .dashboard-main {
   flex: 1;
   overflow-y: auto;
-  background: #f2f3f5;
 }
 
 .dashboard-container {
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .stats-grid {
@@ -624,6 +658,90 @@ const handleConfirmation = () => {
     padding-left: 0;
     border-top: 1px solid #F3F4F6;
     padding-top: 2rem;
+  }
+}
+
+/* Header Styles */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: #6B7280;
+  margin-top: 0.25rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-action svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-action.primary {
+  background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.1), 0 2px 4px -1px rgba(234, 88, 12, 0.06);
+}
+
+.btn-action.primary:hover {
+  background: linear-gradient(180deg, #EA580C 0%, #C2410C 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3), 0 4px 6px -2px rgba(234, 88, 12, 0.1);
+}
+
+.btn-action.secondary {
+  background: var(--color-brand-accent, #3B82F6);
+  color: white;
+}
+
+.btn-action.secondary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px 0 rgba(37, 99, 235, 0.3);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .btn-action {
+    flex: 1;
+    justify-content: center;
   }
 }
 </style>

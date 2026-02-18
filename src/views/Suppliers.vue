@@ -727,6 +727,38 @@ const openAddSupplierModal = () => {
     .supplier-contact-panel {
         border-right: none;
         border-bottom: 1px solid #E5E7EB;
+        padding: 1.5rem;
+    }
+
+    .supplier-products-panel {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .suppliers-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        max-height: 100vh;
+        border-radius: 0;
+        height: 100%;
+    }
+    
+    .modal-header {
+        padding: 1rem;
     }
 }
 </style>

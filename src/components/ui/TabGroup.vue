@@ -64,12 +64,16 @@ defineEmits<{
 }
 
 .tab-button:hover {
-  color: #111827;
+  color:#6b7280 ;
 }
 
 .tab-active {
-  color: var(--color-brand-secondary);
-  border-bottom-color: var(--color-brand-secondary);
+  color: var(--color-brand-dark-main);
+  border-bottom-color: var(--color-brand-dark-main);
+}
+
+.tab-active:hover {
+  color: var(--color-brand-dark-main);
 }
 
 .tab-count {
@@ -93,7 +97,7 @@ defineEmits<{
 
 .tab-active .tab-count {
   background: rgba(34, 197, 94, 0.1);
-  color: var(--color-brand-secondary);
+  color: var(--color-brand-main);
 }
 
 @media (max-width: 640px) {

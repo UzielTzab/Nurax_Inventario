@@ -4,7 +4,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Login from '@/views/Login.vue'
 
 // Views - Dashboard
-import Dashboard from '@/views/Dashboard.vue'
+import Inventory from '@/views/Inventory.vue'
 import SalesHistory from '@/views/SalesHistory.vue'
 import Suppliers from '@/views/Suppliers.vue'
 
@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard/inventory',
-    component: Dashboard,
+    component: Inventory,
     meta: { title: 'Inventario' }
   },
   {

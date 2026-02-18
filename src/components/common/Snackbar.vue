@@ -34,6 +34,14 @@
       </div>
 
       <button 
+        v-if="actionLabel" 
+        class="snackbar-action" 
+        @click="handleAction"
+      >
+        {{ actionLabel }}
+      </button>
+
+      <button 
         v-if="closable" 
         class="snackbar-close" 
         @click="close"
@@ -57,13 +65,17 @@ interface Props {
   duration?: number;
   closable?: boolean;
   show?: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'info',
   duration: 5000,
   closable: true,
-  show: false
+  show: false,
+  actionLabel: undefined,
+  onAction: undefined
 });
 
 const emit = defineEmits<{
@@ -76,6 +88,13 @@ let timeoutId: number | null = null;
 const close = () => {
   isVisible.value = false;
   emit('close');
+};
+
+const handleAction = () => {
+  if (props.onAction) {
+    props.onAction();
+    close();
+  }
 };
 
 const startTimer = () => {
@@ -230,6 +249,25 @@ onMounted(() => {
 .snackbar-close svg {
   width: 20px;
   height: 20px;
+}
+
+.snackbar-action {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+
+.snackbar-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Animations */

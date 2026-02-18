@@ -185,6 +185,7 @@ const getStatusText = (stock: number) => {
   border: 1px solid var(--color-card-border);
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .product-table {
@@ -194,7 +195,7 @@ const getStatusText = (stock: number) => {
 }
 
 thead {
-  background: var(--color-background);
+  background: var(--color-card-fill);
   /* border-bottom removed, handled by th */
 }
 

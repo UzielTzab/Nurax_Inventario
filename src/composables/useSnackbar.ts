@@ -6,6 +6,8 @@ export interface SnackbarOptions {
   message?: string;
   duration?: number;
   closable?: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 interface Snackbar extends SnackbarOptions {
@@ -26,7 +28,9 @@ export function useSnackbar() {
       title: options.title,
       message: options.message,
       duration: options.duration ?? 5000,
-      closable: options.closable ?? true
+      closable: options.closable ?? true,
+      actionLabel: options.actionLabel,
+      onAction: options.onAction
     };
 
     snackbars.value.push(snackbar);

@@ -9,6 +9,8 @@
       :duration="0"
       :closable="snackbar.closable"
       :show="snackbar.show"
+      :action-label="snackbar.actionLabel"
+      :on-action="snackbar.onAction"
       @close="closeSnackbar(snackbar.id)"
     />
   </div>

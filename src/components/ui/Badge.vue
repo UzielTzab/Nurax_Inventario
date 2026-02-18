@@ -31,7 +31,7 @@ const variantClass = computed(() => `badge-${props.variant}`);
 
 .badge-success {
   background: rgba(34, 197, 94, 0.1);
-  color: var(--color-brand-primary);
+  color: #099178;
 }
 
 .badge-warning {

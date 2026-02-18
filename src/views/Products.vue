@@ -1,18 +1,31 @@
 <template>
   <div class="flex h-screen bg-dark-main text-white">
     <Sidebar 
+      :isOpen="isSidebarOpen"
+      @close="isSidebarOpen = false"
       @openAddProduct="showAddProductModal = true" 
       @openInventoryReceipt="showInventoryReceipt = true"
     />
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden lg:ml-[220px]">
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-dark-main">
         <div class="container mx-auto px-6 py-8">
           <!-- Header con título y notificaciones -->
           <div class="flex items-center justify-between mb-2">
-            <div>
-              <h3 class="text-white text-3xl font-bold tracking-tight">Inventario de Productos</h3>
-              <p class="text-gray-400">Administra y visualiza la información de los productos</p>
+            <div class="flex items-center gap-3">
+              <!-- Mobile Sidebar Toggle -->
+              <button 
+                @click="isSidebarOpen = true" 
+                class="lg:hidden p-2 text-gray-400 hover:bg-white/10 rounded-lg"
+              >
+                <Bars3Icon class="h-6 w-6" />
+              </button>
+              
+              <div>
+                <h3 class="text-white text-2xl lg:text-3xl font-bold tracking-tight">Inventario</h3>
+                <p class="text-gray-400 text-sm lg:text-base">Administra tus productos</p>
+              </div>
             </div>
+            
             <!-- Botón de notificaciones -->
             <button 
               @click="showNotifications = true" 
@@ -346,7 +359,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
-import { MagnifyingGlassIcon, QrCodeIcon, FunnelIcon, BarsArrowUpIcon, PencilIcon, TrashIcon, BellAlertIcon, ClipboardIcon } from '@heroicons/vue/24/outline';
+import { MagnifyingGlassIcon, QrCodeIcon, FunnelIcon, BarsArrowUpIcon, PencilIcon, TrashIcon, BellAlertIcon, ClipboardIcon, Bars3Icon } from '@heroicons/vue/24/outline';
+
+const isSidebarOpen = ref(false);
 import Sidebar from '../components/layout/Sidebar.vue';
 import ProductDetail from '../components/ProductDetail.vue';
 import BarcodeScanner from '../components/BarcodeScanner.vue';

@@ -1,7 +1,19 @@
 <template>
   <div class="dashboard-layout">
-    <Sidebar @quick-sell="handleSidebarQuickSell" />
+    <Sidebar 
+      :isOpen="isSidebarOpen" 
+      @close="isSidebarOpen = false"
+      @quick-sell="handleSidebarQuickSell" 
+    />
     <div class="dashboard-content">
+      <div class="mobile-header">
+        <button @click="isSidebarOpen = true" class="btn-toggle">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        <span class="mobile-brand">Nurax Inventario</span>
+      </div>
       <slot />
     </div>
 
@@ -27,6 +39,7 @@
 
 <script setup lang="ts">
 
+import { ref } from 'vue';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import { useSalesStore } from '@/stores/sales.store';
@@ -34,6 +47,7 @@ import { useProductStore } from '@/stores/product.store';
 
 const salesStore = useSalesStore();
 const productStore = useProductStore();
+const isSidebarOpen = ref(false);
 
 const handleSaleCompleted = (items: any[]) => {
   items.forEach(item => {
@@ -41,7 +55,6 @@ const handleSaleCompleted = (items: any[]) => {
   });
 };
 
-// Handle legacy event just in case, though we prefer store direct usage now
 const handleSidebarQuickSell = () => {
     salesStore.openModal();
 };
@@ -62,11 +75,42 @@ defineEmits(['quickSell']);
   flex-direction: column;
   overflow-x: hidden;
   margin-left: 220px; /* Width of sidebar */
+  padding: 2rem;
+}
+
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.btn-toggle {
+  background: none;
+  border: none;
+  color: #374151;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.mobile-brand {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #111827;
 }
 
 @media (max-width: 1024px) {
   .dashboard-content {
     margin-left: 0;
+  }
+  
+  .mobile-header {
+    display: flex;
   }
 }
 

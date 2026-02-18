@@ -9,7 +9,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     vue(),
-    VueDevTools(),
+    VueDevTools({
+      launchEditor: 'open_editor.cmd'
+    }),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',

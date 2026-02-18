@@ -84,7 +84,7 @@ const handleLogin = async () => {
 }
 
 .branding-section {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
+  background: linear-gradient(135deg, rgba(2, 3, 3, 0.95) 0%, rgba(255, 59, 10, 0.95) 100%);
   color: white;
   display: flex;
   align-items: center;

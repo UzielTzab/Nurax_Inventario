@@ -26,7 +26,7 @@
           </div>
           <div class="stat-content">
             <h3>Ingresos de Hoy</h3>
-            <p class="stat-value">${{ formatMoney(todayIncome) }}</p>
+            <p class="stat-value">${{ formatMoney(todayIncome) }} MXN</p>
           </div>
         </div>
 
@@ -316,13 +316,20 @@ const chartOptions = {
 }
 
 .form-select {
-  padding: 0.5rem 2rem 0.5rem 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0.625rem 2.5rem 0.625rem 1rem;
   border-radius: 8px;
   border: 1px solid #E5E7EB;
   background-color: white;
   font-size: 0.875rem;
   color: #374151;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
 }
 
 .stats-grid {
@@ -491,9 +498,42 @@ const chartOptions = {
   height: 20px;
 }
 
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
   .sales-history-container {
     padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .date-filter, .form-select {
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-section {
+    padding: 1rem;
+  }
+  
+  .transactions-table {
+    font-size: 0.75rem;
+  }
+  
+  .transactions-table th, .transactions-table td {
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
   }
 }
 </style>

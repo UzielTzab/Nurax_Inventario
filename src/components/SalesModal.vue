@@ -70,9 +70,9 @@
                        <span class="product-price">${{ product.price.toFixed(2) }}</span>
                        <span 
                           class="product-stock"
-                          :class="{ 'stock-low': product.stock <= 10, 'stock-out': product.stock === 0 }"
+                          :class="{ 'stock-low': getAvailableStock(product) <= 10, 'stock-out': getAvailableStock(product) === 0 }"
                        >
-                          {{ product.stock }} en stock
+                          {{ getAvailableStock(product) }} en stock
                        </span>
                      </div>
                    </div>
@@ -202,29 +202,37 @@ const filteredProducts = computed(() => {
   );
 });
 
+// Helper to calculate available stock visually
+const getAvailableStock = (product: Product) => {
+  const item = cart.value.find(i => i.id === product.id);
+  const reserved = item ? item.quantity : 0;
+  return product.stock - reserved;
+};
+
 // Cart Logic
 const addToCart = (product: Product) => {
-  if (product.stock === 0) return; // Prevent adding out of stock items
+  const available = getAvailableStock(product);
+  
+  if (available <= 0) {
+      enqueueSnackbar({
+        type: 'warning',
+        title: 'Stock Insuficiente',
+        message: `No hay más stock disponible de ${product.name}`,
+        duration: 2000
+      });
+      return; 
+  }
   
   const existingItem = cart.value.find(item => item.id === product.id);
   
   if (existingItem) {
-    if (existingItem.quantity < product.stock) {
-        existingItem.quantity++;
-        enqueueSnackbar({
-          type: 'success',
-          title: 'Cantidad Actualizada',
-          message: `Se agregó una unidad más de ${product.name}`,
-          duration: 1500
-        });
-    } else {
-        enqueueSnackbar({
-          type: 'warning',
-          title: 'Stock Insuficiente',
-          message: `No hay más stock disponible de ${product.name}`,
-          duration: 2000
-        });
-    }
+      existingItem.quantity++;
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Cantidad Actualizada',
+        message: `Se agregó una unidad más de ${product.name}`,
+        duration: 1500
+      });
   } else {
     cart.value.push({ ...product, quantity: 1 });
     enqueueSnackbar({
@@ -259,7 +267,7 @@ const subtotal = computed(() => {
 });
 
 const tax = computed(() => {
-  return subtotal.value * 0.16;
+  return subtotal.value * 0.0;
 });
 
 const total = computed(() => {

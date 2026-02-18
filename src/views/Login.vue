@@ -185,7 +185,7 @@ const handleLogin = async () => {
 
 /* ===== LADO IZQUIERDO: BRANDING ===== */
 .branding-section {
-  background: linear-gradient(135deg, rgba(94, 148, 199, 0.95) 0%, rgb(0, 0, 0) 100%);
+  background: linear-gradient(135deg, rgba(197, 104, 93, 0.95) 0%, rgb(0, 0, 0) 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -293,7 +293,7 @@ const handleLogin = async () => {
 }
 
 .highlight {
-  color: var(--color-brand-primary);
+  color: #F97316;
   font-weight: 700;
   font-size: 2.5rem;
   margin: 0;
