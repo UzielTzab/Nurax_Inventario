@@ -3,8 +3,8 @@
 
 
     <!-- Main Content -->
-    <main class="dashboard-main">
-      <div class="dashboard-container">
+    <div class="inventory-wrapper">
+      <div class="inventory-inner">
         <!-- Header -->
         <div class="page-header">
           <div>
@@ -69,7 +69,8 @@
             :value="totalProducts"
             :trend="{ direction: 'up', value: '+12% vs last month' }"
             :icon="CubeIcon"
-            icon-type="primary"
+            icon-type="brand"
+            variant="brand"
           />
           <StatsCard
             label="Valor del inventario"
@@ -88,56 +89,19 @@
           />
         </div>
 
-        <!-- Tabs & View Toggle Row -->
-        <div class="tabs-actions-row">
-          <TabGroup
-            v-model="activeTab"
-            :tabs="tabs"
-            class="flex-1"
-          />
-          
-          <div class="view-toggle">
-            <button
-              class="view-btn"
-              :class="{ 'view-active': viewMode === 'list' }"
-              @click="viewMode = 'list'"
-              title="List View"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            <button
-              class="view-btn"
-              :class="{ 'view-active': viewMode === 'grid' }"
-              @click="viewMode = 'grid'"
-              title="Grid View"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4.25 2A2.25 2.25 0 002 4.25v2.5A2.25 2.25 0 004.25 9h2.5A2.25 2.25 0 009 6.75v-2.5A2.25 2.25 0 006.75 2h-2.5zM4.25 11A2.25 2.25 0 002 13.25v2.5A2.25 2.25 0 004.25 18h2.5A2.25 2.25 0 009 15.75v-2.5A2.25 2.25 0 006.75 11h-2.5zM13.25 2A2.25 2.25 0 0011 4.25v2.5A2.25 2.25 0 0013.25 9h2.5A2.25 2.25 0 0018 6.75v-2.5A2.25 2.25 0 0015.75 2h-2.5zM13.25 11A2.25 2.25 0 0011 13.25v2.5A2.25 2.25 0 0013.25 18h2.5A2.25 2.25 0 0018 15.75v-2.5A2.25 2.25 0 0015.75 11h-2.5z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Product Table -->
+        <!-- Product Table (with integrated filter panel) -->
         <ProductTable
-          v-if="viewMode === 'list'"
           :products="filteredProducts"
+          :filters="filters"
+          :low-stock-count="lowStockProducts.length"
+          :out-of-stock-count="outOfStockProducts.length"
           @edit="handleEditProduct"
           @delete="handleDeleteProduct"
           @delete-multiple="handleBulkDelete"
           @restock="handleRestock"
+          @update:filters="filters = $event"
         />
 
-        <!-- Product Grid -->
-        <ProductGrid
-          v-else
-          :products="filteredProducts"
-          @edit="handleEditProduct"
-          @delete="handleDeleteProduct"
-          @restock="handleRestock"
-        />
 
         <!-- Pagination -->
         <Pagination
@@ -147,7 +111,7 @@
         />
 
       </div>
-    </main>
+    </div>
 
     <!-- SalesModal removed (handled by layout) -->
     
@@ -177,17 +141,13 @@ import { ref, computed } from 'vue';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
-  ExclamationTriangleIcon,
-  RectangleStackIcon,
-  ArchiveBoxXMarkIcon 
+  ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import StatsCard from '@/components/dashboard/StatsCard.vue';
-import TabGroup, { type Tab } from '@/components/ui/TabGroup.vue';
 import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
-import ProductGrid from '@/components/dashboard/ProductGrid.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -226,24 +186,21 @@ const confirmationState = ref({
 
 
 
-// Tabs
-const activeTab = ref('all');
-
 // Filters type definition
 interface Filters {
   category: string;
   supplier: string;
   priceRange: string;
+  stockFilter: string; // 'all' | 'low-stock' | 'out-of-stock'
 }
 
 // Filters
 const filters = ref<Filters>({
   category: '',
   supplier: '',
-  priceRange: ''
+  priceRange: '',
+  stockFilter: 'all'
 });
-
-const viewMode = ref<'list' | 'grid'>('list');
 
 // Pagination
 const currentPage = ref(1);
@@ -252,16 +209,16 @@ const pageSize = ref(10);
 const filteredProducts = computed(() => {
   let products = [...allProducts.value];
 
-  // Filter by tab
-  if (activeTab.value === 'low-stock') {
+  // Filter by stock status
+  if (filters.value.stockFilter === 'low-stock') {
     products = products.filter(p => p.stock > 0 && p.stock <= 10);
-  } else if (activeTab.value === 'out-of-stock') {
+  } else if (filters.value.stockFilter === 'out-of-stock') {
     products = products.filter(p => p.stock === 0);
   }
 
   // Filter by category
   if (filters.value.category) {
-    products = products.filter(p => 
+    products = products.filter(p =>
       p.category.toLowerCase() === filters.value.category.toLowerCase()
     );
   }
@@ -270,10 +227,10 @@ const filteredProducts = computed(() => {
   if (filters.value.priceRange) {
     const parts = filters.value.priceRange.split('-');
     const min = parts[0] ? parseFloat(parts[0]) : 0;
-    const max = parts[1] && parts[1].replace('+', '') !== parts[1] 
-      ? Infinity 
+    const max = parts[1] && parts[1].replace('+', '') !== parts[1]
+      ? Infinity
       : parts[1] ? parseFloat(parts[1]) : Infinity;
-    
+
     products = products.filter(p => {
       if (max === Infinity) return p.price >= min;
       return p.price >= min && p.price <= max;
@@ -283,11 +240,6 @@ const filteredProducts = computed(() => {
   return products;
 });
 
-const tabs = computed<Tab[]>(() => [
-  { id: 'all', label: 'Todos los productos', count: totalProducts.value, icon: RectangleStackIcon },
-  { id: 'low-stock', label: 'Bajo inventario', count: lowStockProducts.value.length, icon: ExclamationTriangleIcon },
-  { id: 'out-of-stock', label: 'Sin inventario', count: outOfStockProducts.value.length, icon: ArchiveBoxXMarkIcon },
-]);
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
@@ -409,15 +361,16 @@ const handleConfirmation = () => {
 
 <style scoped>
 
-.dashboard-main {
+.inventory-wrapper {
   flex: 1;
   overflow-y: auto;
+  height: 100%;
 }
 
-.dashboard-container {
+.inventory-inner {
   max-width: 1800px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.75rem 2rem;
 }
 
 .stats-grid {
@@ -693,7 +646,7 @@ const handleConfirmation = () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 16px;
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
@@ -707,26 +660,28 @@ const handleConfirmation = () => {
 }
 
 .btn-action.primary {
-  background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);
+  background: var(--color-brand-main);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.1), 0 2px 4px -1px rgba(234, 88, 12, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(6, 64, 43, 0.2), 0 2px 4px -1px rgba(6, 64, 43, 0.1);
 }
 
 .btn-action.primary:hover {
-  background: linear-gradient(180deg, #EA580C 0%, #C2410C 100%);
+  background: #085036;
   transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3), 0 4px 6px -2px rgba(234, 88, 12, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(6, 64, 43, 0.3);
 }
 
 .btn-action.secondary {
-  background: var(--color-brand-accent, #3B82F6);
-  color: white;
+  background: white;
+  color: var(--color-text-main);
+  border: 1px solid var(--color-card-border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .btn-action.secondary:hover {
-  background: #2563eb;
+  background: #f9fafb;
+  border-color: #d1d5db;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px 0 rgba(37, 99, 235, 0.3);
 }
 
 @media (max-width: 768px) {

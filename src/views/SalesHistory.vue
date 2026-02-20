@@ -45,14 +45,30 @@
       </div>
 
       <!-- Weekly Trend Chart -->
-      <div class="chart-section">
-        <h3>Tendencia Semanal</h3>
-        <div class="chart-container">
-           <Line 
-             v-if="chartData" 
-             :data="chartData" 
-             :options="chartOptions" 
-           />
+      <!-- Charts Grid -->
+      <div class="charts-grid-section">
+        <!-- Weekly Trend Chart -->
+        <div class="chart-card">
+          <h3>Tendencia Semanal</h3>
+          <div class="chart-container">
+             <Line 
+               v-if="chartData" 
+               :data="chartData" 
+               :options="chartOptions" 
+             />
+          </div>
+        </div>
+
+        <!-- Top Products Chart -->
+        <div class="chart-card">
+          <h3>Top 3 Productos Más Vendidos</h3>
+          <div class="chart-container">
+             <Bar
+               v-if="barChartData"
+               :data="barChartData"
+               :options="barChartOptions"
+             />
+          </div>
         </div>
       </div>
 
@@ -112,18 +128,22 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  type ChartOptions
 } from 'chart.js';
-import { Line } from 'vue-chartjs';
+
+import { Line, Bar } from 'vue-chartjs';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -287,11 +307,107 @@ const chartOptions = {
     }
   }
 };
+
+// Top Products Logic
+const topProducts = computed(() => {
+  const productCounts: Record<string, number> = {};
+  
+  filteredSales.value.forEach(sale => {
+    // Check if items exists and is an array to be safe
+    if (Array.isArray(sale.items)) {
+      sale.items.forEach(item => {
+        const qty = item.quantity || 1;
+        productCounts[item.name] = (productCounts[item.name] || 0) + qty;
+      });
+    }
+  });
+
+  return Object.entries(productCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+});
+
+const barChartData = computed(() => {
+  return {
+    labels: topProducts.value.map(p => p.name),
+    datasets: [
+      {
+        label: 'Unidades',
+        backgroundColor: [
+          '#06402b', // Forest Green (1st)
+          '#22c55e', // Mint (2nd)
+          '#86efac'  // Light Mint (3rd)
+        ],
+        borderRadius: 8,
+        borderSkipped: false,
+        data: topProducts.value.map(p => p.count),
+        barThickness: 40
+      }
+    ]
+  };
+});
+
+const barChartOptions: ChartOptions<'bar'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false
+    },
+    tooltip: {
+      backgroundColor: '#1F2937',
+      titleColor: '#F9FAFB',
+      bodyColor: '#F9FAFB',
+      padding: 10,
+      cornerRadius: 8,
+      displayColors: true,
+      callbacks: {
+        label: function(context: any) {
+          return `${context.dataset.label}: ${context.parsed.y}`;
+        }
+      }
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: '#F3F4F6'
+      },
+      ticks: {
+        stepSize: 1,
+        color: '#9CA3AF',
+        font: {
+          size: 11
+        }
+      },
+      border: {
+        display: false
+      }
+    },
+    x: {
+      grid: {
+        display: false
+      },
+      ticks: {
+        color: '#6B7280',
+        font: {
+          size: 11,
+          weight: 'bold'
+        }
+      },
+      border: {
+        display: false
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>
 .sales-history-container {
-  padding: 1rem;
+  padding: 1.75rem 2rem;
   max-width: 100%;
   margin: 0;
 }
@@ -390,26 +506,38 @@ const chartOptions = {
   line-height: 1.2;
 }
 
-.chart-section {
+.charts-grid-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
   background: white;
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #E5E7EB;
-  margin-bottom: 2rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-section h3 {
+.chart-card h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #111827;
   margin: 0 0 1.5rem 0;
 }
 
+
+
 .chart-container {
-  height: 320px;
+  flex: 1;
   width: 100%;
   position: relative;
+  min-height: 250px;
 }
 
 .transactions-section {
@@ -523,7 +651,13 @@ const chartOptions = {
     grid-template-columns: 1fr;
   }
 
-  .chart-section {
+  .stats-grid, .charts-grid-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart-card {
+    min-width: 100%;
     padding: 1rem;
   }
   

@@ -65,6 +65,6 @@ const containerClasses = computed(() => {
 });
 
 const inputClasses = computed(() => {
-  return 'w-full pl-10 pr-10 py-2 bg-dark-input border border-dark-border text-white rounded-lg focus:border-transparent placeholder-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+  return 'w-full pl-10 pr-10 py-2 bg-dark-input border border-dark-border text-gray-900 rounded-lg focus:border-transparent placeholder-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed';
 });
 </script>

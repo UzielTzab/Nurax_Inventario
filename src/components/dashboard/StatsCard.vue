@@ -33,9 +33,9 @@ interface Props {
   value: number | string;
   subtitle?: string;
   trend?: Trend;
-  variant?: 'default' | 'danger' | 'success';
+  variant?: 'default' | 'danger' | 'success' | 'brand';
   icon?: any;
-  iconType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'purple';
+  iconType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'brand';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -59,16 +59,16 @@ const trendClass = computed(() => {
 <style scoped>
 .stats-card {
   background: var(--color-card-fill);
-  border: 2px solid var(--color-card-border);
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: 32px;
+  padding: 1.5rem;
   flex: 1;
   min-width: 200px;
   transition: all 0.2s;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  box-shadow: 0 9px 8px rgba(0, 0, 0, 0.01);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .stats-card:hover {
@@ -163,6 +163,37 @@ const trendClass = computed(() => {
 .card-success .stats-subtitle {
   color: #14532d;
   opacity: 0.8;
+}
+
+.card-brand {
+  background-color: var(--color-brand-main);
+  border-color: var(--color-brand-main);
+  color: white;
+}
+
+.card-brand .stats-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.card-brand .stats-value {
+  color: white;
+}
+
+.card-brand .stats-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.card-brand .stats-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.card-brand .stats-trend {
+  color: white;
+}
+
+.card-brand .trend-up, .card-brand .trend-down {
+  color: white;
 }
 
 .stats-header {

@@ -23,7 +23,7 @@ const variantClass = computed(() => `badge-${props.variant}`);
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.75rem;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;

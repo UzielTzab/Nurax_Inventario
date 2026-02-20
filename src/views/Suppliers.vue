@@ -268,7 +268,7 @@ const openAddSupplierModal = () => {
 
 <style scoped>
 .suppliers-container {
-  padding: 1rem;
+  padding: 1.75rem 2rem;
   max-width: 100%;
   margin: 0;
 }

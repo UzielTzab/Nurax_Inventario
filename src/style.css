@@ -2,30 +2,33 @@
 @import "tailwindcss";
 
 @theme {
-  /* Marca - Colores Principales (Nueva Paleta) */
-  --color-brand-main: #F97316;
-  --color-brand-dark-main: #EA580C;
-  --color-brand-primary: #fe4365;    
-  --color-brand-secondary: #1C252E; 
-  --color-brand-accent: #3B82F6;     
-  --color-brand-contrast: #22C55E;   
+  /* Marca - Nueva Paleta */
+  --color-brand-main: #06402B;       /* Verde Bosque Profundo */
+  --color-brand-secondary: #22c55e;  /* Verde Menta Vibrante */
+  --color-brand-contrast: #22c55e;   /* Alias para compatibilidad */
   
   /* Fondos y Diseño */
-  --color-background: #F8F8F8;       
-  --color-card-fill: #FFFFFF;        
-  --color-card-border: #F1F5F9;      
+  --color-background: #f8faf9;       /* Blanco Grisáceo */
+  --color-card-fill: #ffffff;        /* Blanco Puro */
+  --color-card-border: #e5e7eb;      /* Gris Claro */
+  
+  /* Textos - Nuevos */
+  --color-text-main: #1f2937;        /* Carbón */
+  --color-text-secondary: #6b7280;   /* Gris Medio */
   
   /* Estados */
-  --color-status-success: #22C55E;
-  --color-status-warning: #F97316;
-  --color-status-danger: #EF4444;
+  --color-status-success: #22c55e;
+  --color-status-warning: #f97316;
+  --color-status-danger: #ef4444;
   
-  /* Tema Claro (Configuración nueva) */
-  --color-dark-main: #FCFCFC;        
-  --color-dark-card: #FFFFFF;        
-  --color-dark-sidebar: #FFFFFF;     
-  --color-dark-border: #F1F5F9;      
-  --color-dark-input: #FFFFFF;       
+  /* Tema Claro (Variables de soporte para legacy) */
+  --color-brand-dark-main: #06402b;
+  --color-brand-primary: #06402b;
+  --color-dark-main: #ffffff;        
+  --color-dark-card: #ffffff;        
+  --color-dark-sidebar: #ffffff;     
+  --color-dark-border: #e5e7eb;      
+  --color-dark-input: #ffffff;       
 
   /* Tipografía */
   --font-family-sans: "Inter", sans-serif;
@@ -33,25 +36,27 @@
 
 body {
   font-family: 'Inter', sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Opcional: Estilo global para scrollbars oscuros si quieres ese look pro */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-dark-main);
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-dark-border);
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }
