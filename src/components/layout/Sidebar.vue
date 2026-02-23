@@ -5,7 +5,8 @@
       <div class="logo">
         <div class="logo-icon-container">
           <div class="logo-icon">
-            <img src="/nurax_logo.png" alt="Logo"></img>
+            <!-- Leaf icon -->
+            <img src="/public/nurax_logo.png" alt="Logo">
           </div>
         </div>
         <div class="logo-text-container">
@@ -29,10 +30,12 @@
           :class="{ 'nav-item-active': activeItem === item.id }"
           @click.prevent="setActive(item)"
         >
-          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path :fill-rule="item.iconFillRule || 'evenodd'" :d="item.iconPath" :clip-rule="item.iconClipRule || 'evenodd'" />
-          </svg>
-          <span>{{ item.label }}</span>
+          <!-- Icon: outline when inactive, solid when active -->
+          <component
+            :is="activeItem === item.id ? item.iconSolid : item.iconOutline"
+            class="nav-icon"
+          />
+          <span class="nav-text">{{ item.label }}</span>
         </a>
       </div>
     </nav>
@@ -42,26 +45,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useAuth } from '@/composables/useAuth';
+import type { Component } from 'vue';
+
+// Heroicons Outline (inactivo)
+import {
+  CubeIcon as CubeOutline,
+  ShoppingBagIcon as ShoppingBagOutline,
+  UsersIcon as UsersOutline,
+  UserGroupIcon as UserGroupOutline,
+} from '@heroicons/vue/24/outline';
+
+// Heroicons Solid (activo)
+import {
+  CubeIcon as CubeSolid,
+  ShoppingBagIcon as ShoppingBagSolid,
+  UsersIcon as UsersSolid,
+  UserGroupIcon as UserGroupSolid,
+} from '@heroicons/vue/24/solid';
 
 const router = useRouter();
 const route = useRoute();
 const emit = defineEmits(['quickSell', 'close']);
+const { currentUser } = useAuth();
 
 // Tipos para el menú
 interface MenuItem {
   id: string;
   label: string;
   route?: string;
-  iconPath: string;
-  iconFillRule?: 'evenodd' | 'nonzero' | 'inherit';
-  iconClipRule?: 'evenodd' | 'nonzero' | 'inherit';
+  iconOutline: Component; // Componente Heroicon Outline (inactivo)
+  iconSolid: Component;   // Componente Heroicon Solid (activo)
+  roles?: string[];
 }
 
 interface MenuSection {
   label: string;
   items: MenuItem[];
+  roles?: string[];
 }
 
 const activeItem = ref('inventory');
@@ -69,54 +92,81 @@ const activeItem = ref('inventory');
 // Sync active item with route
 watch(() => route.path, (path) => {
   if (path.includes('/dashboard/sales')) {
-    activeItem.value = 'orders'; // 'orders' is the ID for Sales History in our menu
+    activeItem.value = 'orders';
   } else if (path.includes('/dashboard/suppliers')) {
     activeItem.value = 'suppliers';
   } else if (path.includes('/dashboard/inventory') || path === '/dashboard') {
     activeItem.value = 'inventory';
+  } else if (path.includes('/dashboard/clients')) {
+    activeItem.value = 'clients';
   }
 }, { immediate: true });
 
-// Configuración del menú
-const menuSections = ref<MenuSection[]>([
+// Todas las secciones del menú con control de roles
+const allMenuSections: MenuSection[] = [
   {
     label: '',
+    roles: ['cliente'],
     items: [
       {
         id: 'inventory',
         label: 'Inventario',
         route: '/dashboard/inventory',
-        iconPath: 'M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 001.972 0l.74-4.435A1 1 0 0110.853 2H13a1 1 0 011 1v2h.5A1.5 1.5 0 0115.5 6.5v9A1.5 1.5 0 0114 16.5H2A1.5 1.5 0 01.5 15v-9A1.5 1.5 0 012 4.5H2.5V3zm6 2v2h2V5H8z',
-        iconFillRule: 'evenodd',
-        iconClipRule: 'evenodd'
+        roles: ['cliente'],
+        iconOutline: CubeOutline,
+        iconSolid: CubeSolid,
       },
       {
         id: 'orders',
         label: 'Historial de ventas',
         route: '/dashboard/sales',
-        iconPath: 'M3 4a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4zm3 6h6v2H6v-2zm0 4h6v2H6v-2z',
-        iconFillRule: 'evenodd',
-        iconClipRule: 'evenodd'
+        roles: ['cliente'],
+        iconOutline: ShoppingBagOutline,
+        iconSolid: ShoppingBagSolid,
       },
       {
         id: 'suppliers',
         label: 'Proveedores',
         route: '/dashboard/suppliers',
-        iconPath: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-        iconFillRule: 'evenodd',
-        iconClipRule: 'evenodd'
+        roles: ['cliente'],
+        iconOutline: UsersOutline,
+        iconSolid: UsersSolid,
       }
     ]
   },
- 
-]);
+  {
+    label: 'Administración',
+    roles: ['admin'],
+    items: [
+      {
+        id: 'clients',
+        label: 'Clientes',
+        route: '/dashboard/clients',
+        roles: ['admin'],
+        iconOutline: UserGroupOutline,
+        iconSolid: UserGroupSolid,
+      }
+    ]
+  }
+];
+
+// Menú filtrado según el rol del usuario actual
+const menuSections = computed(() => {
+  const role = currentUser.value?.role ?? 'cliente';
+  return allMenuSections
+    .filter(s => !s.roles || s.roles.includes(role))
+    .map(s => ({
+      ...s,
+      items: s.items.filter(i => !i.roles || i.roles.includes(role))
+    }))
+    .filter(s => s.items.length > 0);
+});
 
 const setActive = (item: MenuItem) => {
   activeItem.value = item.id;
   if (item.route) {
     router.push(item.route);
   }
-  // Auto-close on mobile
   if (window.innerWidth <= 1024) {
     emit('close');
   }
@@ -126,13 +176,12 @@ defineProps<{
   isOpen?: boolean;
 }>();
 
-
 </script>
 
 <style scoped>
 .sidebar {
   width: 100%;
-  background: #ffffff;
+  background: var(--color-card-stats-fill);
   color: var(--color-text-main);
   display: flex;
   flex-direction: column;
@@ -155,11 +204,11 @@ defineProps<{
 .logo-icon-container {
   width: 40px;
   height: 40px;
-  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border-radius: 50%;
 }
 
 .logo-icon {
@@ -185,7 +234,7 @@ defineProps<{
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--color-brand-main);
+  color: var(--color-brand-main-dark);
   line-height: 1;
 }
 
@@ -237,7 +286,7 @@ defineProps<{
   border: none;
   border-radius: 16px;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 3rem;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.1), 0 2px 4px -1px rgba(234, 88, 12, 0.06);
@@ -285,25 +334,31 @@ defineProps<{
   gap: 0.75rem;
   padding: 0.7rem 1.25rem;
   margin: 0 0.5rem;
-  border-radius: 10px;
-  color: var(--color-text-secondary);
+  border-radius: 24px;
+  color: var(--color-brand-main);
   text-decoration: none;
-  font-size: 0.925rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 300;
   transition: all 0.2s;
   position: relative;
 }
 
 .nav-item:hover {
-  background: rgba(6, 64, 43, 0.05);
+  background: rgba(58, 66, 63, 0.05);
   color: var(--color-brand-main);
   cursor: pointer;
 }
 
 .nav-item-active {
   background: transparent;
-  color: var(--color-brand-main);
   font-weight: 700;
+}
+
+.nav-item-active .nav-text {
+  background: #000000;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Pill indicator izquierdo redondeado */
@@ -311,37 +366,31 @@ defineProps<{
   content: '';
   display: block;
   position: absolute;
-  left: -0rem;
+  left: -1rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 60%;
-  background: var(--color-brand-main);
-  border-radius: 0 4px 4px 0;
+  width: 10px;
+  height: 100%;
+  /* Gradiente especial: verde claro -> verde oscuro -> verde claro */
+  background: linear-gradient(210deg, #4ade80 0%, #06402b 100%);
+  border-radius: 0 10px 10px 0;
 }
 
 .nav-item-active:hover {
   background: rgba(6, 64, 43, 0.04);
-  color: var(--color-brand-main);
 }
 
 .nav-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  color: inherit;
+  color: var(--color-brand-main);
   transition: color 0.2s;
-}
-
-.nav-icon svg {
-  width: 100%;
-  height: 100%;
-  color: inherit;
 }
 
 .nav-item-active .nav-icon,
 .nav-item-active .nav-icon svg {
-  color: var(--color-brand-main);
+  color: var(--color-brand-main); /* Icono en sólido main */
 }
 
 

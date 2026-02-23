@@ -94,7 +94,10 @@
             <td class="td-product">
               <div class="product-info">
                 <div class="product-image">
-                  <img :src="product.image" :alt="product.name" />
+                  <img v-if="product.image" :src="product.image" :alt="product.name" />
+                  <div v-else class="empty-image">
+                    <PhotoIcon class="empty-icon" />
+                  </div>
                 </div>
                 <div class="product-details">
                   <div class="product-name">{{ product.name }}</div>
@@ -177,6 +180,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { PhotoIcon } from '@heroicons/vue/24/outline';
 import Badge from '../ui/Badge.vue';
 
 export interface Product {
@@ -302,7 +306,7 @@ const getStatusText = (stock: number) => {
    ===================== */
 .product-table-wrapper {
   background: var(--color-card-fill);
-  border-radius: 16px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
@@ -559,6 +563,21 @@ td {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.empty-image {
+  width: 100%;
+  height: 100%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  width: 24px;
+  height: 24px;
+  color: #9ca3af;
 }
 
 .product-details {

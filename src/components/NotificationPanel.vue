@@ -1,13 +1,13 @@
 <template>
   <Transition
     enter-active-class="transition ease-out duration-300"
-    enter-from-class="opacity-0 translate-x-full"
-    enter-to-class="opacity-100 translate-x-0"
+    enter-from-class="opacity-0 translate-y-2"
+    enter-to-class="opacity-100 translate-y-0"
     leave-active-class="transition ease-in duration-200"
-    leave-from-class="opacity-100 translate-x-0"
-    leave-to-class="opacity-0 translate-x-full"
+    leave-from-class="opacity-100 translate-y-0"
+    leave-to-class="opacity-0 translate-y-2"
   >
-    <div v-if="isOpen" class="fixed right-4 top-4 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] flex flex-col">
+    <div v-if="isOpen" class="w-full bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-6rem)] flex flex-col">
       <!-- Header -->
       <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <div class="flex items-center">
@@ -63,7 +63,7 @@
                       notification.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                     ]"
                   >
-                    {{ notification.product.status }}
+                    {{ notification.severity === 'critical' ? 'Agotado' : 'Bajo Stock' }}
                   </span>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">SKU: {{ notification.product.sku }}</p>
@@ -76,7 +76,7 @@
                         notification.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'
                       ]"
                     >
-                      {{ notification.product.quantity }} unidades
+                      {{ notification.product.stock }} unidades
                     </span>
                   </div>
                   <button 
@@ -115,33 +115,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { BellAlertIcon, XMarkIcon, ExclamationTriangleIcon, CubeIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
-
-interface SerializedItem {
-  serialNumber: string;
-  barcode: string;
-  status: 'available' | 'sold' | 'reserved';
-  soldTo?: string;
-  soldDate?: string;
-  saleTicket?: string;
-}
-
-interface Product {
-  name: string;
-  category: string;
-  sku: string;
-  quantity: number;
-  price: string;
-  supplier: string;
-  status: string;
-  image: string;
-  barcode: string;
-  trackingMode: 'bulk' | 'serialized';
-  serializedItems?: SerializedItem[];
-  barcodeType: 'generated' | 'factory';
-  factoryBarcode?: string;
-  brand?: string;
-  model?: string;
-}
+import type { Product } from '@/stores/product.store';
 
 interface Notification {
   sku: string;
@@ -163,16 +137,16 @@ defineEmits<{
 
 const notifications = computed<Notification[]>(() => {
   return props.products
-    .filter(product => product.quantity <= 10)
+    .filter(product => product.stock <= 10)
     .map(product => ({
       sku: product.sku,
       product,
-      severity: (product.quantity === 0 ? 'critical' : 'warning') as 'critical' | 'warning',
-      message: product.quantity === 0 
+      severity: (product.stock === 0 ? 'critical' : 'warning') as 'critical' | 'warning',
+      message: product.stock === 0 
         ? '⚠️ Producto agotado. Se requiere reabastecimiento inmediato.'
-        : `⚠️ Stock bajo. Solo quedan ${product.quantity} unidades disponibles.`
+        : `⚠️ Stock bajo. Solo quedan ${product.stock} unidades disponibles.`
     }))
-    .sort((a, b) => a.product.quantity - b.product.quantity);
+    .sort((a, b) => a.product.stock - b.product.stock);
 });
 
 const criticalCount = computed(() => 

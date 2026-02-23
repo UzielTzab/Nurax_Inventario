@@ -147,12 +147,12 @@
                     placeholder="Escanea o escribe el número de serie..."
                     class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
-                  <button
+                  <AppButton
+                    variant="fill"
                     @click="addSerialNumber"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     Agregar
-                  </button>
+                  </AppButton>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">Presiona Enter o clic en "Agregar" después de escanear</p>
               </div>
@@ -210,41 +210,31 @@
 
         <!-- Footer -->
         <div class="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <button
+          <AppButton
+            variant="outline"
             @click="closeModal"
-            class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
           >
             Cancelar
-          </button>
+          </AppButton>
           
-          <button
+          <AppButton
             v-if="currentStep === 1"
+            variant="fill"
             @click="goToStep2"
             :disabled="!selectedProduct"
-            :class="[
-              'px-6 py-2 rounded-lg font-medium transition-colors',
-              selectedProduct
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            ]"
           >
             Siguiente →
-          </button>
+          </AppButton>
 
-          <button
+          <AppButton
             v-if="currentStep === 2"
+            variant="fill"
             @click="saveReceipt"
             :disabled="!canSave"
-            :class="[
-              'px-6 py-2 rounded-lg font-medium transition-colors flex items-center',
-              canSave
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            ]"
           >
             <CheckCircleIcon class="h-5 w-5 mr-2" />
             Guardar Entrada
-          </button>
+          </AppButton>
         </div>
       </div>
     </div>

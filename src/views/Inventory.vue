@@ -12,18 +12,18 @@
             <p class="page-subtitle">Administración de inventario y ventas</p>
           </div>
           <div class="header-actions">
-            <button class="btn-action primary" @click="handleQuickSell">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-                Vender
-            </button>
-            <button class="btn-action secondary" @click="handleAddProduct">
+            <AppButton variant="outline" @click="handleAddProduct">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
                 Nuevo Producto
-            </button>
+            </AppButton>
+            <AppButton variant="fill" @click="handleQuickSell">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+                Vender
+            </AppButton>
           </div>
         </div>
         <!-- Welcome Card -->
@@ -87,6 +87,7 @@
             :icon="ExclamationTriangleIcon"
             :icon-type="outOfStockProducts.length > 0 ? 'danger' : 'success'"
           />
+
         </div>
 
         <!-- Product Table (with integrated filter panel) -->
@@ -368,6 +369,7 @@ const handleConfirmation = () => {
 }
 
 .inventory-inner {
+  background: var(--color-card-stats-fill);
   max-width: 1800px;
   margin: 0 auto;
   padding: 1.75rem 2rem;
@@ -662,7 +664,6 @@ const handleConfirmation = () => {
 .btn-action.primary {
   background: var(--color-brand-main);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(6, 64, 43, 0.2), 0 2px 4px -1px rgba(6, 64, 43, 0.1);
 }
 
 .btn-action.primary:hover {

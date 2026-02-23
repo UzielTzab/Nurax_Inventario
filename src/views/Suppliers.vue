@@ -6,12 +6,12 @@
           <h1 class="page-title">Proveedores</h1>
           <p class="page-subtitle">Gestiona la relación con tus proveedores y surtido de productos</p>
         </div>
-        <button class="btn-primary" @click="openAddSupplierModal">
+        <AppButton variant="fill" @click="openAddSupplierModal">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
           </svg>
           Nuevo Proveedor
-        </button>
+        </AppButton>
       </div>
 
       <!-- Search Bar -->
@@ -66,11 +66,7 @@
               <span class="stats-value">{{ supplier.products.length }}</span>
               <span class="stats-label">Productos</span>
             </div>
-            <div class="stats-item">
-              <span class="stats-value highlight">4.8</span>
-              <span class="stats-label">Rating</span>
-            </div>
-            <button class="btn-details">Ver Detalles</button>
+            <AppButton variant="outline">Ver Detalles</AppButton>
           </div>
         </div>
       </div>
@@ -117,8 +113,8 @@
                     </div>
                 </div>
                 <div class="contact-actions">
-                    <button class="btn-action primary">Enviar Mensaje</button>
-                    <button class="btn-action secondary">Editar Info</button>
+                    <AppButton variant="fill">Enviar Mensaje</AppButton>
+                    <AppButton variant="outline">Editar Info</AppButton>
                 </div>
              </div>
 
@@ -268,9 +264,10 @@ const openAddSupplierModal = () => {
 
 <style scoped>
 .suppliers-container {
-  padding: 1.75rem 2rem;
-  max-width: 100%;
-  margin: 0;
+background: var(--color-card-stats-fill);
+padding: 1.75rem 2rem;
+max-width: 100%;
+margin: 0;
 }
 
 .page-header {
@@ -307,7 +304,7 @@ const openAddSupplierModal = () => {
 }
 
 .btn-primary:hover {
-    background: var(--color-brand-accent);
+    box-shadow: 0 4px 6px -1px rgba(6, 64, 43, 0.2), 0 2px 4px -1px rgba(6, 64, 43, 0.1);
 }
 
 .btn-primary svg {
@@ -357,7 +354,6 @@ const openAddSupplierModal = () => {
 
 .supplier-card {
     background: white;
-    border: 1px solid #E5E7EB;
     border-radius: 16px;
     overflow: hidden;
     cursor: pointer;

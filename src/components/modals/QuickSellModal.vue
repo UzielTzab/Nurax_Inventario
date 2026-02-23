@@ -28,8 +28,8 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-cancel" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="btn-confirm">Registrar Venta</button>
+          <AppButton variant="outline" type="button" @click="$emit('close')">Cancelar</AppButton>
+          <AppButton variant="fill" type="submit">Registrar Venta</AppButton>
         </div>
       </form>
     </div>

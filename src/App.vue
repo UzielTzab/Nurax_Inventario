@@ -2,22 +2,19 @@
 import { RouterView } from 'vue-router'
 import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import SnackbarContainer from '@/components/common/SnackbarContainer.vue'
-import { useAuth } from '@/composables/useAuth'
 import { useLoadingScreen } from '@/composables/useLoadingScreen'
 import { useRouter } from 'vue-router'
 
-const { completeLogin } = useAuth()
 const router = useRouter()
-const { isLoadingScreen, loadingUserEmail, completeLoadingScreen } = useLoadingScreen()
+const { isLoadingScreen, completeLoadingScreen } = useLoadingScreen()
 
 const handleLoadingComplete = async () => {
-  console.log('✅ Carga completada! Completando login...')
-  completeLogin(loadingUserEmail.value)
+  console.log('✅ Carga completada! Redirigiendo...')
   
-  // Navegar primero (mientras LoadingScreen está visible)
-  await router.push('/dashboard')
+  // Como ahora usamos la API, el currentUser ya fue seteado directo en el useAuth.
+  // Nos vamos directo a la ruta principal de Inventario para ambos roles.
+  await router.push('/dashboard/inventory')
   
-  // Completar el loading después de navegar
   completeLoadingScreen()
 }
 </script>

@@ -167,20 +167,13 @@
 
               <!-- Action Buttons -->
               <div class="flex gap-3 pt-4 border-t border-gray-200">
-                <button 
-                  type="button"
-                  @click="$emit('close')"
-                  class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium transition-colors"
-                >
+                <AppButton variant="outline" type="button" class="flex-1" @click="$emit('close')">
                   Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-md font-medium transition-colors flex items-center justify-center"
-                >
-                  <CheckIcon class="h-5 w-5 mr-2" />
+                </AppButton>
+                <AppButton variant="fill" type="submit" class="flex-1">
+                  <CheckIcon />
                   Guardar Cambios
-                </button>
+                </AppButton>
               </div>
             </form>
           </div>

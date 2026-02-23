@@ -238,7 +238,7 @@ const chartData = computed(() => {
         pointHoverRadius: 6,
         data: weeklyData.value.map(d => d.amount),
         fill: true,
-        tension: 0.4
+        tension: 0
       }
     ]
   };
@@ -274,6 +274,7 @@ const chartOptions = {
   },
   scales: {
     y: {
+      title: { display: true, text: 'Ventas (MXN)', color: '#9CA3AF', font: { weight: 'bold' as const } },
       beginAtZero: true,
       grid: {
         color: '#F3F4F6'
@@ -292,6 +293,7 @@ const chartOptions = {
       }
     },
     x: {
+      title: { display: true, text: 'Días de la semana', color: '#9CA3AF', font: { weight: 'bold' as const } },
       grid: {
         display: false
       },
@@ -371,6 +373,7 @@ const barChartOptions: ChartOptions<'bar'> = {
   },
   scales: {
     y: {
+      title: { display: true, text: 'Unidades vendidas', color: '#9CA3AF', font: { weight: 'bold' as const } },
       beginAtZero: true,
       grid: {
         color: '#F3F4F6'
@@ -387,6 +390,7 @@ const barChartOptions: ChartOptions<'bar'> = {
       }
     },
     x: {
+      title: { display: true, text: 'Nombres de los Productos', color: '#9CA3AF', font: { weight: 'bold' as const } },
       grid: {
         display: false
       },
@@ -407,6 +411,7 @@ const barChartOptions: ChartOptions<'bar'> = {
 
 <style scoped>
 .sales-history-container {
+  background: var(--color-card-stats-fill);
   padding: 1.75rem 2rem;
   max-width: 100%;
   margin: 0;
@@ -459,11 +464,9 @@ const barChartOptions: ChartOptions<'bar'> = {
   background: white;
   padding: 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  border: 1px solid #E5E7EB;
 }
 
 .stat-icon {
@@ -518,7 +521,6 @@ const barChartOptions: ChartOptions<'bar'> = {
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #E5E7EB;
   min-height: 400px;
   display: flex;
   flex-direction: column;
@@ -544,7 +546,6 @@ const barChartOptions: ChartOptions<'bar'> = {
   background: white;
   padding: 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #E5E7EB;
 }
 

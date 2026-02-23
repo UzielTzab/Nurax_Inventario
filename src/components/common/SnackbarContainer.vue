@@ -1,5 +1,5 @@
 <template>
-  <div class="snackbar-container">
+  <TransitionGroup name="snackbar-list" tag="div" class="snackbar-container">
     <Snackbar
       v-for="snackbar in snackbars"
       :key="snackbar.id"
@@ -13,7 +13,7 @@
       :on-action="snackbar.onAction"
       @close="closeSnackbar(snackbar.id)"
     />
-  </div>
+  </TransitionGroup>
 </template>
 
 <script setup lang="ts">
@@ -26,13 +26,45 @@ const { snackbars, closeSnackbar } = useSnackbar();
 <style scoped>
 .snackbar-container {
   position: fixed;
-  top: 0;
-  right: 0;
+  top: 1.5rem;
+  right: 1.5rem;
   z-index: 9999;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-end;
 }
 
-.snackbar-container > * {
-  pointer-events: auto;
+/* Transitions for dynamic list stacking */
+.snackbar-list-move,
+.snackbar-list-enter-active,
+.snackbar-list-leave-active {
+  transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.snackbar-list-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.snackbar-list-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.snackbar-list-leave-active {
+  position: absolute; /* Ensures smooth moving of remaining items */
+  right: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .snackbar-container {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    align-items: stretch;
+  }
 }
 </style>

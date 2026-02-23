@@ -1,68 +1,78 @@
-// import apiClient from './api'  // TODO: Uncomment when API is ready
+import apiClient from './api'
 
-interface LoginData {
+export interface LoginData {
   email: string
   password: string
 }
 
-// TODO: Use this when API integration is complete
-// interface AuthResponse {
-//   token: string
-//   user: {
-//     id: string
-//     email: string
-//     name: string
-//   }
-// }
+export interface LoginBackendResponse {
+  access: string
+  refresh: string
+}
 
-// TODO: Remove _ignore comments when API is ready
+export interface UserProfileResponse {
+  id: number
+  username: string
+  name: string
+  email: string
+  role: 'admin' | 'cliente' // u otros roles
+}
+
+export interface UnifiedAuthResponse {
+  success: boolean
+  access?: string
+  refresh?: string
+  user?: UserProfileResponse
+  error?: string
+}
+
 const authService = {
   /**
-   * Autenticar usuario
+   * 1. Autenticar usuario (Obtiene Tokens)
    */
   async login(credentials: LoginData) {
-    // TODO: Implementar cuando API esté lista
-    // return apiClient.post<AuthResponse>('/auth/login', credentials)
-    return { 
-      success: true, 
-      data: {
-        token: 'placeholder_token',
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: 'User'
-        }
-      }
-    }
+    const res = await apiClient.post<LoginBackendResponse>('/auth/login/', credentials)
+    return res
   },
 
   /**
-   * Registrar nuevo usuario
+   * 2. Obtener Perfil del Usuario Logueado
    */
-  async register(_data: LoginData & { name: string }) {
-    // TODO: Implementar cuando API esté lista
-    // return apiClient.post<AuthResponse>('/auth/register', data)
-    return { success: true, data: null }
+  async fetchUser() {
+    const res = await apiClient.get<UserProfileResponse>('/users/me/')
+    return res
   },
 
   /**
-   * Cerrar sesión
+   * Registrar nuevo usuario (Placeholder)
+   */
+  async register(data: LoginData & { name: string }) {
+    // Cuando el endpoint esté listo
+    return apiClient.post('/auth/register/', data)
+  },
+
+  /**
+   * Cerrar sesión (limpia cache local)
    */
   async logout() {
-    // TODO: Implementar cuando API esté lista
-    // return apiClient.post('/auth/logout')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     return { success: true }
   },
 
   /**
-   * Verificar token
+   * Verificar token (Opcional, si tienes endpoint Verify)
    */
-  async verifyToken(_token: string) {
-    // TODO: Implementar cuando API esté lista
-    // return apiClient.get('/auth/verify', { 
-    //   headers: { Authorization: `Bearer ${token}` } 
-    // })
-    return { success: true }
+  async verifyToken(token: string) {
+    return apiClient.post('/auth/verify/', { token })
+  },
+  
+  /**
+   * Helpers Sync
+   */
+  saveTokens(access: string, refresh: string) {
+    localStorage.setItem('access_token', access)
+    localStorage.setItem('refresh_token', refresh)
   }
 }
 

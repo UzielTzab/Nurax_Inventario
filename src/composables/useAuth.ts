@@ -1,30 +1,79 @@
 import { ref } from 'vue';
+import authService, { type UserProfileResponse } from '@/services/auth.service';
+
+// Tipos de usuario
+export type UserRole = 'admin' | 'cliente' | string;
+
+export interface AuthUser extends UserProfileResponse {
+  // Inherits id, username, name, email, role
+}
 
 // Estado global de autenticación
 const isAuthenticated = ref(false);
-const currentUser = ref<{ email: string } | null>(null);
+const currentUser = ref<AuthUser | null>(null);
 
 export function useAuth() {
-  const login = async (email: string, _password: string) => {
-    // Aquí harías la llamada a tu API
-    // Por ahora, simulamos un login exitoso después de 1.5 segundos
-    return new Promise<{ success: boolean; email: string }>((resolve) => {
-      setTimeout(() => {
-        // Simulación: cualquier credencial es válida
-        // NO cambiamos isAuthenticated aquí, lo haremos después de la pantalla de carga
-        resolve({ success: true, email });
-      }, 1500);
-    });
+  const login = async (email: string, password: string): Promise<{ success: boolean; email?: string; role?: UserRole; error?: string }> => {
+    try {
+      // 1. Obtener tokens
+      const loginRes = await authService.login({ email, password });
+      
+      if (!loginRes.success || !loginRes.data) {
+        return { success: false, error: loginRes.error || 'Credenciales incorrectas' };
+      }
+
+      // Guardar tokens en localStorage
+      authService.saveTokens(loginRes.data.access, loginRes.data.refresh);
+
+      // 2. Obtener perfil
+      const userRes = await authService.fetchUser();
+      if (!userRes.success || !userRes.data) {
+        console.error('Error en fetchUser:', userRes.error, userRes.status);
+        // Falló al obtener la info del usuario: Limpiar tokens y salir
+        authService.logout();
+        return { success: false, error: userRes.error || 'No se pudo obtener el perfil de usuario' };
+      }
+
+      // 3. Establecer estado completo
+      isAuthenticated.value = true;
+      currentUser.value = userRes.data;
+
+      return { 
+        success: true, 
+        email: userRes.data.email, 
+        role: userRes.data.role 
+      };
+
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Error inesperado en login' };
+    }
   };
 
-  const completeLogin = (email: string) => {
+  const completeLogin = (user: AuthUser) => {
     isAuthenticated.value = true;
-    currentUser.value = { email };
+    currentUser.value = user;
   };
 
   const logout = () => {
+    authService.logout();
     isAuthenticated.value = false;
     currentUser.value = null;
+  };
+
+  /**
+   * Inicializa la sesión si hay un token válido guardado
+   */
+  const checkSession = async () => {
+    if (localStorage.getItem('access_token')) {
+      const userRes = await authService.fetchUser();
+      if (userRes.success && userRes.data) {
+        isAuthenticated.value = true;
+        currentUser.value = userRes.data;
+      } else {
+        // Token expiado o inválido
+        logout();
+      }
+    }
   };
 
   return {
@@ -33,5 +82,6 @@ export function useAuth() {
     login,
     completeLogin,
     logout,
+    checkSession
   };
 }

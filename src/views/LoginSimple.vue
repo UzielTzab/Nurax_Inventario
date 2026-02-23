@@ -35,9 +35,9 @@
             </button>
           </div>
 
-          <button type="submit" class="btn-login" :disabled="isLoading">
+          <AppButton type="submit" variant="fill" :disabled="isLoading">
             {{ isLoading ? 'Cargando...' : 'Iniciar Sesión' }}
-          </button>
+          </AppButton>
         </form>
       </div>
     </div>
@@ -63,7 +63,7 @@ const handleLogin = async () => {
     const result = await login(email.value, password.value)
     if (result.success) {
       console.log('✅ Login exitoso!')
-      showLoadingScreen(result.email)
+      showLoadingScreen(result.email || '')
     } else {
       console.error('❌ Login falló')
     }

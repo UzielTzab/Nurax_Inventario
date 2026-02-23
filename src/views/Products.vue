@@ -195,10 +195,10 @@
             </div>
             <!-- Botón Escanear Barcode -->
             <div class="lg:flex-shrink-0">
-              <button @click="showBarcodeScanner = true" class="w-full lg:w-auto bg-brand-primary hover:bg-brand-primary/90 text-white px-6 py-3 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-primary/20 font-bold uppercase tracking-wide text-sm">
-                <QrCodeIcon class="h-5 w-5 mr-2" />
+              <AppButton variant="fill" class="w-full lg:w-auto" @click="showBarcodeScanner = true">
+                <QrCodeIcon />
                 Vender
-              </button>
+              </AppButton>
             </div>
           </div>
 
@@ -329,7 +329,7 @@
       />
       <NotificationPanel 
         :isOpen="showNotifications"
-        :products="products"
+        :products="(products as any)"
         @close="showNotifications = false"
         @viewProduct="viewProductFromNotification"
         @restock="restockProduct"
@@ -735,7 +735,7 @@ const handleProductDeleted = () => {
   productToDelete.value = null;
 };
 
-const viewProductFromNotification = (product: Product) => {
+const viewProductFromNotification = (product: any) => {
   // Close notifications panel
   showNotifications.value = false;
   
@@ -743,7 +743,7 @@ const viewProductFromNotification = (product: Product) => {
   selectedProduct.value = product;
 };
 
-const restockProduct = (product: Product) => {
+const restockProduct = (product: any) => {
   // Close notifications
   showNotifications.value = false;
   

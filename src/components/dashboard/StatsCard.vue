@@ -2,19 +2,15 @@
   <div class="stats-card" :class="`card-${variant}`">
     <div class="stats-header">
       <div class="stats-label">{{ label }}</div>
-      <div v-if="icon" class="stats-icon" :class="`icon-${iconType}`">
-        <component :is="icon" />
-      </div>
+      <button class="arrow-btn" :class="{ 'arrow-btn--brand': variant === 'brand' }" title="Ver detalle">
+        <ArrowUpRightIcon class="arrow-icon" />
+      </button>
     </div>
     <div class="stats-value">{{ formattedValue }}</div>
     <div v-if="subtitle" class="stats-subtitle">{{ subtitle }}</div>
     <div v-else-if="trend" class="stats-trend" :class="trendClass">
-      <svg v-if="trend.direction === 'up'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M12.577 4.878a.75.75 0 01.919-.53l4.78 1.281a.75.75 0 01.531.919l-1.281 4.78a.75.75 0 01-1.449-.387l.81-3.022a19.407 19.407 0 00-5.594 5.203.75.75 0 01-1.139.093L7 10.06l-4.72 4.72a.75.75 0 01-1.06-1.061l5.25-5.25a.75.75 0 011.06 0l3.074 3.073a20.923 20.923 0 015.545-4.931l-3.042-.815a.75.75 0 01-.53-.919z" clip-rule="evenodd" />
-      </svg>
-      <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M1.22 5.222a.75.75 0 011.06 0L7 9.942l3.768-3.769a.75.75 0 011.113.058 20.908 20.908 0 013.813 7.254l1.574-2.727a.75.75 0 011.3.75l-2.475 4.286a.75.75 0 01-1.025.275l-4.287-2.475a.75.75 0 01.75-1.3l2.71 1.565a19.422 19.422 0 00-3.013-6.024L7.53 11.533a.75.75 0 01-1.06 0l-5.25-5.25a.75.75 0 010-1.06z" clip-rule="evenodd" />
-      </svg>
+      <ArrowTrendingUpIcon v-if="trend.direction === 'up'" class="trend-icon" />
+      <ArrowTrendingDownIcon v-else class="trend-icon" />
       <span>{{ trend.value }}</span>
     </div>
   </div>
@@ -22,6 +18,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import {
+  ArrowUpRightIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+} from '@heroicons/vue/24/outline';
 
 interface Trend {
   direction: 'up' | 'down';
@@ -34,13 +35,10 @@ interface Props {
   subtitle?: string;
   trend?: Trend;
   variant?: 'default' | 'danger' | 'success' | 'brand';
-  icon?: any;
-  iconType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'brand';
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
-  iconType: 'primary'
 });
 
 const formattedValue = computed(() => {
@@ -59,7 +57,6 @@ const trendClass = computed(() => {
 <style scoped>
 .stats-card {
   background: var(--color-card-fill);
-  border: 1px solid var(--color-card-border);
   border-radius: 32px;
   padding: 1.5rem;
   flex: 1;
@@ -68,7 +65,6 @@ const trendClass = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .stats-card:hover {
@@ -77,7 +73,7 @@ const trendClass = computed(() => {
 
 .stats-label {
   font-size: 0.7875rem;
-  font-weight: 1000;
+  font-weight: 700;
   color: #b0b5c0;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -85,7 +81,7 @@ const trendClass = computed(() => {
 
 .stats-value {
   font-size: 2.1rem;
-  font-weight: 1000;
+  font-weight: 800;
   color: var(--color-brand-secondarys);
   line-height: 1;
 }
@@ -104,7 +100,7 @@ const trendClass = computed(() => {
   font-weight: 600;
 }
 
-.stats-trend svg {
+.trend-icon {
   width: 14px;
   height: 14px;
 }
@@ -117,6 +113,45 @@ const trendClass = computed(() => {
   color: #ef4444;
 }
 
+/* Circular arrow button — outline style (default) */
+.arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-brand-main);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-brand-main);
+  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.arrow-btn:hover {
+  background: rgba(34, 125, 82, 0.08);
+  transform: scale(1.05);
+}
+
+/* Circular arrow button — brand card (white fill) */
+.arrow-btn--brand {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--color-brand-main);
+}
+
+.arrow-btn--brand:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.05);
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+}
+
 @media (max-width: 768px) {
   .stats-card {
     padding: 1rem;
@@ -126,7 +161,6 @@ const trendClass = computed(() => {
   .stats-value {
     font-size: 1.5rem;
   }
-
 }
 
 .card-danger {
@@ -166,7 +200,7 @@ const trendClass = computed(() => {
 }
 
 .card-brand {
-  background-color: var(--color-brand-main);
+  background: var(--color-brand-main-gradient);
   border-color: var(--color-brand-main);
   color: white;
 }

@@ -3,12 +3,15 @@
 
 @theme {
   /* Marca - Nueva Paleta */
-  --color-brand-main: #06402B;       /* Verde Bosque Profundo */
-  --color-brand-secondary: #22c55e;  /* Verde Menta Vibrante */
-  --color-brand-contrast: #22c55e;   /* Alias para compatibilidad */
+  /* para el color brand main será un gradiente del #227d52 al #13452d en alineación diagonal vertical*/
+  --color-brand-main: #227d52;       /* Verde Bosque Profundo */
+  --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     
+  --color-brand-secondary: #06402B;  /* Verde Bosque (igual al main) */
+  --color-brand-contrast: #06402B;   /* Alias para compatibilidad */
   
   /* Fondos y Diseño */
-  --color-background: #f8faf9;       /* Blanco Grisáceo */
+  --color-background: #ffffff;       /* Blanco Grisáceo */
+  --color-card-stats-fill: #F3F4F6;        /* Blanco Puro */
   --color-card-fill: #ffffff;        /* Blanco Puro */
   --color-card-border: #e5e7eb;      /* Gris Claro */
   
@@ -20,6 +23,14 @@
   --color-status-success: #22c55e;
   --color-status-warning: #f97316;
   --color-status-danger: #ef4444;
+
+  /* Badges de Stock */
+  --color-badge-stock-text: #059669;
+  --color-badge-stock-bg:   #D1FAE5;
+  --color-badge-low-text:   #EA580C;
+  --color-badge-low-bg:     #FFEDD5;
+  --color-badge-out-text:   #DC2626;
+  --color-badge-out-bg:     #FEE2E2;
   
   /* Tema Claro (Variables de soporte para legacy) */
   --color-brand-dark-main: #06402b;

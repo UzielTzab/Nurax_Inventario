@@ -33,9 +33,9 @@
             </button>
           </div>
 
-          <button type="submit" class="btn-login" :disabled="isLoading">
+          <AppButton type="submit" variant="fill" :disabled="isLoading">
             {{ isLoading ? 'Iniciando...' : 'Iniciar Sesión' }}
-          </button>
+          </AppButton>
         </form>
 
         <p class="footer-text">

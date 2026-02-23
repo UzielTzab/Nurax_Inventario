@@ -1,8 +1,11 @@
 <template>
   <div class="loading-screen">
     <div class="loading-content">
-      <!-- Spinner -->
-      <div class="spinner"></div>
+      <!-- Spinner with Logo -->
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <img class="spinner-logo" src="/public/nurax_logo.png" alt="Logo">
+      </div>
 
       <!-- Brand Name -->
       <h1 class="brand-name">NURAX</h1>
@@ -98,12 +101,25 @@ onMounted(() => {
   padding: 2rem;
 }
 
-/* Spinner */
+/* Spinner Container */
+.spinner-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spinner Ring */
 .spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(34, 162, 197, 0.1);
-  border-top: 4px solid var(--color-brand-accent);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 4px solid rgba(6, 64, 43, 0.12);
+  border-top: 4px solid var(--color-brand-main, #06402B);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -117,40 +133,31 @@ onMounted(() => {
   }
 }
 
-.logo-icon {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  animation: pulse 2s ease-in-out infinite;
-  display: none;
+/* Logo Inside Spinner */
+.spinner-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  z-index: 2;
+  animation: logoPulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes logoPulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
   }
 }
 
 .brand-name {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-brand-secondary);
-  letter-spacing: 2px;
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-brand-main, #06402B);
+  letter-spacing: 4px;
   margin: 0;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
-  /* Agregar animación de scaling prgresivo */
   animation: scaleUp 1.5s ease-out forwards;
-
 }
 
 .loading-text {
@@ -160,16 +167,16 @@ onMounted(() => {
 }
 
 .main-text {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-brand-secondary);
+  color: #1f2937;
   margin: 0;
 }
 
 .sub-text {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 400;
-  color: rgba(28, 37, 46, 0.6);
+  color: #6b7280;
   margin: 0;
 }
 
@@ -185,7 +192,7 @@ onMounted(() => {
 .progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(34, 197, 94, 0.1);
+  background: rgba(6, 64, 43, 0.08);
   border-radius: 3px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -194,11 +201,10 @@ onMounted(() => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-brand-primary), var(--color-brand-accent));
+  background: linear-gradient(90deg, var(--color-brand-main, #06402B) 0%, #145c3a 100%);
   border-radius: 3px;
   transition: width 0.3s ease-out;
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
-  filter: blur(0.5px);
+  box-shadow: 0 0 10px rgba(6, 64, 43, 0.35);
 }
 
 .progress-info {
@@ -216,16 +222,25 @@ onMounted(() => {
 }
 
 .progress-percentage {
-  font-family: 'Courier New', monospace;
-  color: var(--color-brand-secondary);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  color: var(--color-brand-main, #06402B);
 }
 
 /* Responsive */
 @media (max-width: 640px) {
+  .spinner-container {
+    width: 64px;
+    height: 64px;
+  }
+  
   .spinner {
-    width: 50px;
-    height: 50px;
     border-width: 3px;
+  }
+
+  .spinner-logo {
+    width: 36px;
+    height: 36px;
   }
 
   .brand-name {

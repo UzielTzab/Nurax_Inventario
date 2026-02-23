@@ -30,12 +30,12 @@
 
         <!-- Actions -->
         <div class="modal-actions">
-          <button v-if="showCancel" class="btn-cancel" @click="handleCancel">
+          <AppButton variant="outline" v-if="showCancel" @click="handleCancel">
             {{ cancelText }}
-          </button>
-          <button class="btn-confirm" @click="handleConfirm">
+          </AppButton>
+          <AppButton variant="fill" @click="handleConfirm">
             {{ confirmText }}
-          </button>
+          </AppButton>
         </div>
       </div>
     </div>
@@ -157,14 +157,15 @@ const handleConfirm = () => {
 }
 
 .btn-cancel {
-  background: white;
-  border: 1px solid #D1D5DB;
+  background: transparent;
+  border: 1.5px solid #D1D5DB;
   color: #374151;
 }
 
 .btn-cancel:hover {
-  background: #F9FAFB;
-  border-color: #9CA3AF;
+  border-color: var(--color-brand-main, #06402B);
+  color: var(--color-brand-main, #06402B);
+  background: rgba(6, 64, 43, 0.04);
 }
 
 .btn-confirm {
@@ -199,14 +200,14 @@ const handleConfirm = () => {
 
 /* Success */
 .modal-success .modal-icon {
-  background: #ECFDF5;
-  color: #10B981;
+  background: rgba(6, 64, 43, 0.08);
+  color: var(--color-brand-main, #06402B);
 }
 .modal-success .btn-confirm {
-  background: #10B981;
+  background: var(--color-brand-main, #06402B);
 }
 .modal-success .btn-confirm:hover {
-  background: #059669;
+  background: #0a5c3a;
 }
 
 /* Info */

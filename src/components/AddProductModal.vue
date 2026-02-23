@@ -125,11 +125,10 @@
 
             <!-- Actions -->
             <div class="form-actions">
-              <button type="button" class="btn-cancel" @click="$emit('close')">Cancelar</button>
-              <button type="submit" class="btn-save">
-                <PlusIcon class="icon-small" />
+              <AppButton variant="outline" type="button" @click="$emit('close')">Cancelar</AppButton>
+              <AppButton variant="fill" type="submit">
                 {{ productToEdit ? 'Guardar Cambios' : 'Agregar Producto' }}
-              </button>
+              </AppButton>
             </div>
           </form>
         </div>
@@ -140,7 +139,7 @@
 
 <script setup lang="ts">
 import { ref, watch, reactive } from 'vue';
-import { XMarkIcon, PlusCircleIcon, PlusIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PlusCircleIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
 
 interface Product {
   id: string;
@@ -273,7 +272,7 @@ const handleSubmit = () => {
       sku: formData.sku,
       stock: formData.stock,
       price: formData.price,
-      image: formData.image || 'https://via.placeholder.com/150'
+      image: formData.image || ''
     };
     emit('productAdded', newProduct);
   }
@@ -323,7 +322,7 @@ const handleSubmit = () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #10B981;
+  color: var(--color-brand-main, #06402B);
 }
 
 .modal-title {
@@ -385,6 +384,7 @@ const handleSubmit = () => {
 }
 
 .form-input {
+  width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
@@ -395,9 +395,9 @@ const handleSubmit = () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #10B981;
+  border-color: var(--color-brand-main, #06402B);
   background: white;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
 }
 
 .form-row {
@@ -436,9 +436,9 @@ const handleSubmit = () => {
 }
 
 .file-input::-webkit-file-upload-button {
-  background: #EDFDF5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
+  background: rgba(6, 64, 43, 0.06);
+  color: var(--color-brand-main, #06402B);
+  border: 1px solid rgba(6, 64, 43, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
@@ -448,7 +448,7 @@ const handleSubmit = () => {
 }
 
 .file-input::-webkit-file-upload-button:hover {
-  background: #D1FAE5;
+  background: rgba(6, 64, 43, 0.1);
 }
 
 .help-text {
@@ -486,36 +486,41 @@ const handleSubmit = () => {
 
 .btn-cancel {
   padding: 0.75rem 1.5rem;
-  background: white;
-  border: 1px solid #D1D5DB;
+  background: transparent;
+  border: 1.5px solid #d1d5db;
   color: #374151;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
 }
 
 .btn-cancel:hover {
-  background: #F9FAFB;
-  border-color: #9CA3AF;
+  border-color: var(--color-brand-main, #06402B);
+  color: var(--color-brand-main, #06402B);
+  background: rgba(6, 64, 43, 0.04);
 }
 
 .btn-save {
   padding: 0.75rem 1.5rem;
-  background: #10B981; /* Green brand color */
+  background: var(--color-brand-main, #06402B);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .btn-save:hover {
-  background: #059669;
+  background: #0a5c3a;
+  box-shadow: 0 4px 12px rgba(6, 64, 43, 0.25);
+  transform: translateY(-1px);
 }
 
 /* Transitions */

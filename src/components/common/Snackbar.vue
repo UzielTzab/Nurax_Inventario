@@ -1,62 +1,48 @@
 <template>
-  <Transition name="snackbar">
-    <div 
-      v-if="isVisible" 
-      class="snackbar"
-      :class="`snackbar-${type}`"
-      role="alert"
-    >
-      <div class="snackbar-icon">
-        <!-- Success Icon -->
-        <svg v-if="type === 'success'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-        </svg>
-        
-        <!-- Info Icon -->
-        <svg v-else-if="type === 'info'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
-        </svg>
-        
-        <!-- Warning Icon -->
-        <svg v-else-if="type === 'warning'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
-        </svg>
-        
-        <!-- Error Icon -->
-        <svg v-else-if="type === 'error'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" />
-        </svg>
-      </div>
-
-      <div class="snackbar-content">
-        <div class="snackbar-title">{{ title }}</div>
-        <div v-if="message" class="snackbar-message">{{ message }}</div>
-      </div>
-
-      <button 
-        v-if="actionLabel" 
-        class="snackbar-action" 
-        @click="handleAction"
-      >
-        {{ actionLabel }}
-      </button>
-
-      <button 
-        v-if="closable" 
-        class="snackbar-close" 
-        @click="close"
-        aria-label="Close notification"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-        </svg>
-      </button>
+  <div 
+    class="snackbar"
+    :class="`snackbar-${type}`"
+    role="alert"
+  >
+    <div class="snackbar-icon">
+      <CheckCircleIcon v-if="type === 'success'" />
+      <InformationCircleIcon v-else-if="type === 'info'" />
+      <ExclamationTriangleIcon v-else-if="type === 'warning'" />
+      <XCircleIcon v-else-if="type === 'error'" />
     </div>
-  </Transition>
+
+    <div class="snackbar-content">
+      <div class="snackbar-title">{{ title }}</div>
+      <div v-if="message" class="snackbar-message">{{ message }}</div>
+    </div>
+
+    <button 
+      v-if="actionLabel" 
+      class="snackbar-action" 
+      @click="handleAction"
+    >
+      {{ actionLabel }}
+    </button>
+
+    <button 
+      v-if="closable" 
+      class="snackbar-close" 
+      @click="close"
+      aria-label="Close notification"
+    >
+      <XMarkIcon />
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import {
+  CheckCircleIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from '@heroicons/vue/24/solid';
+import { XMarkIcon } from '@heroicons/vue/24/outline';
 
 interface Props {
   type?: 'success' | 'info' | 'warning' | 'error';
@@ -82,11 +68,7 @@ const emit = defineEmits<{
   close: []
 }>();
 
-const isVisible = ref(false);
-let timeoutId: number | null = null;
-
 const close = () => {
-  isVisible.value = false;
   emit('close');
 };
 
@@ -96,45 +78,11 @@ const handleAction = () => {
     close();
   }
 };
-
-const startTimer = () => {
-  if (props.duration > 0) {
-    timeoutId = window.setTimeout(() => {
-      close();
-    }, props.duration);
-  }
-};
-
-const clearTimer = () => {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  }
-};
-
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    isVisible.value = true;
-    clearTimer();
-    startTimer();
-  } else {
-    isVisible.value = false;
-  }
-});
-
-onMounted(() => {
-  if (props.show) {
-    isVisible.value = true;
-    startTimer();
-  }
-});
 </script>
 
 <style scoped>
 .snackbar {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
+  position: relative;
   min-width: 320px;
   max-width: 600px;
   padding: 1.25rem 1.5rem;
@@ -143,45 +91,47 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  z-index: 9999;
   backdrop-filter: blur(10px);
-  animation: slideIn 0.3s ease-out;
+  pointer-events: auto;
 }
 
 /* Success Style */
 .snackbar-success {
   background: var(--color-brand-secondary);
-  border-left: 4px solid var(--color-brand-primary);
+  border-left: 4px solid #10b981;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-success .snackbar-icon {
-  color: var(--color-brand-primary);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399; /* emerald-400 */
 }
 
 /* Info Style */
 .snackbar-info {
   background: var(--color-brand-secondary);
-  border-left: 4px solid var(--color-brand-accent);
+  border-left: 4px solid #3b82f6;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-info .snackbar-icon {
-  color: var(--color-brand-accent);
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa; /* blue-400 */
 }
 
 /* Warning Style */
 .snackbar-warning {
   background: var(--color-brand-secondary);
-  border-left: 4px solid #f97316;
+  border-left: 4px solid #f59e0b;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-warning .snackbar-icon {
-  color: #f97316;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24; /* amber-400 */
 }
 
 /* Error Style */
@@ -193,18 +143,23 @@ onMounted(() => {
 }
 
 .snackbar-error .snackbar-icon {
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171; /* red-400 */
 }
 
 .snackbar-icon {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .snackbar-icon svg {
-  width: 100%;
-  height: 100%;
+  width: 20px;
+  height: 20px;
 }
 
 .snackbar-content {
@@ -270,41 +225,14 @@ onMounted(() => {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Animations */
-.snackbar-enter-active,
-.snackbar-leave-active {
-  transition: all 0.3s ease;
-}
-
-.snackbar-enter-from {
-  opacity: 0;
-  transform: translateX(100%) translateY(-20px);
-}
-
-.snackbar-leave-to {
-  opacity: 0;
-  transform: translateX(100%) translateY(-20px);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(100%) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) translateY(0);
-  }
-}
+/* Animations moved to SnackbarContainer.vue */
 
 /* Responsive */
 @media (max-width: 640px) {
   .snackbar {
-    top: 1rem;
-    right: 1rem;
-    left: 1rem;
     min-width: auto;
     max-width: none;
+    width: 100%;
   }
 }
 </style>
