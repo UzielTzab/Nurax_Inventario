@@ -7,153 +7,160 @@
     leave-from-class="opacity-100 translate-y-0"
     leave-to-class="opacity-0 translate-y-2"
   >
-    <div v-if="isOpen" class="w-full bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-6rem)] flex flex-col">
+    <div v-if="isOpen" class="w-full bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 max-h-[calc(100vh-6rem)] flex flex-col font-sans">
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-200">
-        <div class="flex items-center">
-          <BellAlertIcon class="h-6 w-6 text-red-600 mr-2" />
-          <h3 class="text-lg font-semibold text-gray-900">Alertas de Inventario</h3>
+      <div class="flex items-center justify-between p-5 border-b border-gray-50">
+        <div>
+          <h3 class="text-[1.35rem] font-bold text-[#0A2540] tracking-tight">Notificaciones</h3>
+          <p class="text-[0.9rem] text-slate-500 mt-0.5">Tienes {{ notifications.length }} alertas nuevas</p>
         </div>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors">
-          <XMarkIcon class="h-6 w-6" />
+        <button class="bg-slate-50 hover:bg-slate-100 text-[#0A2540] text-[0.85rem] font-semibold px-4 py-2 rounded-full transition-colors">
+          Marcar leídas
         </button>
       </div>
 
       <!-- Notifications List -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-3">
-        <div v-if="notifications.length === 0" class="text-center py-8">
-          <CheckCircleIcon class="h-12 w-12 text-green-500 mx-auto mb-2" />
-          <p class="text-gray-500">No hay alertas de inventario</p>
-          <p class="text-sm text-gray-400">Todos los productos tienen stock suficiente</p>
-        </div>
-
-        <TransitionGroup
-          enter-active-class="transition ease-out duration-300"
-          enter-from-class="opacity-0 scale-95"
-          enter-to-class="opacity-100 scale-100"
-          leave-active-class="transition ease-in duration-200"
-          leave-from-class="opacity-100 scale-100"
-          leave-to-class="opacity-0 scale-95"
-          mode="out-in"
-        >
-          <div
-            v-for="notification in notifications"
-            :key="notification.sku"
-            :class="[
-              'p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-md',
-              notification.severity === 'critical' ? 'bg-red-50 border-red-500' : 'bg-yellow-50 border-yellow-500'
-            ]"
-            @click="$emit('viewProduct', notification.product)"
-          >
-            <div class="flex items-start">
-              <div class="flex-shrink-0">
-                <ExclamationTriangleIcon 
-                  :class="[
-                    'h-5 w-5',
-                    notification.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'
-                  ]"
-                />
-              </div>
-              <div class="ml-3 flex-1">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-semibold text-gray-900">{{ notification.product.name }}</p>
-                  <span 
-                    :class="[
-                      'text-xs font-medium px-2 py-1 rounded',
-                      notification.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                    ]"
-                  >
-                    {{ notification.severity === 'critical' ? 'Agotado' : 'Bajo Stock' }}
-                  </span>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">SKU: {{ notification.product.sku }}</p>
-                <div class="mt-2 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <CubeIcon class="h-4 w-4 text-gray-400 mr-1" />
-                    <span 
-                      :class="[
-                        'text-sm font-bold',
-                        notification.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'
-                      ]"
-                    >
-                      {{ notification.product.stock }} unidades
-                    </span>
-                  </div>
-                  <button 
-                    @click.stop="$emit('restock', notification.product)"
-                    class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded transition-colors"
-                  >
-                    Reabastecer
-                  </button>
-                </div>
-                <p class="text-xs text-gray-600 mt-2">{{ notification.message }}</p>
-              </div>
+      <div class="flex-1 overflow-y-auto w-full">
+        <div v-for="notification in notifications" :key="notification.id" class="px-5 py-6 border-b border-gray-50/80 hover:bg-slate-50/50 transition-colors flex gap-4">
+          <!-- Unread Dot -->
+          <div class="mt-1.5 flex-shrink-0">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+          </div>
+          
+          <!-- Icon -->
+          <div class="flex-shrink-0">
+            <div 
+              class="w-12 h-12 rounded-full flex items-center justify-center"
+              :class="{
+                'bg-orange-50': notification.type === 'warning',
+                'bg-blue-50': notification.type === 'sync',
+                'bg-emerald-50': notification.type === 'success'
+              }"
+            >
+              <ExclamationTriangleIcon v-if="notification.type === 'warning'" class="w-6 h-6 text-orange-500" />
+              <ArrowPathIcon v-else-if="notification.type === 'sync'" class="w-6 h-6 text-blue-500" />
+              <CurrencyDollarIcon v-else-if="notification.type === 'success'" class="w-6 h-6 text-emerald-500" />
             </div>
           </div>
-        </TransitionGroup>
+
+          <!-- Content -->
+          <div class="flex-1 pt-0.5">
+            <div class="flex items-start justify-between">
+              <h4 class="text-[1.05rem] font-bold text-[#1a2f45] leading-snug">{{ notification.title }}</h4>
+              <span class="text-[0.8rem] text-slate-400 font-medium whitespace-nowrap ml-2">{{ notification.time }}</span>
+            </div>
+            
+            <p class="text-[0.92rem] text-slate-500 mt-1.5 leading-relaxed pr-2">
+              {{ notification.description }}
+            </p>
+
+            <div v-if="notification.primaryAction || notification.secondaryAction" class="mt-4 flex items-center gap-3">
+              <AppButton 
+                v-if="notification.primaryAction"
+                variant="outline"
+                class="!px-4 !py-1.5 !text-[0.85rem] !font-semibold !rounded-lg"
+              >
+                {{ notification.primaryAction.label }}
+              </AppButton>
+              
+              <button 
+                v-if="notification.secondaryAction"
+                class="text-[0.9rem] font-semibold text-slate-500 hover:text-slate-800 transition-colors px-2"
+              >
+                {{ notification.secondaryAction.label }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Footer Summary -->
-      <div v-if="notifications.length > 0" class="p-4 bg-gray-50 border-t border-gray-200">
-        <div class="flex items-center justify-between text-sm">
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center">
-              <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span class="text-gray-600">Agotados: <strong>{{ criticalCount }}</strong></span>
-            </div>
-            <div class="flex items-center">
-              <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-              <span class="text-gray-600">Bajo Stock: <strong>{{ warningCount }}</strong></span>
-            </div>
-          </div>
-        </div>
+      <!-- Footer -->
+      <div class="p-5 flex items-center justify-between rounded-b-2xl">
+        <button class="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-[0.9rem] font-semibold">
+          <Cog6ToothIcon class="w-5 h-5" />
+          Configuración de alertas
+        </button>
+        <button class="flex items-center gap-1.5 text-[#06402B] hover:text-[#0a5c3a] transition-colors text-[0.95rem] font-bold">
+          Ver todo 
+          <ArrowRightIcon class="w-4 h-4 stroke-2" />
+        </button>
       </div>
     </div>
   </Transition>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { BellAlertIcon, XMarkIcon, ExclamationTriangleIcon, CubeIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
+import { ref } from 'vue';
+import { 
+  ExclamationTriangleIcon, 
+  ArrowPathIcon, 
+  CurrencyDollarIcon,
+  Cog6ToothIcon,
+  ArrowRightIcon
+} from '@heroicons/vue/24/outline';
+import AppButton from '@/components/ui/AppButton.vue';
 import type { Product } from '@/stores/product.store';
 
-interface Notification {
-  sku: string;
-  product: Product;
-  severity: 'critical' | 'warning';
-  message: string;
+interface NotificationItem {
+  id: string;
+  type: 'warning' | 'sync' | 'success';
+  title: string;
+  time: string;
+  description: string;
+  primaryAction?: {
+    label: string;
+    action: string;
+  };
+  secondaryAction?: {
+    label: string;
+    action: string;
+  };
 }
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
-  products: Product[];
+  products?: Product[];
 }>();
 
 defineEmits<{
   close: [];
-  viewProduct: [product: Product];
-  restock: [product: Product];
+  viewProduct: [product: any];
+  restock: [product: any];
 }>();
 
-const notifications = computed<Notification[]>(() => {
-  return props.products
-    .filter(product => product.stock <= 10)
-    .map(product => ({
-      sku: product.sku,
-      product,
-      severity: (product.stock === 0 ? 'critical' : 'warning') as 'critical' | 'warning',
-      message: product.stock === 0 
-        ? '⚠️ Producto agotado. Se requiere reabastecimiento inmediato.'
-        : `⚠️ Stock bajo. Solo quedan ${product.stock} unidades disponibles.`
-    }))
-    .sort((a, b) => a.product.stock - b.product.stock);
-});
-
-const criticalCount = computed(() => 
-  notifications.value.filter(n => n.severity === 'critical').length
-);
-
-const warningCount = computed(() => 
-  notifications.value.filter(n => n.severity === 'warning').length
-);
+const notifications = ref<NotificationItem[]>([
+  {
+    id: '1',
+    type: 'warning',
+    title: 'Stock Bajo: Smartwatch Fit 2',
+    time: '2m',
+    description: 'El inventario ha caído por debajo del nivel mínimo (5 unidades). Restan 0 unidades.',
+    primaryAction: {
+      label: 'Ver Producto',
+      action: 'view_product'
+    },
+    secondaryAction: {
+      label: 'Ignorar',
+      action: 'ignore'
+    }
+  },
+  {
+    id: '2',
+    type: 'sync',
+    title: 'Sincronización Completada',
+    time: '15m',
+    description: 'Se han actualizado 124 productos desde el almacén central exitosamente.',
+    primaryAction: {
+      label: 'Ver Log',
+      action: 'view_log'
+    }
+  },
+  {
+    id: '3',
+    type: 'success',
+    title: 'Venta Mayorista #4920',
+    time: '1h',
+    description: 'Nueva orden grande aprobada por $4,500.00 de Cliente VIP.',
+  }
+]);
 </script>

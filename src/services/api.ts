@@ -69,7 +69,47 @@ class ApiClient {
       }
 
       // 4. Do Request
-      const response = await fetch(url.toString(), fetchOptions)
+      let response = await fetch(url.toString(), fetchOptions)
+
+      // Handle 401 Unauthorized (Token expired) interception
+      if (response.status === 401 && !endpoint.includes('/auth/login/') && !endpoint.includes('/auth/refresh/')) {
+        const refreshToken = localStorage.getItem('refresh_token')
+        if (refreshToken) {
+          try {
+            // Intentar refrescar el token
+            const refreshUrl = new URL(`${this.baseUrl}/auth/refresh/`)
+            const refreshResponse = await fetch(refreshUrl.toString(), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh: refreshToken }),
+            })
+
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json()
+              const newAccessToken = refreshData.access
+              localStorage.setItem('access_token', newAccessToken)
+              
+              // Actualizar el header de Authorization con el nuevo token
+              headers['Authorization'] = `Bearer ${newAccessToken}`
+              fetchOptions.headers = headers
+              
+              // Reintentar la petición original
+              response = await fetch(url.toString(), fetchOptions)
+            } else {
+              // El refresh token expiró o es inválido
+              localStorage.removeItem('access_token')
+              localStorage.removeItem('refresh_token')
+              // Se podría agregar un window.location.href = '/login' si se desea forzar redirección
+            }
+          } catch (e) {
+            console.error('[API] Error refreshing token:', e)
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+          }
+        } else {
+          localStorage.removeItem('access_token')
+        }
+      }
 
       // Get the response text first
       const responseText = await response.text()
@@ -127,8 +167,8 @@ class ApiClient {
   }
 }
 
-// Configurado a localhost:8000 para apuntar al backend Django como pidió el cliente
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// Prioriza VITE_API_BASE_URL para Netlify/Render, con fallback a VITE_API_URL o entorno local
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const apiClient = new ApiClient(API_URL)
 
 export default apiClient
