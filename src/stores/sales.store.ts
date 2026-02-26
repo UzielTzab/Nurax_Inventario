@@ -1,47 +1,73 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import apiClient from '@/services/api';
+
+export interface SaleItem {
+  id: number;
+  product: number | null;
+  product_name: string;
+  quantity: number;
+  unit_price: string | number;
+  subtotal: string | number;
+}
 
 export interface Sale {
-  id: string;
-  date: Date;
-  items: Array<{ name: string; quantity: number }>;
-  total: number;
-  status: 'completed' | 'pending' | 'cancelled';
+  id: number;
+  transaction_id: string;
+  user: number;
+  status: string;
+  total: string | number;
+  created_at: string;
+  items: SaleItem[];
 }
 
 export const useSalesStore = defineStore('sales', () => {
-  const sales = ref<Sale[]>([
-    {
-      id: 'TRX-9821',
-      date: new Date(),
-      items: [{ name: 'Audífonos Inalámbricos', quantity: 1 }],
-      total: 199.00,
-      status: 'completed'
-    },
-    {
-      id: 'TRX-9822',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24), // Ayer
-      items: [{ name: 'Smartwatch Fit 2', quantity: 1 }],
-      total: 429.98,
-      status: 'completed'
-    },
-    {
-      id: 'TRX-9823',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // Hace 3 dias
-      items: [{ name: 'Laptop Pro 15"', quantity: 1 }],
-      total: 1299.99,
-      status: 'completed'
-    }
-  ]);
+  const sales = ref<Sale[]>([]);
+  const isLoading = ref(false);
+  const error = ref<string | null>(null);
 
-  const addSale = (saleData: { items: Array<{ name: string; quantity: number }>; total: number }) => {
-    const newSale: Sale = {
-      id: `TRX-${Math.floor(Math.random() * 10000)}`,
-      date: new Date(),
-      status: 'completed',
-      ...saleData
-    };
-    sales.value.unshift(newSale); // Agregar al principio
+  const fetchSales = async () => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.get<Sale[]>('/sales/');
+      if (response.success && response.data) {
+        sales.value = response.data;
+      } else {
+        error.value = response.error || 'No se pudieron cargar las ventas';
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      console.error(err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const addSale = async (saleData: { transaction_id: string; items: any[]; total: number | string; user: number; status: string }) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.post<Sale>('/sales/', saleData);
+      if (response.success && response.data) {
+        sales.value.unshift(response.data);
+        return { success: true, transaction_id: response.data.transaction_id };
+      } else {
+        error.value = response.error || 'Error al procesar la venta';
+        return { success: false, error: error.value };
+      }
+    } catch(err: any) {
+      const msg = err.message || 'Error de conexión';
+      error.value = msg;
+      console.error(err);
+      return { success: false, error: msg };
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const removeSale = (id: number) => {
+    sales.value = sales.value.filter(s => s.id !== id);
   };
 
   const weeklyData = computed(() => {
@@ -57,18 +83,11 @@ export const useSalesStore = defineStore('sales', () => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     sales.value.forEach(sale => {
-      const date = new Date(sale.date);
-      // Solo contar ventas de esta semana (o posteriores, aunque futuras no debería haber)
+      const date = new Date(sale.created_at);
       if (date >= startOfWeek) {
-        // Encontrar índice correcto para Lunes=0 ... Domingo=6
-        // getDay(): Dom=0, Lun=1 ... Sab=6
-        // Queremos Lun=0 ... Dom=6.
-        // (day + 6) % 7 funciona:
-        // Lun(1) -> 7 % 7 = 0
-        // Dom(0) -> 6 % 7 = 6
         const dayIndex = (date.getDay() + 6) % 7; 
         if (dayIndex >= 0 && dayIndex < 7 && data[dayIndex]) {
-            data[dayIndex]!.amount += sale.total;
+            data[dayIndex]!.amount += parseFloat(String(sale.total));
         }
       }
     });
@@ -89,5 +108,16 @@ export const useSalesStore = defineStore('sales', () => {
     isModalOpen.value = false;
   };
 
-  return { sales, addSale, weeklyData, isModalOpen, openModal, closeModal };
+  return { 
+    sales, 
+    isLoading, 
+    error, 
+    fetchSales, 
+    addSale, 
+    removeSale, 
+    weeklyData, 
+    isModalOpen, 
+    openModal, 
+    closeModal 
+  };
 });

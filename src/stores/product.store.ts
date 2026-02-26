@@ -1,65 +1,48 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import apiClient from '@/services/api';
 
 export interface Product {
-  id: string;
+  id: number | string;
   name: string;
-  category: string;
+  category: number | string;
+  category_name?: string;
+  supplier?: number | string | null;
   sku: string;
   stock: number;
-  price: number;
-  image: string;
+  price: number | string;
+  image: string | null;
+  image_url?: string | null;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useProductStore = defineStore('products', () => {
-  // Initial Mock Data
-  const products = ref<Product[]>([
-    {
-      id: '1',
-      name: 'Wireless Headphones',
-      category: 'Audio',
-      sku: 'SKU-11234',
-      stock: 10,
-      price: 199.50,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop'
-    },
-    {
-      id: '2',
-      name: 'DSLR Camera Pro',
-      category: 'Photography',
-      sku: 'SKU-99876',
-      stock: 75,
-      price: 1800.00,
-      image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=100&h=100&fit=crop'
-    },
-    {
-      id: '3',
-      name: 'Smartwatch Fit 2',
-      category: 'Wearable',
-      sku: 'SKU-55678',
-      stock: 0,
-      price: 250.00,
-      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop'
-    },
-    {
-      id: '4',
-      name: 'Laptop Pro 15"',
-      category: 'Computing',
-      sku: 'SKU-44321',
-      stock: 25,
-      price: 1299.99,
-      image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop'
-    },
-    {
-      id: '5',
-      name: 'Bluetooth Speaker',
-      category: 'Audio',
-      sku: 'SKU-77889',
-      stock: 50,
-      price: 89.99,
-      image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=100&h=100&fit=crop'
+  const products = ref<Product[]>([]);
+  const isLoading = ref(false);
+  const error = ref<string | null>(null);
+
+  const fetchProducts = async () => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.get<Product[]>('/products/');
+      if (response.success && response.data) {
+        products.value = response.data.map(p => ({
+          ...p,
+          image: p.image_url || p.image || null
+        }));
+      } else {
+        error.value = response.error || 'No se pudieron obtener los productos';
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      console.error(err);
+    } finally {
+      isLoading.value = false;
     }
-  ]);
+  };
 
   // Getters
   const totalProducts = computed(() => products.value.length);
@@ -73,38 +56,106 @@ export const useProductStore = defineStore('products', () => {
   });
 
   const inventoryValue = computed(() => {
-    return products.value.reduce((total, p) => total + (p.price * p.stock), 0);
+    return products.value.reduce((total, p) => total + (parseFloat(String(p.price)) * p.stock), 0);
   });
   
   const allSkus = computed(() => products.value.map(p => p.sku));
 
-  const addProduct = (product: Product) => {
-    products.value.push(product);
-  };
+  const addProduct = async (productData: any) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const fd = new FormData();
+      fd.append('name', productData.name);
+      fd.append('sku', productData.sku);
+      fd.append('price', String(productData.price));
+      
+      // Default to Category 1 if category is a string like "Laptop" instead of an ID, you might need to adjust this depending on the API mapping
+      fd.append('category', String(productData.category ? parseInt(productData.category, 10) : '1'));
+      
+      if (productData.supplierId || productData.supplier) {
+        fd.append('supplier', String(productData.supplierId || productData.supplier));
+      }
+      
+      if (productData.stock !== undefined) {
+          fd.append('stock', String(productData.stock));
+      }
+      
+      if (productData.imageFile) {
+        fd.append('image_file', productData.imageFile);
+      }
 
-  const updateProduct = (updatedProduct: Product) => {
-    const index = products.value.findIndex(p => p.id === updatedProduct.id);
-    if (index !== -1) {
-      products.value[index] = updatedProduct;
+      const response = await apiClient.post<Product>('/products/', fd);
+      if (response.success && response.data) {
+        const newData = { ...response.data, image: response.data.image_url || response.data.image || null };
+        products.value.push(newData);
+        return { success: true, data: newData };
+      } else {
+        error.value = response.error || 'No se pudo crear el producto';
+        return { success: false, error: error.value };
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      console.error(err);
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
     }
   };
 
-  const deleteProduct = (id: string) => {
+  const updateProduct = async (updatedProduct: any) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const fd = new FormData();
+      if (updatedProduct.name) fd.append('name', updatedProduct.name);
+      if (updatedProduct.sku) fd.append('sku', updatedProduct.sku);
+      if (updatedProduct.price) fd.append('price', String(updatedProduct.price));
+      if (updatedProduct.category) fd.append('category', String(parseInt(updatedProduct.category, 10)));
+      if (updatedProduct.supplierId || updatedProduct.supplier) fd.append('supplier', String(updatedProduct.supplierId || updatedProduct.supplier));
+      if (updatedProduct.stock !== undefined) fd.append('stock', String(updatedProduct.stock));
+      
+      if (updatedProduct.imageFile) {
+        fd.append('image_file', updatedProduct.imageFile);
+      }
+      
+      const response = await apiClient.patch<Product>(`/products/${updatedProduct.id}/`, fd);
+      if (response.success && response.data) {
+        const newData = { ...response.data, image: response.data.image_url || response.data.image || null };
+        const index = products.value.findIndex(p => p.id === updatedProduct.id);
+        if (index !== -1) {
+          products.value[index] = newData;
+        }
+        return { success: true, data: newData };
+      } else {
+         error.value = response.error || 'No se pudo actualizar el producto';
+         return { success: false, error: error.value };
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      console.error(err);
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const deleteProduct = (id: string | number) => {
     products.value = products.value.filter(p => p.id !== id);
   };
   
-  const bulkDeleteProducts = (ids: string[]) => {
+  const bulkDeleteProducts = (ids: (string | number)[]) => {
     products.value = products.value.filter(p => !ids.includes(p.id));
   };
   
-  const updateStock = (id: string, newStock: number) => {
+  const updateStock = (id: string | number, newStock: number) => {
     const product = products.value.find(p => p.id === id);
     if(product) {
        product.stock = newStock;
     }
   };
   
-  const decreaseStock = (id: string, quantity: number) => {
+  const decreaseStock = (id: string | number, quantity: number) => {
     const product = products.value.find(p => p.id === id);
     if(product) {
        product.stock = Math.max(0, product.stock - quantity);
@@ -113,11 +164,14 @@ export const useProductStore = defineStore('products', () => {
 
   return {
     products,
+    isLoading,
+    error,
     totalProducts,
     lowStockProducts,
     outOfStockProducts,
     inventoryValue,
     allSkus,
+    fetchProducts,
     addProduct,
     updateProduct,
     deleteProduct,

@@ -113,7 +113,7 @@
           </div>
 
           <!-- Recordar dispositivo -->
-          <div class="form-options" data-aos="fade-up" data-aos-delay="300">
+          <!-- <div class="form-options" data-aos="fade-up" data-aos-delay="300">
             <label class="checkbox-label">
               <span class="checkbox-custom" :class="{ 'checked': rememberMe }" @click="rememberMe = !rememberMe">
                 <svg v-show="rememberMe" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none">
@@ -122,7 +122,7 @@
               </span>
               <span class="checkbox-text">Recordar dispositivo por 30 días</span>
             </label>
-          </div>
+          </div> -->
 
           <!-- Botón Login -->
           <AppButton
@@ -168,8 +168,7 @@
               <span>Google</span>
             </button>
 
-            <button type="button" class="social-btn">
-              <!-- Microsoft Icon -->
+            <!-- <button type="button" class="social-btn">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="social-icon">
                 <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
                 <rect x="13" y="1" width="10" height="10" fill="#7fba00"/>
@@ -177,7 +176,7 @@
                 <rect x="13" y="13" width="10" height="10" fill="#ffb900"/>
               </svg>
               <span>Microsoft</span>
-            </button>
+            </button> -->
           </div>
         </form>
 
@@ -524,8 +523,7 @@ const handleLogin = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #06402B;
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
+  border-color: var(--color-brand-main);
 }
 
 /* Toggle password */
@@ -733,7 +731,7 @@ const handleLogin = async () => {
 /* Social buttons */
 .social-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 

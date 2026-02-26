@@ -10,8 +10,8 @@
   --color-brand-contrast: #06402B;   /* Alias para compatibilidad */
   
   /* Fondos y Diseño */
-  --color-background: #ffffff;       /* Blanco Grisáceo */
-  --color-card-stats-fill: #F3F4F6;        /* Blanco Puro */
+  --color-background: #ffffff;         /* Blanco Puro */
+  --color-card-stats-fill: #F3F4F6;    /* Blanco Grisáceo */
   --color-card-fill: #ffffff;        /* Blanco Puro */
   --color-card-border: #e5e7eb;      /* Gris Claro */
   

@@ -92,7 +92,7 @@
 
         <!-- Product Table (with integrated filter panel) -->
         <ProductTable
-          :products="filteredProducts"
+          :products="pagedProducts"
           :filters="filters"
           :low-stock-count="lowStockProducts.length"
           :out-of-stock-count="outOfStockProducts.length"
@@ -100,15 +100,15 @@
           @delete="handleDeleteProduct"
           @delete-multiple="handleBulkDelete"
           @restock="handleRestock"
-          @update:filters="filters = $event"
+          @update:filters="onFiltersUpdate"
         />
 
 
         <!-- Pagination -->
         <Pagination
           v-model:current-page="currentPage"
-          :page-size="pageSize"
-          :total="totalProducts"
+          v-model:page-size="pageSize"
+          :total="filteredProducts.length"
         />
 
       </div>
@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
@@ -163,6 +163,11 @@ const { enqueueSnackbar } = useSnackbar();
 // Stores
 const productStore = useProductStore();
 const salesStore = useSalesStore();
+
+onMounted(async () => {
+  await productStore.fetchProducts();
+  await salesStore.fetchSales();
+});
 
 const { 
   products: allProducts,
@@ -208,7 +213,8 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 
 const filteredProducts = computed(() => {
-  let products = [...allProducts.value];
+  // Invertir el array para mostrar los más nuevos primero
+  let products = [...allProducts.value].reverse();
 
   // Filter by stock status
   if (filters.value.stockFilter === 'low-stock') {
@@ -241,6 +247,22 @@ const filteredProducts = computed(() => {
   return products;
 });
 
+// Slice for current page — this is what the table actually renders
+const pagedProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredProducts.value.slice(start, start + pageSize.value);
+});
+
+// Reset to page 1 whenever filters change so the user never lands on an empty page
+watch(filters, () => { currentPage.value = 1; }, { deep: true });
+
+// Also reset when pageSize changes (already done inside Pagination, but belt-and-suspenders)
+watch(pageSize, () => { currentPage.value = 1; });
+
+function onFiltersUpdate(newFilters: Filters) {
+  filters.value = newFilters;
+}
+
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
@@ -256,14 +278,23 @@ const handleAddProduct = () => {
   showAddProductModal.value = true;
 };
 
-const handleSaveNewProduct = (newProduct: Product) => {
-  productStore.addProduct(newProduct);
-  enqueueSnackbar({
-    type: 'success',
-    title: 'Producto Agregado',
-    message: `${newProduct.name} se agregó al inventario exitosamente.`,
-    duration: 3000
-  });
+const handleSaveNewProduct = async (newProduct: Product) => {
+  const result = await productStore.addProduct(newProduct);
+  if (result.success) {
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Producto Agregado',
+      message: `${newProduct.name} se agregó al inventario exitosamente.`,
+      duration: 3000
+    });
+  } else {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Error al agregar',
+      message: result.error || 'No se pudo crear el producto',
+      duration: 4000
+    });
+  }
 };
 
 const handleEditProduct = (product: Product) => {
@@ -271,14 +302,23 @@ const handleEditProduct = (product: Product) => {
   showAddProductModal.value = true;
 };
 
-const handleUpdateProduct = (updatedProduct: Product) => {
-  productStore.updateProduct(updatedProduct);
-  enqueueSnackbar({
-    type: 'success',
-    title: 'Producto Actualizado',
-    message: `${updatedProduct.name} ha sido actualizado correctamente.`,
-    duration: 3000
-  });
+const handleUpdateProduct = async (updatedProduct: Product) => {
+  const result = await productStore.updateProduct(updatedProduct);
+  if (result.success) {
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Producto Actualizado',
+      message: `${updatedProduct.name} ha sido actualizado correctamente.`,
+      duration: 3000
+    });
+  } else {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Error al actualizar',
+      message: result.error || 'No se pudo actualizar el producto',
+      duration: 4000
+    });
+  }
 };
 
 const handleDeleteProduct = (product: Product) => {
@@ -371,6 +411,7 @@ const handleConfirmation = () => {
 .inventory-inner {
   background: var(--color-card-stats-fill);
   max-width: 1800px;
+  min-height: 100vh;
   margin: 0 auto;
   padding: 1.75rem 2rem;
 }

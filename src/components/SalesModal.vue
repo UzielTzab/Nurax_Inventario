@@ -49,14 +49,14 @@
              </div>
 
              <div v-else class="products-grid">
-               <div 
+                <div 
                  v-for="product in filteredProducts" 
                  :key="product.id" 
                  class="product-card"
                  @click="addToCart(product)"
                >
                  <div class="product-image">
-                   <img v-if="product.image" :src="product.image" :alt="product.name">
+                   <img v-if="product.image_url" :src="product.image_url" :alt="product.name">
                    <div v-else class="empty-image">
                      <PhotoIcon class="empty-icon-lg" />
                    </div>
@@ -74,7 +74,7 @@
                      <span class="product-sku">SKU-{{ product.sku }}</span>
                    </div>
                    <div class="product-footer">
-                     <span class="product-price">${{ product.price.toFixed(2) }}</span>
+                     <span class="product-price">${{ Number(product.price).toFixed(2) }}</span>
                      <button class="add-btn" @click.stop="addToCart(product)">
                        <PlusIcon class="w-4 h-4" />
                      </button>
@@ -104,8 +104,8 @@
 
           <div v-else class="cart-items-container">
             <div v-for="item in cart" :key="item.id" class="cart-item">
-              <div class="cart-item-image">
-                 <img v-if="item.image" :src="item.image" :alt="item.name">
+               <div class="cart-item-image">
+                 <img v-if="item.image_url" :src="item.image_url" :alt="item.name">
                  <div v-else class="empty-image">
                    <PhotoIcon class="empty-icon-sm" />
                  </div>
@@ -113,7 +113,7 @@
               
               <div class="cart-item-info">
                  <span class="cart-item-name">{{ item.name }}</span>
-                 <span class="cart-item-unit-price">${{ item.price.toFixed(2) }} c/u</span>
+                 <span class="cart-item-unit-price">${{ Number(item.price).toFixed(2) }} c/u</span>
               </div>
               
               <div class="qty-controls">
@@ -122,7 +122,7 @@
                  <button class="qty-btn" @click="updateQuantity(item.id, 1)">+</button>
               </div>
               
-              <span class="cart-item-total">${{ (item.price * item.quantity).toFixed(2) }}</span>
+              <span class="cart-item-total">${{ (Number(item.price) * item.quantity).toFixed(2) }}</span>
             </div>
           </div>
           
@@ -162,9 +162,11 @@
 
   <SaleSuccessModal 
     :is-open="showSuccessModal"
-    :cart="cart"
-    :total="total"
+    :cart="lastCartSnapshot"
+    :total="lastTotal"
+    :sale-id="lastSaleId"
     @close="handleCloseSuccess"
+    @revert="handleRevert"
   />
 </template>
 
@@ -187,15 +189,7 @@ import {
 
 const { enqueueSnackbar } = useSnackbar();
 const salesStore = useSalesStore();
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  sku: string;
-  stock: number;
-  price: number;
-  image: string;
-}
+import type { Product } from '@/stores/product.store';
 
 interface CartItem extends Product {
   quantity: number;
@@ -206,11 +200,16 @@ const props = defineProps<{
   products?: Product[];
 }>();
 
-const emit = defineEmits(['close', 'sale-completed']);
+const emit = defineEmits(['close', 'sale-completed', 'sale-reverted']);
 
 const searchQuery = ref('');
 const cart = ref<CartItem[]>([]);
 const showSuccessModal = ref(false);
+
+// Snapshot de la última venta (para poder revertirla)
+const lastSaleId = ref<string | number>('');
+const lastCartSnapshot = ref<CartItem[]>([]);
+const lastTotal = ref(0);
 
 const filteredProducts = computed(() => {
   if (!props.products) return [];
@@ -267,7 +266,7 @@ const addToCart = (product: Product) => {
   }
 };
 
-const removeFromCart = (id: string) => {
+const removeFromCart = (id: string | number) => {
   cart.value = cart.value.filter(item => item.id !== id);
 };
 
@@ -275,7 +274,7 @@ const clearCart = () => {
   cart.value = [];
 };
 
-const updateQuantity = (id: string, delta: number) => {
+const updateQuantity = (id: string | number, delta: number) => {
   const item = cart.value.find(item => item.id === id);
   if (!item) return;
   
@@ -290,7 +289,7 @@ const updateQuantity = (id: string, delta: number) => {
 
 // Computed Totals
 const subtotal = computed(() => {
-  return cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  return cart.value.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
 });
 
 const tax = computed(() => {
@@ -301,31 +300,58 @@ const total = computed(() => {
   return subtotal.value + tax.value;
 });
 
-const handleCheckout = () => {
+const handleCheckout = async () => {
   // Play sound
   const audio = new Audio('/Fx_Sucess.wav');
   audio.play().catch(e => console.error('Error playing sound:', e));
+
+  // Guardar snapshot de la venta antes de registrarla
+  lastCartSnapshot.value = [...cart.value];
+  lastTotal.value = Number(total.value.toFixed(2));
   
-  // Register sale in store
-  salesStore.addSale({
+  const trxId = `TRX-${Date.now()}`;
+
+  // Register sale in store via API
+  const result = await salesStore.addSale({
+    transaction_id: trxId,
+    user: 1, // Se debe cambiar más adelante según auth actual
+    status: 'completed',
+    total: lastTotal.value.toString(),
     items: cart.value.map(item => ({ 
-        name: item.name, 
-        quantity: item.quantity 
-    })),
-    total: Number(total.value.toFixed(2))
+        product: Number(item.id),
+        quantity: item.quantity,
+        unit_price: Number(item.price).toString()
+    }))
   });
   
-  // Emit sale completed event
-  emit('sale-completed', [...cart.value]);
-  
-  // Show success modal
-  showSuccessModal.value = true;
+  if (result.success && result.transaction_id) {
+    lastSaleId.value = result.transaction_id;
+    // Emit sale completed event (descuenta stock visualmente)
+    emit('sale-completed', [...cart.value]);
+    
+    // Show success modal
+    showSuccessModal.value = true;
+  } else {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Venta Fallida',
+      message: result.error || 'Ocurrió un error al procesar la venta.',
+      duration: 5000
+    });
+  }
 };
 
 const handleCloseSuccess = () => {
   showSuccessModal.value = false;
   cart.value = []; // Clear cart
   emit('close'); // Close sales modal
+};
+
+const handleRevert = (saleId: string | number, cartItems: { id: string | number; name: string; price: string | number; quantity: number }[]) => {
+  showSuccessModal.value = false;
+  cart.value = [];
+  emit('sale-reverted', saleId, cartItems);
+  emit('close');
 };
 </script>
 
@@ -381,14 +407,11 @@ const handleCloseSuccess = () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   transition: all 0.2s;
 }
 
 .modal-close-btn:hover {
-  transform: scale(1.05);
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--color-card-stats-fill);
 }
 
 .modal-close-btn svg {
@@ -397,7 +420,7 @@ const handleCloseSuccess = () => {
 }
 
 .modal-content {
-  background: #f4f6f8;
+  background: var(--color-background);
   width: 95%;
   max-width: 1200px;
   height: 90vh;
@@ -422,7 +445,7 @@ const handleCloseSuccess = () => {
 .sale-layout {
   display: grid;
   grid-template-columns: 2fr 1.1fr;
-  gap: 1.5rem;
+  gap: 2rem;
   height: 100%;
   min-height: 0;
 }
@@ -441,11 +464,14 @@ const handleCloseSuccess = () => {
    Search Section
    ===================== */
 .search-section {
+  background: var(--color-card-stats-fill);
   display: flex;
   gap: 0.75rem;
   align-items: center;
   margin-bottom: 1.5rem;
+  border-radius: 24px;
   flex-shrink: 0;
+  padding: 1rem;
 }
 
 .search-input-wrapper {
@@ -513,11 +539,14 @@ const handleCloseSuccess = () => {
    Product Grid
    ===================== */
 .products-list {
+  background:var(--color-card-stats-fill) ;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
   padding-right: 0.5rem;
   margin-right: -0.5rem;
+  border-radius: 24px;
+  padding: 1rem;
 }
 
 .products-list::-webkit-scrollbar { width: 6px; }
@@ -586,7 +615,7 @@ const handleCloseSuccess = () => {
 .empty-image {
   width: 100%;
   height: 100%;
-  background: #f3f4f6;
+  background: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -606,9 +635,6 @@ const handleCloseSuccess = () => {
   opacity: 0.7;
 }
 
-.product-card:hover .product-image img {
-
-}
 
 /* ── Floating stock badge ── */
 .stock-badge {
@@ -687,6 +713,7 @@ const handleCloseSuccess = () => {
   align-items: center;
   justify-content: center;
   border: none;
+  border-radius: 24px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -706,7 +733,7 @@ const handleCloseSuccess = () => {
    Right Panel — Cart
    ===================== */
 .right-panel {
-  background: #ffffff;
+  background: var(--color-card-stats-fill);
   border-radius: 28px;
   display: flex;
   flex-direction: column;
@@ -720,7 +747,7 @@ const handleCloseSuccess = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: var(--color-card-stats-fill);
   flex-shrink: 0;
 }
 
@@ -896,7 +923,7 @@ const handleCloseSuccess = () => {
    ===================== */
 .sale-totals {
   padding: 1.5rem 1.75rem 1.75rem;
-  background: #fafafa;
+  background: var(--color-card-stats-fill);
   border-top: 1px solid #f3f4f6;
   flex-shrink: 0;
 }
@@ -976,7 +1003,6 @@ const handleCloseSuccess = () => {
 /* Checkout Button */
 .btn-checkout {
   width: 100%;
-  background: #06402B;
   color: white;
   border: none;
   padding: 1.15rem;
@@ -989,13 +1015,6 @@ const handleCloseSuccess = () => {
   gap: 0.75rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(6, 64, 43, 0.2);
-}
-
-.btn-checkout:hover:not(:disabled) {
-  background: #042f1f;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(6, 64, 43, 0.3);
 }
 
 .btn-checkout:active:not(:disabled) {
