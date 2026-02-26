@@ -88,7 +88,7 @@ const trendClass = computed(() => {
 
 .stats-subtitle {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-brand-main);
   font-weight: 500;
 }
 
@@ -214,7 +214,7 @@ const trendClass = computed(() => {
 }
 
 .card-brand .stats-subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-brand-main);
 }
 
 .card-brand .stats-icon {

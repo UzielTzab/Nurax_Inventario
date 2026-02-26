@@ -6,7 +6,7 @@
           <h1 class="page-title">Proveedores</h1>
           <p class="page-subtitle">Gestiona la relación con tus proveedores y surtido de productos</p>
         </div>
-        <AppButton variant="fill" @click="openAddSupplierModal">
+        <AppButton variant="fill" @click="showAddModal = true">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
           </svg>
@@ -38,7 +38,7 @@
             </div>
             <div class="supplier-info-header">
               <h3>{{ supplier.name }}</h3>
-              <span class="contact-person">{{ supplier.contactPerson }}</span>
+              <span class="contact-person">{{ supplier.company || 'Sin empresa' }}</span>
             </div>
             <div class="supplier-status">
                <span class="status-dot"></span> Active
@@ -63,12 +63,21 @@
 
           <div class="card-footer">
             <div class="stats-item">
-              <span class="stats-value">{{ supplier.products.length }}</span>
-              <span class="stats-label">Productos</span>
+              <!-- <span class="stats-value">{{ supplier.products.length }}</span>
+              <span class="stats-label">Productos</span> -->
             </div>
             <AppButton variant="outline">Ver Detalles</AppButton>
           </div>
         </div>
+      </div>
+      
+      <!-- Empty State -->
+      <div v-if="filteredSuppliers.length === 0" class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+        </svg>
+        <h3>No se encontraron proveedores</h3>
+        <p>Ajusta tu búsqueda o agrega un nuevo proveedor a tu lista.</p>
       </div>
       
       <!-- Supplier Details Modal -->
@@ -92,8 +101,8 @@
                 <h3>Contacto</h3>
                 <div class="contact-details">
                     <div class="contact-group">
-                        <label>Persona de Contacto</label>
-                        <p>{{ selectedSupplier.contactPerson }}</p>
+                        <label>Empresa</label>
+                        <p>{{ selectedSupplier.company || 'N/A' }}</p>
                     </div>
                     <div class="contact-group">
                         <label>Correo Electrónico</label>
@@ -102,14 +111,6 @@
                     <div class="contact-group">
                         <label>Teléfono</label>
                         <p>{{ selectedSupplier.phone }}</p>
-                    </div>
-                    <div class="contact-group">
-                        <label>Dirección</label>
-                        <p>{{ selectedSupplier.address }}</p>
-                    </div>
-                     <div class="contact-group">
-                        <label>Sitio Web</label>
-                        <p><a href="#" class="link">{{ selectedSupplier.website || 'No disponible' }}</a></p>
                     </div>
                 </div>
                 <div class="contact-actions">
@@ -132,7 +133,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="product in selectedSupplier.products" :key="product.sku">
+                            <!-- <tr v-for="product in selectedSupplier.products" :key="product.sku">
                                 <td class="font-medium">{{ product.name }}</td>
                                 <td class="text-sm text-gray">{{ product.sku }}</td>
                                 <td>${{ product.cost.toFixed(2) }}</td>
@@ -141,9 +142,10 @@
                                         {{ product.stock }}
                                     </span>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
+                    <p style="margin-top: 1rem; color: #6B7280; font-size: 0.875rem;">(Los productos por proveedor aún se están consultando desde el servidor)</p>
                 </div>
              </div>
           </div>
@@ -151,96 +153,34 @@
       </div>
 
     </div>
+
+    <!-- Modal: Añadir Proveedor -->
+    <AddSupplierModal
+      :is-open="showAddModal"
+      @close="showAddModal = false"
+      @supplier-created="showAddModal = false"
+    />
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AddSupplierModal from '@/components/AddSupplierModal.vue';
+import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
 
-interface ProductSummary {
-    name: string;
-    sku: string;
-    cost: number;
-    stock: number;
-}
-
-interface Supplier {
-    id: string;
-    name: string;
-    contactPerson: string;
-    email: string;
-    phone: string;
-    address: string;
-    website?: string;
-    products: ProductSummary[];
-}
+const { suppliers } = useSuppliers();
 
 const searchQuery = ref('');
 const selectedSupplier = ref<Supplier | null>(null);
-
-// Mock Data
-const suppliers = ref<Supplier[]>([
-    {
-        id: 'SUP-001',
-        name: 'TechGlobal Inc.',
-        contactPerson: 'Sarah Jenkins',
-        email: 'sarah.j@techglobal.com',
-        phone: '+1 (555) 123-4567',
-        address: '123 Innovation Dr, Silicon Valley, CA',
-        website: 'www.techglobal.com',
-        products: [
-            { name: 'Wireless Headphones', sku: 'SKU-11234', cost: 120.00, stock: 10 },
-            { name: 'Bluetooth Speaker', sku: 'SKU-77889', cost: 45.00, stock: 50 },
-            { name: 'Smartwatch Fit 2', sku: 'SKU-55678', cost: 150.00, stock: 0 }
-        ]
-    },
-    {
-        id: 'SUP-002',
-        name: 'OpticView Solutions',
-        contactPerson: 'Michael Chang',
-        email: 'supply@opticview.com',
-        phone: '+1 (555) 987-6543',
-        address: '456 Lens Ave, Rochester, NY',
-        products: [
-             { name: 'DSLR Camera Pro', sku: 'SKU-99876', cost: 1200.00, stock: 75 },
-             { name: 'Camera Lens', sku: 'SKU-33221', cost: 350.00, stock: 12 }
-        ]
-    },
-    {
-        id: 'SUP-003',
-        name: 'MegaCompute Parts',
-        contactPerson: 'David Miller',
-        email: 'orders@megacompute.com',
-        phone: '+1 (555) 456-7890',
-        address: '789 Silicon Blvd, Austin, TX',
-        products: [
-             { name: 'Laptop Pro 15"', sku: 'SKU-44321', cost: 950.00, stock: 25 },
-             { name: 'USB-C Cable', sku: 'SKU-11111', cost: 5.00, stock: 200 },
-             { name: 'Monitor 4K', sku: 'SKU-22222', cost: 220.00, stock: 15 }
-        ]
-    },
-    {
-        id: 'SUP-004',
-        name: 'AudioMasters Ltd',
-        contactPerson: 'Emily White',
-        email: 'emily@audiomasters.co.uk',
-        phone: '+44 20 7946 0958',
-        address: '12 Sound Street, London, UK',
-        products: [
-             { name: 'Studio Microphone', sku: 'SKU-99900', cost: 180.00, stock: 8 },
-             { name: 'Mixing Console', sku: 'SKU-99901', cost: 450.00, stock: 3 }
-        ]
-    }
-]);
+const showAddModal = ref(false);
 
 const filteredSuppliers = computed(() => {
     if (!searchQuery.value) return suppliers.value;
     const query = searchQuery.value.toLowerCase();
-    return suppliers.value.filter(s => 
-        s.name.toLowerCase().includes(query) || 
-        s.contactPerson.toLowerCase().includes(query) ||
-        s.products.some(p => p.name.toLowerCase().includes(query))
+    return suppliers.value.filter(s =>
+        s.name.toLowerCase().includes(query) ||
+        s.company?.toLowerCase().includes(query)
     );
 });
 
@@ -255,11 +195,6 @@ const viewSupplierDetails = (supplier: Supplier) => {
 const closeModal = () => {
     selectedSupplier.value = null;
 };
-
-const openAddSupplierModal = () => {
-    // Placeholder for adding functionality
-    alert('Esta funcionalidad estaria en un modal separado.');
-};
 </script>
 
 <style scoped>
@@ -267,6 +202,7 @@ const openAddSupplierModal = () => {
 background: var(--color-card-stats-fill);
 padding: 1.75rem 2rem;
 max-width: 100%;
+min-height: 100vh;
 margin: 0;
 }
 
@@ -756,5 +692,38 @@ margin: 0;
     .modal-header {
         padding: 1rem;
     }
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: white;
+    border-radius: 16px;
+    margin-top: 1rem;
+}
+
+.empty-state svg {
+    width: 64px;
+    height: 64px;
+    color: #9CA3AF;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.empty-state p {
+    margin: 0;
+    color: #6B7280;
+    font-size: 0.875rem;
 }
 </style>

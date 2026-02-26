@@ -16,18 +16,68 @@
         <!-- Body -->
         <div class="modal-body">
           <form @submit.prevent="handleSubmit" class="product-form">
-            <!-- Name -->
-            <div class="form-group">
-              <label for="name">Nombre del Producto *</label>
-              <input 
-                type="text" 
-                id="name" 
-                v-model="formData.name" 
-                required 
-                placeholder="Ej: Laptop Gamer X1"
-                class="form-input"
-              />
-            </div>
+            <div class="product-top-row">
+              <!-- Zona de subida de imagen (Izquierda) -->
+              <div class="image-upload-section">
+                <!-- Dropzone de imagen principal -->
+                <label 
+                  class="image-dropzone" 
+                  :class="{ 'has-image': imagePreview }"
+                  for="image"
+                >
+                  <div v-if="!imagePreview" class="dropzone-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span class="dropzone-text">Arrastrar imagen principal o tocar para buscar</span>
+                  </div>
+                  <img v-else :src="imagePreview" alt="Preview" class="preview-img" />
+                  
+                  <input
+                    type="file"
+                    id="image"
+                    @change="handleImageUpload"
+                    accept="image/*"
+                    class="file-input-hidden"
+                  />
+                  <!-- Botón quitar imagen (si hay imagen) -->
+                  <button v-if="imagePreview" type="button" class="remove-img-btn" @click.prevent="removeImage" title="Quitar imagen">
+                    <XMarkIcon style="width:16px;height:16px;" />
+                  </button>
+                </label>
+                
+                <!-- Botón de cámara (Debajo del dropzone) -->
+                <label class="img-btn camera camera-standalone" for="camera">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>Cámara</span>
+                  <input
+                    type="file"
+                    id="camera"
+                    @change="handleImageUpload"
+                    accept="image/*"
+                    capture="environment"
+                    class="file-input-hidden"
+                  />
+                </label>
+              </div>
+
+              <!-- Formulario de datos (Derecha) -->
+              <div class="product-data-section">
+                <!-- Name -->
+                <div class="form-group">
+                  <label for="name">Nombre del Producto *</label>
+                  <input 
+                    type="text" 
+                    id="name" 
+                    v-model="formData.name" 
+                    required 
+                    placeholder="Ej: Laptop Gamer X1"
+                    class="form-input"
+                  />
+                </div>
 
             <!-- Category & SKU -->
             <div class="form-row">
@@ -35,31 +85,36 @@
                 <label for="category">Categoría *</label>
                 <select id="category" v-model="formData.category" required class="form-input">
                   <option value="">Seleccione una categoría</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="Smartphone">Smartphone</option>
-                  <option value="Audio">Audio</option>
-                  <option value="Wearable">Wearable</option>
-                  <option value="Fotografía">Fotografía</option>
-                  <option value="Gaming">Gaming</option>
-                  <option value="Accesorios">Accesorios</option>
-                  <option value="Otros">Otros</option>
+                  <option :value="1">Laptop</option>
+                  <option :value="2">Smartphone</option>
+                  <option :value="3">Audio</option>
+                  <option :value="4">Wearable</option>
+                  <option :value="5">Fotografía</option>
+                  <option :value="6">Gaming</option>
+                  <option :value="7">Accesorios</option>
+                  <option :value="8">Otros</option>
                 </select>
               </div>
               <div class="form-group">
-                <label for="sku">SKU / Código *</label>
-                <div class="input-with-button">
-                  <input 
-                    type="text" 
-                    id="sku" 
-                    v-model="formData.sku" 
-                    required 
-                    placeholder="SKU-00000"
-                    class="form-input"
-                  />
-                  <button type="button" @click="generateSKU" class="btn-icon" title="Generar SKU">
-                    <ArrowPathIcon class="icon" />
-                  </button>
+                <div class="label-with-tooltip">
+                  <label for="sku">SKU / Código</label>
+                  <div class="tooltip-container">
+                    <QuestionMarkCircleIcon class="tooltip-icon" />
+                    <div class="tooltip-content">
+                      El SKU (Stock Keeping Unit) es un código identificador único generado automáticamente por el sistema para rastrear este producto en el inventario.
+                    </div>
+                  </div>
                 </div>
+                <input 
+                  type="text" 
+                  id="sku" 
+                  v-model="formData.sku" 
+                  required 
+                  readonly
+                  placeholder="SKU-..."
+                  class="form-input sku-readonly-input"
+                  style="background-color: #f9fafb; cursor: not-allowed; color: #9ca3af;"
+                />
               </div>
             </div>
 
@@ -105,24 +160,34 @@
                 </div>
               </div>
             </div>
-
-            <!-- Image -->
+            
+            <!-- ── PROVEEDOR ── -->
             <div class="form-group">
-              <label for="image">Imagen del Producto</label>
-              <input 
-                type="file" 
-                id="image" 
-                @change="handleImageUpload" 
-                accept="image/*"
-                class="file-input"
-              />
-              <p class="help-text">Selecciona una imagen de tu dispositivo</p>
+              <label for="supplier">Proveedor</label>
+              <div class="supplier-row">
+                <select id="supplier" v-model="formData.supplierId" class="form-input supplier-select">
+                  <option value="">Ninguno</option>
+                  <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
+                <button
+                  type="button"
+                  class="btn-new-supplier"
+                  @click="showAddSupplierModal = true"
+                  title="Crear nuevo proveedor"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                  </svg>
+                  <span>Nuevo</span>
+                </button>
+              </div>
+              <p v-if="formData.supplierId" class="supplier-hint">
+                📦 {{ supplierName }}
+              </p>
             </div>
             
-            <div v-if="imagePreview" class="image-preview">
-                <img :src="imagePreview" alt="Preview" />
-            </div>
-
+              </div> <!-- /product-data-section -->
+            </div>     <!-- /product-top-row -->
             <!-- Actions -->
             <div class="form-actions">
               <AppButton variant="outline" type="button" @click="$emit('close')">Cancelar</AppButton>
@@ -135,11 +200,21 @@
       </div>
     </div>
   </Transition>
+
+  <!-- Sub-modal: Crear Proveedor -->
+  <AddSupplierModal
+    :is-open="showAddSupplierModal"
+    @close="showAddSupplierModal = false"
+    @supplier-created="onSupplierCreated"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue';
-import { XMarkIcon, PlusCircleIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
+import { ref, watch, reactive, computed } from 'vue';
+import { XMarkIcon, PlusCircleIcon, ArrowPathIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
+import AppButton from '@/components/ui/AppButton.vue';
+import AddSupplierModal from '@/components/AddSupplierModal.vue';
+import { useSuppliers } from '@/composables/useSuppliers';
 
 interface Product {
   id: string;
@@ -149,6 +224,7 @@ interface Product {
   stock: number;
   price: number;
   image: string;
+  supplierId?: string;
 }
 
 const props = defineProps<{
@@ -159,42 +235,47 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'productAdded', 'productUpdated']);
 
+const { suppliers } = useSuppliers();
+const showAddSupplierModal = ref(false);
+
 const formData = reactive({
   name: '',
   category: '',
   sku: '',
   stock: 0,
   price: 0,
-  image: ''
+  image: '',
+  supplierId: '',
 });
 
 const imagePreview = ref('');
+const rawImageFile = ref<File | null>(null);
+
+const supplierName = computed(() => {
+  if (!formData.supplierId) return ''
+  return suppliers.value.find(s => s.id === formData.supplierId)?.name ?? ''
+});
 
 // Reset or populate form when modal opens
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     if (props.productToEdit) {
-      // Edit Mode
       Object.assign(formData, {
         name: props.productToEdit.name,
         category: props.productToEdit.category,
         sku: props.productToEdit.sku,
         stock: props.productToEdit.stock,
         price: props.productToEdit.price,
-        image: props.productToEdit.image
+        image: props.productToEdit.image,
+        supplierId: props.productToEdit.supplierId ?? '',
       });
       imagePreview.value = props.productToEdit.image;
+      rawImageFile.value = null; // No new file by default
     } else {
-      // Add Mode
-      Object.assign(formData, {
-        name: '',
-        category: '',
-        sku: '',
-        stock: 0,
-        price: 0,
-        image: ''
-      });
+      Object.assign(formData, { name: '', category: '', sku: '', stock: 0, price: 0, image: '', supplierId: '' });
       imagePreview.value = '';
+      rawImageFile.value = null;
+      generateSKU(); // Auto-generar al crear uno nuevo
     }
   }
 });
@@ -202,77 +283,87 @@ watch(() => props.isOpen, (newVal) => {
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
-  
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
       imagePreview.value = result;
+      // Guardar el string solo de backup/preview local (depende cómo esté el tipado)
       formData.image = result;
     };
     reader.readAsDataURL(file);
+    // Persist real file for FormData
+    rawImageFile.value = file;
+    // Reset input so the same file can be re-selected
+    target.value = '';
   }
 };
 
+const removeImage = () => {
+  imagePreview.value = '';
+  formData.image = '';
+  rawImageFile.value = null;
+};
+
 const generateSKU = () => {
-  let unique = false;
-  let attempts = 0;
-  let candidate = '';
-
-  while (!unique && attempts < 10) {
-    const randomNum = Math.floor(Math.random() * 90000) + 10000;
-    candidate = `SKU-${randomNum}`;
-    
-    // Check if it exists in the provided list
-    // If editing, the current product's SKU is allowed (though we are generating a NEW one, so we should probably ensure it's different from OTHERS)
-    // But usually generating a new SKU means we want a brand new one.
-    if (props.existingSkus && props.existingSkus.includes(candidate)) {
-      attempts++;
-    } else {
-      unique = true;
-    }
+  // Mejor práctica UX: Secuencial con prefijo inteligente.
+  // 1. Buscamos el número más alto actual.
+  let maxNumber = 0;
+  
+  if (props.existingSkus && props.existingSkus.length > 0) {
+    props.existingSkus.forEach(sku => {
+      // Extraer los últimos dígitos de textos como "SKU-0005"
+      const match = sku.match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (num > maxNumber) {
+          maxNumber = num;
+        }
+      }
+    });
   }
-
-  if (unique) {
-    formData.sku = candidate;
-  } else {
-    // Fallback or error if we couldn't find one (highly unlikely space is 90k)
-    console.warn('Could not generate unique SKU after 10 attempts');
-    const randomNum = Math.floor(Math.random() * 900000) + 100000; // Try larger range
-    formData.sku = `SKU-${randomNum}`;
-  }
+  
+  // 2. Incrementamos en 1 y rellenamos con ceros (ej. 0001)
+  const nextNumber = maxNumber + 1;
+  const zeroPadded = nextNumber.toString().padStart(4, '0');
+  
+  // 3. Asignamos el nuevo SKU secuencial
+  formData.sku = `SKU-${zeroPadded}`;
 };
 
 const adjustStock = (amount: number) => {
   const newValue = (formData.stock || 0) + amount;
-  if (newValue >= 0) {
-    formData.stock = newValue;
-  }
+  if (newValue >= 0) formData.stock = newValue;
+};
+
+/** Called when AddSupplierModal successfully creates a supplier */
+const onSupplierCreated = (supplierId: string) => {
+  formData.supplierId = supplierId;
 };
 
 const handleSubmit = () => {
   if (props.productToEdit) {
-    // Update existing product
-    const updatedProduct: Product = {
+    const updatedProduct: any = {
       ...props.productToEdit,
       name: formData.name,
-      category: formData.category,
+      category: formData.category, // Debe ser el ID numérico si viene mapeado, de momento se manda 'Laptop', se ajustará en store o backend fallback
       sku: formData.sku,
       stock: formData.stock,
       price: formData.price,
-      image: formData.image || props.productToEdit.image
+      // Pass real file so Store knows to use FormData
+      imageFile: rawImageFile.value,
+      supplierId: formData.supplierId,
     };
     emit('productUpdated', updatedProduct);
   } else {
-    // Add new product
-    const newProduct: Product = {
-      id: Date.now().toString(),
+    const newProduct: any = {
       name: formData.name,
       category: formData.category,
       sku: formData.sku,
       stock: formData.stock,
       price: formData.price,
-      image: formData.image || ''
+      imageFile: rawImageFile.value,
+      supplierId: formData.supplierId,
     };
     emit('productAdded', newProduct);
   }
@@ -391,13 +482,14 @@ const handleSubmit = () => {
   font-size: 1rem;
   transition: all 0.2s;
   background: #F9FAFB;
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-brand-main, #06402B);
+  border-color: var(--color-brand-main);
   background: white;
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
 }
 
 .form-row {
@@ -430,97 +522,230 @@ const handleSubmit = () => {
   color: #111827;
 }
 
-.file-input {
-  font-size: 0.875rem;
-  color: #6B7280;
+/* Supplier row */
+.supplier-row {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
 }
 
-.file-input::-webkit-file-upload-button {
-  background: rgba(6, 64, 43, 0.06);
+.supplier-select {
+  flex: 1;
+}
+
+.btn-new-supplier {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 0.875rem;
+  background: rgba(6, 64, 43, 0.07);
   color: var(--color-brand-main, #06402B);
-  border: 1px solid rgba(6, 64, 43, 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border: 1.5px solid rgba(6, 64, 43, 0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-right: 1rem;
-  font-weight: 500;
+  white-space: nowrap;
   transition: all 0.2s;
+  font-family: inherit;
+  flex-shrink: 0;
 }
 
-.file-input::-webkit-file-upload-button:hover {
-  background: rgba(6, 64, 43, 0.1);
+.btn-new-supplier svg {
+  width: 16px;
+  height: 16px;
 }
 
-.help-text {
-  font-size: 0.75rem;
-  color: #9CA3AF;
+.btn-new-supplier:hover {
+  background: rgba(6, 64, 43, 0.13);
+  border-color: rgba(6, 64, 43, 0.4);
+}
+
+.supplier-hint {
+  font-size: 0.78rem;
+  color: var(--color-brand-main, #06402B);
   margin: 0;
+  font-weight: 500;
 }
 
-.image-preview {
-  height: 160px;
+/* Grid layout para imagen + form */
+.product-top-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .product-top-row {
+    grid-template-columns: 160px 1fr;
+  }
+}
+
+.image-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.product-data-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Fix CSS de los selectores para la flecha */
+select.form-input {
+  /* Eliminar la apariencia nativa y añadir la flecha SVG garantiza padding correcto */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3e%3c/svg%3e");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1.2rem;
+  padding-right: 2.5rem; /* Ajuste crítico: espacio para la flecha */
+  background-color: #F9FAFB;
+}
+
+select.form-input:focus {
+  background-color: white;
+}
+
+/* Image Dropzone Nuevo Estilo */
+.image-dropzone {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
-  overflow: hidden;
-  background: #F3F4F6;
+  border: 2px dashed #D1D5DB;
+  background-color: #F9FAFB;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #D1D5DB;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
 }
 
-.image-preview img {
+.image-dropzone:hover {
+  border-color: var(--color-brand-main, #06402B);
+  background-color: rgba(6, 64, 43, 0.03);
+}
+
+.image-dropzone.has-image {
+  border-style: solid;
+  border-color: transparent;
+  background: black; /* fondo en caso de imagenes transparentes */
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  gap: 0.5rem;
+  color: #6B7280;
+}
+
+.upload-icon {
+  width: 32px;
+  height: 32px;
+  color: #9CA3AF;
+  margin-bottom: 0.25rem;
+}
+
+.image-dropzone:hover .upload-icon {
+  color: var(--color-brand-main, #06402B);
+}
+
+.dropzone-text {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.preview-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Actions */
+/* Botones de imagen */
+.img-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid #D1D5DB;
+  background: #F9FAFB;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  user-select: none;
+}
+
+.img-btn svg {
+  width: 18px;
+  height: 18px;
+  color: inherit;
+}
+
+.img-btn.camera-standalone {
+  background: white;
+  color: var(--color-brand-main, #06402B);
+  border-color: var(--color-brand-main, #06402B);
+}
+
+.img-btn.camera-standalone:hover {
+  background: rgba(6, 64, 43, 0.05);
+}
+
+/* visually hidden real input */
+.file-input-hidden {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  font-size: 0;
+}
+
+
+
+.remove-img-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-img-btn:hover {
+  background: rgba(0,0,0,0.75);
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #E5E7EB;
-}
-
-.btn-cancel {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: 1.5px solid #d1d5db;
-  color: #374151;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-}
-
-.btn-cancel:hover {
-  border-color: var(--color-brand-main, #06402B);
-  color: var(--color-brand-main, #06402B);
-  background: rgba(6, 64, 43, 0.04);
-}
-
-.btn-save {
-  padding: 0.75rem 1.5rem;
-  background: var(--color-brand-main, #06402B);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Inter', sans-serif;
-}
-
-.btn-save:hover {
-  background: #0a5c3a;
-  box-shadow: 0 4px 12px rgba(6, 64, 43, 0.25);
-  transform: translateY(-1px);
 }
 
 /* Transitions */
@@ -593,6 +818,71 @@ const handleSubmit = () => {
 
 .btn-quick-add:hover {
   background: #DBEAFE;
-  color: #1E40AF;
+  border-color: #2e8b57;
+}
+
+/* Tooltip styles */
+.label-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.label-with-tooltip label {
+  margin-bottom: 0;
+}
+.tooltip-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+.tooltip-icon {
+  width: 18px;
+  height: 18px;
+  color: #9CA3AF;
+  transition: color 0.2s;
+}
+.tooltip-container:hover .tooltip-icon {
+  color: var(--color-brand-main, #06402B);
+}
+.tooltip-content {
+  position: absolute;
+  bottom: 125%;
+  right: -10px;
+  transform: translateY(10px);
+  background: #1F2937;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  width: 250px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 50;
+}
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 14px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #1F2937 transparent transparent transparent;
+}
+.tooltip-container:hover .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.sku-readonly-input::placeholder {
+  color: #d1d5db;
 }
 </style>

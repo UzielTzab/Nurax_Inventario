@@ -335,7 +335,7 @@ defineProps<{
   padding: 0.7rem 1.25rem;
   margin: 0 0.5rem;
   border-radius: 24px;
-  color: var(--color-brand-main);
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 1rem;
   font-weight: 300;
@@ -384,7 +384,7 @@ defineProps<{
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  color: var(--color-brand-main);
+  color: var(--color-text-secondary);
   transition: color 0.2s;
 }
 

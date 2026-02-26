@@ -8,7 +8,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M2.628 1.601C5.028 1.2 7.49 1 10 1s4.973.2 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clip-rule="evenodd" />
           </svg>
-          Filtrar
+          Ver filtros
         </button>
       </div>
     </div>
@@ -86,7 +86,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="product in products"
+            v-for="(product, index) in products"
             :key="product.id"
             class="product-row"
             :class="{ 'row-out-of-stock': product.stock === 0 }"
@@ -136,7 +136,7 @@
               <div class="action-menu-wrapper" :ref="el => setMenuRef(el as HTMLElement, product.id)">
                 <button
                   class="btn-dots"
-                  @click.stop="toggleMenu(product.id)"
+                  @click.stop="toggleMenu(product.id, $event)"
                   :class="{ active: openMenuId === product.id }"
                   title="Acciones"
                 >
@@ -144,9 +144,20 @@
                   <span></span>
                   <span></span>
                 </button>
-                <Transition name="menu-pop">
-                  <div v-if="openMenuId === product.id" class="action-dropdown">
-                    <button class="dropdown-item" @click="handleEdit(product)">
+                <Teleport to="body">
+                  <Transition name="menu-pop">
+                    <div 
+                      v-if="openMenuId === product.id" 
+                      class="action-dropdown teleported-dropdown"
+                      :style="{ 
+                        position: 'fixed',
+                        top: dropdownPos.top,
+                        bottom: dropdownPos.bottom,
+                        left: dropdownPos.left,
+                        transformOrigin: dropdownPos.transformOrigin
+                      }"
+                    >
+                      <button class="dropdown-item" @click="handleEdit(product)">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
                         <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
@@ -155,12 +166,13 @@
                     </button>
                     <button class="dropdown-item item-danger" @click="handleDelete(product)">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l-.3-7.5z" clip-rule="evenodd" />
                       </svg>
                       Eliminar
                     </button>
                   </div>
                 </Transition>
+              </Teleport>
               </div>
             </td>
           </tr>
@@ -252,27 +264,79 @@ const clearFilters = () => {
 // --- Dots menu ---
 const openMenuId = ref<string | null>(null);
 const menuRefs = new Map<string, HTMLElement>();
+const dropdownPos = ref({ top: '0px', left: '0px', bottom: 'auto', transformOrigin: 'top right' });
 
 const setMenuRef = (el: HTMLElement | null, id: string) => {
   if (el) menuRefs.set(id, el);
   else menuRefs.delete(id);
 };
 
-const toggleMenu = (id: string) => {
-  openMenuId.value = openMenuId.value === id ? null : id;
-};
-
-const handleClickOutside = (e: MouseEvent) => {
-  if (openMenuId.value) {
-    const el = menuRefs.get(openMenuId.value);
-    if (el && !el.contains(e.target as Node)) {
-      openMenuId.value = null;
+const toggleMenu = (id: string, event: MouseEvent) => {
+  if (openMenuId.value === id) {
+    openMenuId.value = null;
+  } else {
+    openMenuId.value = id;
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const menuHeight = 120; // Approximate menu height
+    
+    if (spaceBelow < menuHeight && rect.top > menuHeight) {
+      // Drop up
+      dropdownPos.value = {
+        top: 'auto',
+        bottom: `${window.innerHeight - rect.top + 6}px`,
+        left: `${rect.right - 150}px`,
+        transformOrigin: 'bottom right'
+      };
+    } else {
+      // Drop down
+      dropdownPos.value = {
+        top: `${rect.bottom + 6}px`,
+        bottom: 'auto',
+        left: `${rect.right - 150}px`,
+        transformOrigin: 'top right'
+      };
     }
   }
 };
 
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
+const handleClickOutside = (e: MouseEvent) => {
+  if (openMenuId.value) {
+    // Si se clica fuera del dropdown y NO fue el propio btn de 3 puntos
+    // NOTA: al usar Teleport, el e.target NO cae dentro del wrapper.
+    const dropdownEl = document.querySelector('.teleported-dropdown');
+    const menuWrapperEl = menuRefs.get(openMenuId.value);
+    
+    // Si clickeó dentro del dropdown flotante, no cerrarlo (a menos que sea handleEdit etc, que ya lo cierran explícitamente)
+    if (dropdownEl && dropdownEl.contains(e.target as Node)) {
+       return;
+    }
+    
+    // Si clickeó en el mismo botón que lo abriò, no hay que hacer toggle dos veces
+    if (menuWrapperEl && menuWrapperEl.contains(e.target as Node)) {
+        return;
+    }
+
+    openMenuId.value = null;
+  }
+};
+
+const handleScroll = (e: Event) => {
+  if (openMenuId.value) {
+    openMenuId.value = null;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+  window.addEventListener('scroll', handleScroll, true); // capture = true
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('scroll', handleScroll, true);
+});
 
 const handleEdit = (product: Product) => {
   openMenuId.value = null;
@@ -767,6 +831,21 @@ td {
 .menu-pop-leave-to {
   opacity: 0;
   transform: scale(0.92) translateY(-4px);
+}
+
+.action-dropdown.drop-up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.action-dropdown.drop-up.menu-pop-enter-active,
+.action-dropdown.drop-up.menu-pop-leave-active {
+  transform-origin: bottom right;
+}
+
+.action-dropdown.drop-up.menu-pop-enter-from,
+.action-dropdown.drop-up.menu-pop-leave-to {
+  transform: scale(0.92) translateY(4px);
 }
 
 /* =====================

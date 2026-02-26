@@ -34,6 +34,14 @@
 
         <!-- Área derecha topbar -->
         <div class="topbar-right">
+          <!-- Botón Vender (Acceso Global) -->
+          <AppButton variant="fill" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+            Vender
+          </AppButton>
+
           <!-- Notificaciones -->
           <div class="topbar-notification-wrapper" ref="notificationWrapperRef">
             <button class="icon-btn" title="Notificaciones" @click="toggleNotifications">
@@ -107,11 +115,7 @@
                   <button class="dropdown-item" @click="openProfileEdit">
                     <UserCircleIcon class="w-5 h-5" />
                     <span>Editar perfil</span>
-                  </button>
-                  <button class="dropdown-item">
-                    <KeyIcon class="w-5 h-5" />
-                    <span>Contraseña</span>
-                  </button>
+                  </button>                  
                 </div>
 
                 <div class="dropdown-divider"></div>
@@ -120,7 +124,7 @@
                 <div class="dropdown-menu">
                   <!-- usar el botón appButton que es un componente, usar el varian fill -->
                   <AppButton
-                    variant="fill"
+                    variant="outline"
                     color="primary"
                     size="sm"
                     @click="openExcelModal"
@@ -153,12 +157,13 @@
 
     <!-- Sales Modal -->
     <Teleport to="body">
-      <SalesModal
+    <SalesModal
         v-if="salesStore.isModalOpen"
         :is-open="salesStore.isModalOpen"
         :products="productStore.products"
         @close="salesStore.closeModal()"
         @sale-completed="handleSaleCompleted"
+        @sale-reverted="handleSaleReverted"
       />
     </Teleport>
 
@@ -607,6 +612,18 @@ const handleSaleCompleted = (items: any[]) => {
   });
 };
 
+const handleSaleReverted = (saleId: string, items: { id: string; quantity: number }[]) => {
+  // 1. Eliminar del historial de ventas
+  salesStore.removeSale(saleId);
+  // 2. Restaurar el stock de cada producto
+  items.forEach(item => {
+    const product = productStore.products.find(p => p.id === item.id);
+    if (product) {
+      productStore.updateStock(item.id, product.stock + item.quantity);
+    }
+  });
+};
+
 const handleSidebarQuickSell = () => {
   salesStore.openModal();
 };
@@ -658,6 +675,9 @@ defineEmits(['quickSell']);
   gap: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
+  position: sticky;
+  top: 12px;
+  z-index: 100;
 }
 
 .mobile-menu-btn {
@@ -860,7 +880,7 @@ defineEmits(['quickSell']);
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 275px;
+  width: 350px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -919,6 +939,10 @@ defineEmits(['quickSell']);
 }
 
 .dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   padding: 0.375rem 0.5rem;
 }
 
@@ -980,7 +1004,7 @@ defineEmits(['quickSell']);
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 90;
+  z-index: 950;
 }
 
 /* ===== PROFILE EDIT MODAL ===== */
@@ -1159,7 +1183,7 @@ defineEmits(['quickSell']);
     height: 100vh;
     border-radius: 0 20px 20px 0;
     transform: translateX(-100%);
-    z-index: 100;
+    z-index: 1000;
   }
 
   .sidebar-card.mobile-open {
@@ -1171,9 +1195,12 @@ defineEmits(['quickSell']);
   .main-column { gap: 0; }
 
   .topbar-card {
+    top: 0;
     border-radius: 0;
     border-bottom: 1px solid #e5e7eb;
-    box-shadow: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 0.75rem 1rem;
+    z-index: 100;
   }
 
   .content-card { border-radius: 0; box-shadow: none; }

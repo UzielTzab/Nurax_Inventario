@@ -93,7 +93,7 @@ const handleClick = (event: MouseEvent) => {
   Variante: Outline (Solo contorno)
 */
 .app-button--outline {
-  background-color: #ffffff;
+  background-color: transparent;
   color: var(--color-brand-main, #06402B);
   border: 1px solid var(--color-brand-main);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
