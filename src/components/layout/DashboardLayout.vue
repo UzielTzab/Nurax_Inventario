@@ -65,7 +65,6 @@
           <!-- Divisor -->
           <div class="topbar-divider"></div>
 
-          <!-- Perfil con dropdown -->
           <div class="topbar-profile-wrapper" ref="profileWrapperRef">
             <button
               class="topbar-profile"
@@ -74,13 +73,13 @@
             >
             <div class="topbar-avatar">
               <img
-                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name ?? 'U')}&background=06402b&color=fff`"
-                :alt="currentUser?.name"
+                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || currentUser?.username || 'U')}&background=06402b&color=fff`"
+                :alt="currentUser?.name || currentUser?.username"
               />
             </div>
               <div class="topbar-profile-text">
-                <span class="topbar-name">{{ currentUser?.name ?? 'Usuario' }}</span>
-                <span class="topbar-email">{{ currentUser?.email ?? '' }}</span>
+                <span class="topbar-name">{{ currentUser?.name || currentUser?.username || 'Usuario' }}</span>
+                <span class="topbar-email">{{ currentUser?.email || '' }}</span>
               </div>
               <ChevronDownIcon
                 class="profile-chevron"
@@ -95,13 +94,13 @@
                 <div class="dropdown-header">
                   <div class="dropdown-avatar">
                     <img
-                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name ?? 'U')}&background=06402b&color=fff&size=80`"
-                      :alt="currentUser?.name"
+                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || currentUser?.username || 'U')}&background=06402b&color=fff&size=80`"
+                      :alt="currentUser?.name || currentUser?.username"
                     />
                   </div>
                   <div>
-                    <p class="dropdown-name">{{ currentUser?.name ?? 'Usuario' }}</p>
-                    <p class="dropdown-email">{{ currentUser?.email ?? '' }}</p>
+                    <p class="dropdown-name">{{ currentUser?.name || currentUser?.username || 'Usuario' }}</p>
+                    <p class="dropdown-email">{{ currentUser?.email || '' }}</p>
                     <span class="dropdown-role-badge">
                       {{ currentUser?.role === 'admin' ? 'Administrador' : 'Cliente' }}
                     </span>
@@ -375,6 +374,7 @@ import { useProductStore } from '@/stores/product.store';
 import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
 import { useRouter } from 'vue-router';
+import { useSnackbar } from '@/composables/useSnackbar';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
 import {
@@ -423,8 +423,8 @@ const toggleNotifications = () => {
 };
 
 const openProfileEdit = () => {
-  profileForm.name = currentUser.value?.name ?? '';
-  profileForm.email = currentUser.value?.email ?? '';
+  profileForm.name = currentUser.value?.name || currentUser.value?.username || '';
+  profileForm.email = currentUser.value?.email || '';
   showProfileMenu.value = false;
   showProfileEdit.value = true;
 };
@@ -611,16 +611,36 @@ const handleSaleCompleted = (items: any[]) => {
   });
 };
 
-const handleSaleReverted = (saleId: string | number, items: { id: string | number; quantity: number }[]) => {
-  // 1. Eliminar del historial de ventas
-  salesStore.removeSale(saleId);
-  // 2. Restaurar el stock de cada producto
-  items.forEach(item => {
-    const product = productStore.products.find(p => p.id === item.id);
-    if (product) {
-      productStore.updateStock(item.id, product.stock + item.quantity);
-    }
-  });
+const { enqueueSnackbar } = useSnackbar();
+
+const handleSaleReverted = async (saleId: string | number, items: { id: string | number; quantity: number }[]) => {
+  // Call backend to cancel the sale
+  const result = await salesStore.cancelSale(saleId);
+  
+  if (result.success) {
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Venta revertida',
+      message: 'La venta ha sido cancelada y el stock restaurado exitosamente.',
+      duration: 3000
+    });
+    // Restore stock locally
+    items.forEach(item => {
+      const product = productStore.products.find(p => p.id === item.id);
+      if (product) {
+        productStore.updateStock(item.id, product.stock + item.quantity);
+      }
+    });
+    // We should probably explicitly fetch sales so the store gets the new "cancelled" status
+    await salesStore.fetchSales();
+  } else {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Error al revertir',
+      message: result.error || 'Ocurrió un error inesperado al intentar cancelar la venta.',
+      duration: 5000
+    });
+  }
 };
 
 const handleSidebarQuickSell = () => {

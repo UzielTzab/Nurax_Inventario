@@ -62,10 +62,11 @@
           </div>
 
           <div class="card-footer">
-            <div class="stats-item">
-              <!-- <span class="stats-value">{{ supplier.products.length }}</span>
-              <span class="stats-label">Productos</span> -->
-            </div>
+            <button class="btn-danger-outline" @click.stop="handleDeleteSupplier(supplier)" title="Eliminar proveedor">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+              </svg>
+            </button>
             <AppButton variant="outline">Ver Detalles</AppButton>
           </div>
         </div>
@@ -160,6 +161,16 @@
       @close="showAddModal = false"
       @supplier-created="showAddModal = false"
     />
+    <!-- Modal: Confirmar Borrado -->
+    <ConfirmationModal
+      :is-open="confirmationState.isOpen"
+      :title="confirmationState.title"
+      :message="confirmationState.message"
+      :type="confirmationState.type"
+      :confirm-text="confirmationState.confirmText"
+      @close="confirmationState.isOpen = false"
+      @confirm="handleConfirmation"
+    />
   </DashboardLayout>
 </template>
 
@@ -167,9 +178,55 @@
 import { ref, computed } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
+import { useSnackbar } from '@/composables/useSnackbar';
 import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
 
-const { suppliers } = useSuppliers();
+const { enqueueSnackbar } = useSnackbar();
+const { suppliers, deleteSupplier } = useSuppliers();
+
+const confirmationState = ref({
+  isOpen: false,
+  title: '',
+  message: '',
+  type: 'info' as 'danger' | 'warning' | 'info' | 'success',
+  confirmText: 'Confirmar',
+  onConfirm: () => {}
+});
+
+const handleConfirmation = () => confirmationState.value.onConfirm();
+
+const handleDeleteSupplier = (supplier: Supplier) => {
+  confirmationState.value = {
+    isOpen: true,
+    title: 'Eliminar Proveedor',
+    message: `¿Estás seguro de que deseas eliminar al proveedor "${supplier.name}"? Los productos vinculados a este proveedor perderán la referencia de suministro. Esta acción no se puede deshacer.`,
+    type: 'danger',
+    confirmText: 'Sí, eliminar',
+    onConfirm: async () => {
+      confirmationState.value.isOpen = false;
+      const result = await deleteSupplier(supplier.id);
+      if (result.success) {
+        enqueueSnackbar({
+          type: 'success',
+          title: 'Proveedor eliminado',
+          message: `${supplier.name} eliminado exitosamente.`,
+          duration: 3000
+        });
+        if (selectedSupplier.value?.id === supplier.id) {
+          selectedSupplier.value = null; // Cierra el panel de detalles si estaba abierto
+        }
+      } else {
+        enqueueSnackbar({
+          type: 'error',
+          title: 'No se pudo eliminar',
+          message: result.error || 'Ocurrió un error inesperado.',
+          duration: 4000
+        });
+      }
+    }
+  };
+};
 
 const searchQuery = ref('');
 const selectedSupplier = ref<Supplier | null>(null);
@@ -425,6 +482,29 @@ margin: 0;
 .btn-details:hover {
     border-color: #9CA3AF;
     background: #F3F4F6;
+}
+
+.btn-danger-outline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 1px solid #FECACA;
+    border-radius: 6px;
+    background: white;
+    color: #DC2626;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger-outline:hover {
+    background: #FEF2F2;
+    border-color: #F87171;
+}
+
+.btn-danger-outline svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Modal Styles */
