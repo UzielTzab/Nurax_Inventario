@@ -56,6 +56,7 @@ import {
   ShoppingBagIcon as ShoppingBagOutline,
   UsersIcon as UsersOutline,
   UserGroupIcon as UserGroupOutline,
+  Cog6ToothIcon as Cog6ToothOutline,
 } from '@heroicons/vue/24/outline';
 
 // Heroicons Solid (activo)
@@ -64,6 +65,7 @@ import {
   ShoppingBagIcon as ShoppingBagSolid,
   UsersIcon as UsersSolid,
   UserGroupIcon as UserGroupSolid,
+  Cog6ToothIcon as Cog6ToothSolid,
 } from '@heroicons/vue/24/solid';
 
 const router = useRouter();
@@ -99,6 +101,8 @@ watch(() => route.path, (path) => {
     activeItem.value = 'inventory';
   } else if (path.includes('/dashboard/clients')) {
     activeItem.value = 'clients';
+  } else if (path.includes('/dashboard/settings')) {
+    activeItem.value = 'settings';
   }
 }, { immediate: true });
 
@@ -131,6 +135,14 @@ const allMenuSections: MenuSection[] = [
         roles: ['cliente'],
         iconOutline: UsersOutline,
         iconSolid: UsersSolid,
+      },
+      {
+        id: 'settings',
+        label: 'Configuración',
+        route: '/dashboard/settings',
+        roles: ['cliente'],
+        iconOutline: Cog6ToothOutline,
+        iconSolid: Cog6ToothSolid,
       }
     ]
   },

@@ -187,7 +187,8 @@
 
                   <td class="total-cell">${{ formatMoney(Number(sale.total)) }}</td>
                   <td>
-                    <span class="status-badge success">Completado</span>
+                    <span v-if="sale.status === 'cancelled'" class="status-badge danger">Cancelado</span>
+                    <span v-else class="status-badge success">Completado</span>
                   </td>
                   <td>
                     <button
@@ -216,12 +217,20 @@
                       <div class="detail-content">
                         <div class="detail-header">
                           <p class="detail-label">Detalle de productos vendidos:</p>
-                          <button class="btn-reprint" @click="printSaleTicket(sale)" title="Reimprimir ticket">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
-                            </svg>
-                            Reimprimir Ticket
-                          </button>
+                          <div class="header-actions" style="display: flex; gap: 0.5rem;">
+                            <button v-if="sale.status !== 'cancelled'" class="btn-revert" @click="handleCancel(sale.id)" title="Revertir venta">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                              </svg>
+                              Revertir Venta
+                            </button>
+                            <button class="btn-reprint" @click="printSaleTicket(sale)" title="Reimprimir ticket">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                              </svg>
+                              Reimprimir Ticket
+                            </button>
+                          </div>
                         </div>
                         <div class="detail-items">
                           <div
@@ -250,6 +259,15 @@
         />
       </div>
     </div>
+    <ConfirmationModal
+      :is-open="confirmModal.isOpen"
+      :title="confirmModal.title"
+      :message="confirmModal.message"
+      :type="confirmModal.type"
+      :confirm-text="confirmModal.confirmText"
+      @close="confirmModal.isOpen = false"
+      @confirm="executeCancel"
+    />
   </DashboardLayout>
 </template>
 
@@ -260,6 +278,8 @@ import Pagination from '@/components/ui/Pagination.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import { CurrencyDollarIcon } from '@heroicons/vue/24/outline';
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 import type { Sale } from '@/stores/sales.store';
 import {
@@ -392,6 +412,52 @@ const printSaleTicket = (sale: Sale) => {
   setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
 };
 
+// ── Revertir Venta ──
+const { enqueueSnackbar } = useSnackbar();
+const confirmModal = ref({
+  isOpen: false,
+  title: '',
+  message: '',
+  type: 'info' as 'danger' | 'warning' | 'info' | 'success',
+  confirmText: 'Confirmar',
+  saleIdToCancel: null as string | number | null
+});
+
+const handleCancel = (saleId: string | number) => {
+  confirmModal.value = {
+    isOpen: true,
+    title: 'Revertir Venta',
+    message: '¿Estás seguro de que deseas revertir esta venta? Se actualizará el inventario sumando de vuelta el stock de los productos. Esta acción no se puede deshacer.',
+    type: 'danger',
+    confirmText: 'Sí, Revertir',
+    saleIdToCancel: saleId
+  };
+};
+
+const executeCancel = async () => {
+  const saleId = confirmModal.value.saleIdToCancel;
+  if (saleId !== null) {
+    confirmModal.value.isOpen = false;
+    
+    const result = await salesStore.cancelSale(saleId);
+    if (result.success) {
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Venta revertida',
+        message: 'La venta ha sido cancelada y el stock restaurado exitosamente.',
+        duration: 3000
+      });
+      await salesStore.fetchSales();
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Error al revertir',
+        message: result.error || 'No se pudo cancelar la venta.',
+        duration: 5000
+      });
+    }
+  }
+};
 
 // ── Filtered Sales Logic ──
 const filteredSales = computed(() => {
@@ -969,8 +1035,45 @@ const barChartOptions: ChartOptions<'bar'> = {
 }
 
 .status-badge.success {
-  background: #ECFDF5;
-  color: #10B981;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.status-badge.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.btn-icon-active {
+  background: var(--color-brand-primary);
+  color: white;
+  border-color: var(--color-brand-primary);
+}
+
+.btn-revert {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-revert:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #dc2626;
+}
+
+.btn-revert svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ── Columna de productos ── */

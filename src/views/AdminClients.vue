@@ -137,7 +137,7 @@
                   </div>
                 </td>
               </tr>
-              <tr v-if="filteredClients.length === 0">
+              <tr v-if="filteredClients.length === 0 && !isLoading">
                 <td colspan="6" class="empty-state">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
@@ -272,11 +272,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import apiClient from '@/services/api';
+import { useSnackbar } from '@/composables/useSnackbar';
+
+const { enqueueSnackbar } = useSnackbar();
 
 interface Client {
-  id: string;
+  id: string | number;
   name: string;
   email: string;
   company: string;
@@ -291,14 +295,8 @@ const AVATAR_COLORS = [
   '#b45309', '#be185d', '#0369a1', '#15803d',
 ];
 
-const clients = ref<Client[]>([
-  { id: '1', name: 'María López',      email: 'maria@floreria.mx',   company: 'Florería Elegance',  plan: 'pro',        joinDate: '12 Ene 2024', active: true,  avatarColor: AVATAR_COLORS[0] ?? '#06402B' },
-  { id: '2', name: 'Carlos Méndez',    email: 'carlos@ferrshop.mx',  company: 'FerreShop MX',       plan: 'básico',     joinDate: '28 Ene 2024', active: true,  avatarColor: AVATAR_COLORS[1] ?? '#06402B' },
-  { id: '3', name: 'Ana Rodríguez',    email: 'ana@boutique.mx',     company: 'Boutique Ánima',     plan: 'enterprise', joinDate: '05 Feb 2024', active: false, avatarColor: AVATAR_COLORS[2] ?? '#06402B' },
-  { id: '4', name: 'Roberto Herrera',  email: 'r.herrera@tech.io',   company: 'TechInov',           plan: 'pro',        joinDate: '14 Feb 2024', active: true,  avatarColor: AVATAR_COLORS[3] ?? '#06402B' },
-  { id: '5', name: 'Laura Gutiérrez',  email: 'lgutierrez@foods.mx', company: 'Sabores del Norte',  plan: 'básico',     joinDate: '22 Feb 2024', active: true,  avatarColor: AVATAR_COLORS[4] ?? '#06402B' },
-  { id: '6', name: 'Fernando Torres',  email: 'ftorres@muebles.mx',  company: 'Muebles Estilo',     plan: 'pro',        joinDate: '01 Mar 2024', active: false, avatarColor: AVATAR_COLORS[5] ?? '#06402B' },
-]);
+const clients = ref<Client[]>([]);
+const isLoading = ref(false);
 
 const searchQuery = ref('');
 const statusFilter = ref<'all' | 'active' | 'inactive'>('all');
@@ -336,21 +334,77 @@ const confirmToggle = (client: Client) => {
 };
 
 // Aplica el cambio de estado después de confirmar
-const applyToggle = () => {
+const applyToggle = async () => {
   if (!toggleTarget.value) return;
-  toggleTarget.value.active = !toggleTarget.value.active;
-  toggleTarget.value = null;
+  const client = toggleTarget.value;
+  try {
+    const response = await apiClient.patch<{ active: boolean }>(`/clients/${client.id}/toggle_active/`, {});
+    if (response.success && response.data) {
+      client.active = response.data.active;
+      enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: 'El estado del cliente fue actualizado.', duration: 3000 });
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 3000 });
+    }
+  } catch (error) {
+    console.error("No tienes permisos o el cliente no existe", error);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+  } finally {
+    toggleTarget.value = null;
+  }
 };
 
 const confirmDelete = (client: Client) => {
   deleteTarget.value = client;
 };
 
-const deleteClient = () => {
+const deleteClient = async () => {
   if (!deleteTarget.value) return;
-  clients.value = clients.value.filter(c => c.id !== deleteTarget.value!.id);
-  deleteTarget.value = null;
+  const targetId = deleteTarget.value.id;
+  try {
+    const response = await apiClient.delete(`/clients/${targetId}/`);
+    if (response.success) {
+      clients.value = clients.value.filter(c => c.id !== targetId);
+      enqueueSnackbar({ type: 'success', title: 'Cliente eliminado', message: 'El cliente ha sido eliminado exitosamente.', duration: 3000 });
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar al cliente', duration: 3000 });
+    }
+  } catch (err) {
+    console.error(err);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+  } finally {
+    deleteTarget.value = null;
+  }
 };
+
+const fetchClients = async () => {
+  isLoading.value = true;
+  try {
+    const response = await apiClient.get<any[]>('/clients/');
+    if (response.success && response.data) {
+      clients.value = response.data.map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        company: c.company,
+        plan: c.plan,
+        active: c.active,
+        joinDate: new Date(c.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+        avatarColor: c.avatar_color || '#06402B'
+      }));
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudieron cargar los clientes.', duration: 3000 });
+    }
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchClients();
+});
 
 const addClient = () => {
   const colorIndex = clients.value.length % AVATAR_COLORS.length;

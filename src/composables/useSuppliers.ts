@@ -68,5 +68,26 @@ export function useSuppliers() {
     }
   }
 
-  return { suppliers, isLoading, error, fetchSuppliers, addSupplier }
+  async function deleteSupplier(id: string | number) {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.delete(`/suppliers/${id}/`);
+      if (response.success) {
+         suppliers.value = suppliers.value.filter(s => s.id !== id);
+         return { success: true };
+      } else {
+         error.value = response.error || 'Error al eliminar proveedor';
+         return { success: false, error: error.value };
+      }
+    } catch(err: any) {
+      error.value = err.message || 'Error de conexión';
+      console.error(err);
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  return { suppliers, isLoading, error, fetchSuppliers, addSupplier, deleteSupplier }
 }

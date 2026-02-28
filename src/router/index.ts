@@ -9,6 +9,7 @@ import Inventory from '@/views/Inventory.vue'
 import SalesHistory from '@/views/SalesHistory.vue'
 import Suppliers from '@/views/Suppliers.vue'
 import AdminClients from '@/views/AdminClients.vue'
+import Settings from '@/views/Settings.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -22,27 +23,36 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard',
-    redirect: '/dashboard/inventory'
+    // Removed static redirect, handled in guard
+    redirect: () => {
+      // Will be handled in the guard. For fallback:
+      return '/dashboard/inventory'
+    }
   },
   {
     path: '/dashboard/inventory',
     component: Inventory,
-    meta: { title: 'Inventario', roles: ['admin', 'cliente'] }
+    meta: { title: 'Inventario', roles: ['cliente'] }
   },
   {
     path: '/dashboard/sales',
     component: SalesHistory,
-    meta: { title: 'Historial de Ventas', roles: ['admin', 'cliente'] }
+    meta: { title: 'Historial de Ventas', roles: ['cliente'] }
   },
   {
     path: '/dashboard/suppliers',
     component: Suppliers,
-    meta: { title: 'Proveedores', roles: ['admin', 'cliente'] }
+    meta: { title: 'Proveedores', roles: ['cliente'] }
   },
   {
     path: '/dashboard/clients',
     component: AdminClients,
     meta: { title: 'Clientes', roles: ['admin'] }
+  },
+  {
+    path: '/dashboard/settings',
+    component: Settings,
+    meta: { title: 'Configuración', roles: ['cliente'] }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -64,6 +74,11 @@ router.beforeEach((to) => {
 
   // Si no está autenticado → login
   if (!isAuthenticated.value) return '/auth/login'
+
+  // Redirigir la base de dashboard dinámicamente según el rol
+  if (to.path === '/dashboard' && currentUser.value) {
+    return currentUser.value.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory';
+  }
 
   // Verificar roles si la ruta los requiere
   const requiredRoles = to.meta.roles as string[] | undefined

@@ -51,7 +51,7 @@ export const useSalesStore = defineStore('sales', () => {
       const response = await apiClient.post<Sale>('/sales/', saleData);
       if (response.success && response.data) {
         sales.value.unshift(response.data);
-        return { success: true, transaction_id: response.data.transaction_id };
+        return { success: true, transaction_id: response.data.transaction_id, id: response.data.id };
       } else {
         error.value = response.error || 'Error al procesar la venta';
         return { success: false, error: error.value };
@@ -68,6 +68,37 @@ export const useSalesStore = defineStore('sales', () => {
 
   const removeSale = (id: string | number) => {
     sales.value = sales.value.filter(s => String(s.id) !== String(id));
+  };
+
+  const cancelSale = async (id: string | number) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.post<{status: string}>(`/sales/${id}/cancel/`, {});
+      if (response.success) {
+        // Find and update status instead of removing, or just remove from list if desired.
+        // The backend might return standard success response.
+        const saleIndex = sales.value.findIndex(s => String(s.id) === String(id));
+        if (saleIndex !== -1) {
+          const saleToCancel = sales.value[saleIndex];
+          if (saleToCancel) {
+            saleToCancel.status = 'cancelled';
+          }
+          // Or just calling removeSale(id) if the UI should not show cancelled sales
+        }
+        return { success: true };
+      } else {
+        error.value = response.error || 'No se pudo cancelar la venta';
+        return { success: false, error: error.value };
+      }
+    } catch (err: any) {
+      const msg = err.message || 'Error al conectar con el servidor';
+      error.value = msg;
+      console.error(err);
+      return { success: false, error: msg };
+    } finally {
+      isLoading.value = false;
+    }
   };
 
   const weeklyData = computed(() => {
@@ -115,6 +146,7 @@ export const useSalesStore = defineStore('sales', () => {
     fetchSales, 
     addSale, 
     removeSale, 
+    cancelSale,
     weeklyData, 
     isModalOpen, 
     openModal, 

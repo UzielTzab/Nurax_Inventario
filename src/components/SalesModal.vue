@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div v-if="isOpen" class="modal-overlay">
     <div class="modal-content">
       <!-- Modal Header -->
@@ -325,7 +325,7 @@ const handleCheckout = async () => {
   });
   
   if (result.success && result.transaction_id) {
-    lastSaleId.value = result.transaction_id;
+    lastSaleId.value = result.id as number | string;
     // Emit sale completed event (descuenta stock visualmente)
     emit('sale-completed', [...cart.value]);
     
