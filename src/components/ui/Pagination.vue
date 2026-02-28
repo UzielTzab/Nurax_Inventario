@@ -107,10 +107,6 @@ const emit = defineEmits<{
 // ── Computed ───────────────────────────────────────────────────────────────
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 
-const startItem = computed(() => props.total === 0 ? 0 : (props.currentPage - 1) * props.pageSize + 1)
-
-const endItem = computed(() => Math.min(props.currentPage * props.pageSize, props.total))
-
 /**
  * Builds the array of page numbers to show, with ellipsis where needed.
  * Example for 10 pages at page 5: [1, '...', 4, 5, 6, '...', 10]

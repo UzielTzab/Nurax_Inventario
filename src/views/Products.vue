@@ -343,6 +343,7 @@
       />
       <SaleSuccessModal 
         :isOpen="showSaleSuccess"
+        saleId="N/A"
         :cart="[{
           id: 'sale-item',
           name: saleDetails.productName,
@@ -529,7 +530,7 @@ const filteredProducts = computed(() => {
     filtered = filtered.filter(product => 
       product.name.toLowerCase().includes(query) ||
       product.sku.toLowerCase().includes(query) ||
-      product.supplier.toLowerCase().includes(query)
+      String(product.supplier || '').toLowerCase().includes(query)
     );
   }
 

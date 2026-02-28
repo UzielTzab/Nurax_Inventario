@@ -11,18 +11,14 @@
 
       <!-- Stats Cards -->
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon income-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <h3>Ingresos de Hoy</h3>
-            <p class="stat-value">${{ formatMoney(todayIncome) }} MXN</p>
-          </div>
-        </div>
-
+          <StatsCard
+            label="Ingresos de Hoy"
+            :value="formatMoney(todayIncome) + ' MXN'"
+            subtitle="Calculado hoy"
+            :icon="CurrencyDollarIcon"
+            icon-type="success"
+          />
+        
         <div class="stat-card">
           <div class="stat-icon sales-icon">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -170,18 +166,18 @@
               </tr>
             </thead>
             <tbody>
-              <template v-for="sale in filteredSales" :key="sale.id">
+              <template v-for="sale in paginatedSales" :key="sale.id">
                 <!-- Fila principal -->
                 <tr class="main-row" :class="{ 'row-expanded': expandedRows.has(sale.id) }">
-                  <td>{{ formatTime(sale.date) }}</td>
-                  <td class="font-mono text-xs trx-id">{{ sale.id }}</td>
+                  <td>{{ formatTime(sale.created_at) }}</td>
+                  <td class="font-mono text-xs trx-id">{{ sale.transaction_id }}</td>
 
                   <!-- Columna de productos con cantidades -->
                   <td>
                     <div class="product-summary">
                       <span class="product-first">
                         <span class="qty-pill">{{ sale.items[0]?.quantity ?? 1 }}×</span>
-                        {{ sale.items[0]?.name || 'Producto desconocido' }}
+                        {{ sale.items[0]?.product_name || 'Producto desconocido' }}
                       </span>
                       <span v-if="sale.items.length > 1" class="more-items">
                         +{{ sale.items.length - 1 }} producto{{ sale.items.length - 1 !== 1 ? 's' : '' }} más
@@ -189,7 +185,7 @@
                     </div>
                   </td>
 
-                  <td class="total-cell">${{ formatMoney(sale.total) }}</td>
+                  <td class="total-cell">${{ formatMoney(Number(sale.total)) }}</td>
                   <td>
                     <span class="status-badge success">Completado</span>
                   </td>
@@ -234,7 +230,7 @@
                             class="detail-item"
                           >
                             <span class="detail-qty">{{ item.quantity ?? 1 }}×</span>
-                            <span class="detail-name">{{ item.name }}</span>
+                            <span class="detail-name">{{ item.product_name }}</span>
                           </div>
                         </div>
                       </div>
@@ -245,15 +241,26 @@
             </tbody>
           </table>
         </div>
+        
+        <!-- Paginación usando el componente reutilizable -->
+        <Pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="filteredSales.length"
+        />
       </div>
     </div>
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import { useSalesStore } from '@/stores/sales.store';
+import StatsCard from '@/components/dashboard/StatsCard.vue';
+import { CurrencyDollarIcon } from '@heroicons/vue/24/outline';
+
 import type { Sale } from '@/stores/sales.store';
 import {
   Chart as ChartJS,
@@ -289,13 +296,21 @@ const selectedPeriod = ref('today');
 const customStartDate = ref('');
 const customEndDate = ref('');
 
+onMounted(() => {
+  salesStore.fetchSales();
+});
+
 // ── Búsqueda y filtros ──
 const searchQuery = ref('');
 const minAmount = ref(0);
 
+// ── Paginación ──
+const currentPage = ref(1);
+const pageSize = ref(10);
+
 // Control de filas expandidas
-const expandedRows = ref(new Set<string>());
-const toggleDetail = (id: string) => {
+const expandedRows = ref(new Set<number>());
+const toggleDetail = (id: number) => {
   if (expandedRows.value.has(id)) {
     expandedRows.value.delete(id);
   } else {
@@ -309,15 +324,15 @@ const toggleDetail = (id: string) => {
 const { sales, weeklyData } = storeToRefs(salesStore);
 
 // Format Helpers
-const formatMoney = (amount: number) => {
-  return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatMoney = (amount: number | string) => {
+  return Number(amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const formatTime = (date: Date) => {
+const formatTime = (date: Date | string) => {
   return new Date(date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 };
 
-const formatDateTime = (date: Date) => {
+const formatDateTime = (date: Date | string) => {
   return new Date(date).toLocaleString('es-MX', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
@@ -350,20 +365,20 @@ const printSaleTicket = (sale: Sale) => {
         <div class="header">
           <div class="company">NOMBRE DE LA EMPRESA</div>
           <div class="info">
-            <p>${formatDateTime(sale.date)}</p>
-            <p>Ticket ${sale.id}</p>
+            <p>${formatDateTime(sale.created_at)}</p>
+            <p>Ticket ${sale.id}</p>>
           </div>
         </div>
         <div class="items">
           ${sale.items.map(item => `
             <div class="item-row">
-              <span class="item-name">${item.quantity ?? 1}x ${item.name}</span>
+              <span class="item-name">${item.quantity ?? 1}x ${item.product_name}</span>
             </div>
           `).join('')}
         </div>
         <div class="total">
           <span>TOTAL</span>
-          <span>$${formatMoney(sale.total)}</span>
+          <span>$${formatMoney(Number(sale.total))}</span>
         </div>
         <div class="footer"><p>¡Gracias por su compra!</p></div>
         <div class="reprint">— REIMPRESIÓN —</div>
@@ -396,7 +411,7 @@ const filteredSales = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
 
   return sales.value.filter(sale => {
-    const saleDate = new Date(sale.date);
+    const saleDate = new Date(sale.created_at);
 
     // 1. Filtro de período
     let passesPeriod = true;
@@ -417,16 +432,28 @@ const filteredSales = computed(() => {
 
     // 2. Filtro de búsqueda por ID o nombre de producto
     if (q) {
-      const matchesId = sale.id.toLowerCase().includes(q);
-      const matchesProduct = sale.items.some(item => item.name.toLowerCase().includes(q));
+      const matchesId = String(sale.id).toLowerCase().includes(q) || sale.transaction_id?.toLowerCase().includes(q);
+      const matchesProduct = sale.items.some(item => item.product_name?.toLowerCase().includes(q));
       if (!matchesId && !matchesProduct) return false;
     }
 
     // 3. Filtro de monto mínimo
-    if (minAmount.value > 0 && sale.total < minAmount.value) return false;
+    if (minAmount.value > 0 && Number(sale.total) < minAmount.value) return false;
 
     return true;
-  });
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+});
+
+// Reiniciar a la página 1 cuando cambien los filtros
+watch([searchQuery, selectedPeriod, customStartDate, customEndDate, minAmount], () => {
+  currentPage.value = 1;
+});
+
+// ── Paginated Sales Logic ──
+const paginatedSales = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return filteredSales.value.slice(start, end);
 });
 
 // Stats
@@ -434,8 +461,8 @@ const todayIncome = computed(() => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return sales.value
-      .filter(s => new Date(s.date) >= startOfDay)
-      .reduce((sum, s) => sum + s.total, 0);
+      .filter(s => new Date(s.created_at) >= startOfDay)
+      .reduce((sum, s) => sum + Number(s.total), 0);
 });
 
 const salesCount = computed(() => filteredSales.value.length);
@@ -543,7 +570,7 @@ const topProducts = computed(() => {
     if (Array.isArray(sale.items)) {
       sale.items.forEach(item => {
         const qty = item.quantity || 1;
-        productCounts[item.name] = (productCounts[item.name] || 0) + qty;
+        productCounts[item.product_name] = (productCounts[item.product_name] || 0) + qty;
       });
     }
   });

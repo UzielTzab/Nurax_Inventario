@@ -383,7 +383,6 @@ import {
   BellIcon,
   ChevronDownIcon,
   UserCircleIcon,
-  KeyIcon,
   TableCellsIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
@@ -612,7 +611,7 @@ const handleSaleCompleted = (items: any[]) => {
   });
 };
 
-const handleSaleReverted = (saleId: string, items: { id: string; quantity: number }[]) => {
+const handleSaleReverted = (saleId: string | number, items: { id: string | number; quantity: number }[]) => {
   // 1. Eliminar del historial de ventas
   salesStore.removeSale(saleId);
   // 2. Restaurar el stock de cada producto

@@ -207,7 +207,6 @@ const { showLoadingScreen } = useLoadingScreen()
 
 const email = ref('')
 const password = ref('')
-const rememberMe = ref(false)
 const showPassword = ref(false)
 const isLoading = ref(false)
 const emailFocused = ref(false)
