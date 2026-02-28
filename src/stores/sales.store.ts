@@ -66,8 +66,8 @@ export const useSalesStore = defineStore('sales', () => {
     }
   };
 
-  const removeSale = (id: number) => {
-    sales.value = sales.value.filter(s => s.id !== id);
+  const removeSale = (id: string | number) => {
+    sales.value = sales.value.filter(s => String(s.id) !== String(id));
   };
 
   const weeklyData = computed(() => {

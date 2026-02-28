@@ -210,7 +210,7 @@ const printTicket = () => {
           ${props.cart.map(item => `
             <div class="item-row">
               <span class="item-name">${item.quantity}x ${item.name}</span>
-              <span>$${(item.price * item.quantity).toFixed(2)}</span>
+              <span>$${(Number(item.price) * item.quantity).toFixed(2)}</span>
             </div>
           `).join('')}
         </div>

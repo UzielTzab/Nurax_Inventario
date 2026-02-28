@@ -211,19 +211,19 @@
 
 <script setup lang="ts">
 import { ref, watch, reactive, computed } from 'vue';
-import { XMarkIcon, PlusCircleIcon, ArrowPathIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import AppButton from '@/components/ui/AppButton.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
 
 interface Product {
-  id: string;
+  id: string | number;
   name: string;
-  category: string;
+  category: string | number;
   sku: string;
   stock: number;
-  price: number;
-  image: string;
+  price: string | number;
+  image?: string | null;
   supplierId?: string;
 }
 
@@ -269,7 +269,7 @@ watch(() => props.isOpen, (newVal) => {
         image: props.productToEdit.image,
         supplierId: props.productToEdit.supplierId ?? '',
       });
-      imagePreview.value = props.productToEdit.image;
+      imagePreview.value = props.productToEdit.image || '';
       rawImageFile.value = null; // No new file by default
     } else {
       Object.assign(formData, { name: '', category: '', sku: '', stock: 0, price: 0, image: '', supplierId: '' });

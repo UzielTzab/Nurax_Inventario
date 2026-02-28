@@ -86,7 +86,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="(product, index) in products"
+            v-for="product in products"
             :key="product.id"
             class="product-row"
             :class="{ 'row-out-of-stock': product.stock === 0 }"
@@ -196,13 +196,13 @@ import { PhotoIcon } from '@heroicons/vue/24/outline';
 import Badge from '../ui/Badge.vue';
 
 export interface Product {
-  id: string;
+  id: string | number;
   name: string;
-  category: string;
+  category: string | number;
   sku: string;
   stock: number;
-  price: number;
-  image: string;
+  price: string | number;
+  image?: string | null;
 }
 
 export interface Filters {
@@ -262,16 +262,16 @@ const clearFilters = () => {
 };
 
 // --- Dots menu ---
-const openMenuId = ref<string | null>(null);
-const menuRefs = new Map<string, HTMLElement>();
+const openMenuId = ref<string | number | null>(null);
+const menuRefs = new Map<string | number, HTMLElement>();
 const dropdownPos = ref({ top: '0px', left: '0px', bottom: 'auto', transformOrigin: 'top right' });
 
-const setMenuRef = (el: HTMLElement | null, id: string) => {
+const setMenuRef = (el: HTMLElement | null, id: string | number) => {
   if (el) menuRefs.set(id, el);
   else menuRefs.delete(id);
 };
 
-const toggleMenu = (id: string, event: MouseEvent) => {
+const toggleMenu = (id: string | number, event: MouseEvent) => {
   if (openMenuId.value === id) {
     openMenuId.value = null;
   } else {
@@ -323,7 +323,7 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 };
 
-const handleScroll = (e: Event) => {
+const handleScroll = () => {
   if (openMenuId.value) {
     openMenuId.value = null;
   }
@@ -349,7 +349,7 @@ const handleDelete = (product: Product) => {
 };
 
 // --- Helpers ---
-const formatPrice = (price: number) => price.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatPrice = (price: number | string) => Number(price).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const getStatusVariant = (stock: number): 'success' | 'warning' | 'danger' => {
   if (stock === 0) return 'danger';

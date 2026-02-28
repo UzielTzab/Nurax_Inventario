@@ -226,7 +226,7 @@ const filteredProducts = computed(() => {
   // Filter by category
   if (filters.value.category) {
     products = products.filter(p =>
-      p.category.toLowerCase() === filters.value.category.toLowerCase()
+      String(p.category).toLowerCase() === filters.value.category.toLowerCase()
     );
   }
 
@@ -239,8 +239,9 @@ const filteredProducts = computed(() => {
       : parts[1] ? parseFloat(parts[1]) : Infinity;
 
     products = products.filter(p => {
-      if (max === Infinity) return p.price >= min;
-      return p.price >= min && p.price <= max;
+      const pPrice = Number(p.price);
+      if (max === Infinity) return pPrice >= min;
+      return pPrice >= min && pPrice <= max;
     });
   }
 
@@ -360,7 +361,7 @@ const handleBulkDelete = (ids: string[]) => {
     confirmText: `Sí, eliminar ${ids.length} productos`,
     onConfirm: () => {
       // Store products to restore before deleting
-      const productsToRestore = allProducts.value.filter(p => ids.includes(p.id));
+      const productsToRestore = allProducts.value.filter(p => ids.includes(String(p.id)));
       
       productStore.bulkDeleteProducts(ids);
       enqueueSnackbar({

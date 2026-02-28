@@ -49,6 +49,9 @@ const total = ref(0);
 
 const handleSale = () => {
   salesStore.addSale({
+    transaction_id: `QS-${Date.now()}`,
+    user: 1,
+    status: 'completed',
     items: [{ name: productName.value, quantity: Number(quantity.value) }],
     total: Number(total.value)
   });

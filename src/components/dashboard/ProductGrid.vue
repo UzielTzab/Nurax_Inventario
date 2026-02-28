@@ -4,7 +4,7 @@
       <div v-for="product in products" :key="product.id" class="product-card" :class="{ 'card-out-of-stock': product.stock === 0 }">
         <div class="card-header">
            <div class="product-image">
-             <img :src="product.image" :alt="product.name" />
+             <img :src="product.image || undefined" :alt="product.name" />
            </div>
            <div class="product-badges">
              <span class="badge-category">{{ product.category }}</span>
@@ -81,8 +81,8 @@ defineEmits<{
   restock: [product: Product];
 }>();
 
-const formatPrice = (price: number) => {
-  return price.toFixed(2);
+const formatPrice = (price: number | string) => {
+  return Number(price).toFixed(2);
 };
 
 const getStatusVariant = (stock: number): 'success' | 'warning' | 'danger' => {
