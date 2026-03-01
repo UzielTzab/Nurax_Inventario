@@ -49,8 +49,8 @@
             label="Inactivos"
             :value="clients.length - activeClients"
             :icon="ExclamationTriangleIcon"
-            :icon-type="(clients.length - activeClients) > 0 ? 'warning' : 'success'"
-            :variant="(clients.length - activeClients) > 0 ? 'warning' : 'default'"
+            :icon-type="(clients.length - activeClients) > 0 ? 'danger' : 'success'"
+            :variant="(clients.length - activeClients) > 0 ? 'danger' : 'default'"
           />
           </template>
         </div>
@@ -309,6 +309,8 @@ interface Client {
   joinDate: string;
   is_active: boolean;
   avatarColor: string;
+  company?: string;
+  plan?: string;
 }
 
 const AVATAR_COLORS = [
@@ -329,7 +331,7 @@ const newClient = ref({
   name: '',
   email: '',
   company: '',
-  plan: 'básico' as Client['plan'],
+  plan: 'básico',
 });
 
 const activeClients = computed(() => clients.value.filter(c => c.is_active).length);
@@ -446,8 +448,9 @@ const addClient = () => {
     email: newClient.value.email,
     company: newClient.value.company || '—',
     plan: newClient.value.plan,
+    role: 'cliente',
     joinDate: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
-    active: true,
+    is_active: true,
     avatarColor: AVATAR_COLORS[colorIndex] ?? '#06402B',
   });
   newClient.value = { name: '', email: '', company: '', plan: 'básico' };
