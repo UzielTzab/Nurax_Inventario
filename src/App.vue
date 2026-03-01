@@ -1,25 +1,21 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import SnackbarContainer from '@/components/common/SnackbarContainer.vue'
+import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import { useLoadingScreen } from '@/composables/useLoadingScreen'
 import { useAuth } from '@/composables/useAuth'
+import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const { isLoadingScreen, completeLoadingScreen } = useLoadingScreen()
+const { currentUser } = useAuth()
+const router = useRouter()
 
 const handleLoadingComplete = async () => {
-  console.log('✅ Carga completada! Redirigiendo...')
-  
-  // Como ahora usamos la API, el currentUser ya fue seteado directo en el useAuth.
-  const { currentUser } = useAuth()
   if (currentUser.value?.role === 'admin') {
     await router.push('/dashboard/clients')
   } else {
     await router.push('/dashboard/inventory')
   }
-  
   completeLoadingScreen()
 }
 </script>

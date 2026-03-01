@@ -15,7 +15,8 @@ export interface UserProfileResponse {
   username: string
   name: string
   email: string
-  role: 'admin' | 'cliente' // u otros roles
+  role: 'admin' | 'cliente'
+  avatar_url?: string
 }
 
 export interface UnifiedAuthResponse {
@@ -44,6 +45,17 @@ const authService = {
   },
 
   /**
+   * 3. Subir / actualizar foto de perfil
+   */
+  async updateAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('avatar_file', file);
+    // Pass FormData as body — ApiClient strips Content-Type so browser sets boundary
+    const res = await apiClient.patch<{ avatar_url: string }>('/users/me/avatar/', formData);
+    return res;
+  },
+
+  /**
    * Registrar nuevo usuario (Placeholder)
    */
   async register(data: LoginData & { name: string }) {
@@ -52,11 +64,15 @@ const authService = {
   },
 
   /**
-   * Cerrar sesión (limpia cache local)
+   * Cerrar sesión (limpia todo el almacenamiento local)
    */
   async logout() {
+    // Clear all possible token storage locations
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
+    localStorage.removeItem('token')
+    localStorage.removeItem('authToken')
+    sessionStorage.clear()
     return { success: true }
   },
 

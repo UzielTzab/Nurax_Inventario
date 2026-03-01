@@ -59,57 +59,49 @@
 
           <!-- Email -->
           <div class="form-group" data-aos="fade-up" data-aos-delay="200">
-            <label for="email" class="form-label">Correo Electrónico</label>
-            <div class="input-wrapper" :class="{ 'input-focused': emailFocused }">
-              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2" y="4" width="20" height="16" rx="2"/>
-                <path d="m2 7 10 6 10-6"/>
-              </svg>
-              <input
-                id="email"
-                v-model="email"
-                type="text"
-                placeholder="nombre@empresa.com"
-                class="form-input"
-                @focus="emailFocused = true"
-                @blur="emailFocused = false"
-                required
-              />
-            </div>
+            <AppInput
+              id="email"
+              v-model="email"
+              type="email"
+              label="Correo Electrónico"
+              placeholder="nombre@empresa.com"
+              autocomplete="email"
+              :error="loginError ? ' ' : ''"
+              @input="loginError = ''"
+              required
+            >
+              <template #icon>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="m2 7 10 6 10-6"/>
+                </svg>
+              </template>
+            </AppInput>
           </div>
 
           <!-- Contraseña -->
           <div class="form-group" data-aos="fade-up" data-aos-delay="250">
             <div class="password-label-row">
-              <label for="password" class="form-label">Contraseña</label>
+              <span class="form-label">Contraseña</span>
               <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
             </div>
-            <div class="input-wrapper" :class="{ 'input-focused': passwordFocused }">
-              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <input
-                id="password"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
-                class="form-input"
-                @focus="passwordFocused = true"
-                @blur="passwordFocused = false"
-                required
-              />
-              <button type="button" @click="showPassword = !showPassword" class="toggle-password" tabindex="-1">
-                <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-                  <circle cx="12" cy="12" r="3"/>
+            <AppInput
+              id="password"
+              v-model="password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              :error="loginError ? ' ' : ''"
+              @input="loginError = ''"
+              required
+            >
+              <template #icon>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </button>
-            </div>
+              </template>
+            </AppInput>
           </div>
 
           <!-- Recordar dispositivo -->
@@ -199,6 +191,8 @@ import { ref, onMounted } from 'vue'
 import { z } from 'zod'
 import { useAuth } from '@/composables/useAuth'
 import { useLoadingScreen } from '@/composables/useLoadingScreen'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppInput from '@/components/ui/AppInput.vue'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
@@ -207,10 +201,7 @@ const { showLoadingScreen } = useLoadingScreen()
 
 const email = ref('')
 const password = ref('')
-const showPassword = ref(false)
 const isLoading = ref(false)
-const emailFocused = ref(false)
-const passwordFocused = ref(false)
 const imgError = ref(false)
 const loginError = ref('')
 
@@ -228,9 +219,36 @@ onMounted(() => {
 })
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'El correo electrónico es requerido.').email('Por favor ingresa un correo con formato válido.'),
-  password: z.string().min(1, 'La contraseña es requerida.')
+  email: z.string().min(1, 'Ingresa tu correo electrónico.').email('Ese correo no tiene un formato válido. Ej: nombre@empresa.com'),
+  password: z.string().min(1, 'Ingresa tu contraseña.')
 })
+
+/**
+ * Convierte mensajes de error del backend (en inglés técnico) a texto
+ * amigable en español para cualquier usuario.
+ */
+const humanizeError = (raw: string): string => {
+  const r = raw.toLowerCase()
+  if (r.includes('no active account') || r.includes('credentials') || r.includes('invalid') || r.includes('unauthorized')) {
+    return 'El correo o la contraseña que ingresaste no son correctos. Revísalos e intenta de nuevo.'
+  }
+  if (r.includes('account') && r.includes('inactiv')) {
+    return 'Tu cuenta está inactiva. Contacta con soporte para reactivarla.'
+  }
+  if (r.includes('not found') || r.includes('does not exist')) {
+    return 'No encontramos una cuenta con ese correo. Verifica que sea el correo correcto.'
+  }
+  if (r.includes('too many') || r.includes('throttle') || r.includes('rate limit')) {
+    return 'Demasiados intentos fallidos. Espera unos minutos antes de intentarlo de nuevo.'
+  }
+  if (r.includes('network') || r.includes('fetch') || r.includes('connection') || r.includes('timeout')) {
+    return 'No pudimos conectar con el servidor. Revisa tu internet e intenta de nuevo.'
+  }
+  // Si ya viene en español o es un mensaje corto legible, lo mostramos tal cual
+  if (r.length < 100 && !r.includes('http') && /[áéíóúñ,. ]/.test(raw)) return raw;
+  // Fallback genérico amigable
+  return 'Algo salió mal al iniciar sesión. Verifica tus datos e intenta de nuevo.'
+}
 
 const handleLogin = async () => {
   loginError.value = ''
@@ -244,18 +262,17 @@ const handleLogin = async () => {
   
   isLoading.value = true
   try {
-    // 2. Real API login
     const result = await login(email.value, password.value)
     
     if (result.success && result.role) {
       console.log('✅ Login exitoso! Rol:', result.role)
       showLoadingScreen(result.email!, result.role)
     } else {
-      loginError.value = result.error || 'Usuario o contraseña incorrectos.'
+      loginError.value = humanizeError(result.error || '')
     }
   } catch (error) {
     console.error('❌ Error en login:', error)
-    loginError.value = 'Ocurrió un error de conexión. Intenta de nuevo.'
+    loginError.value = 'No pudimos conectar con el servidor. Revisa tu internet e intenta de nuevo.'
   } finally {
     isLoading.value = false
   }
@@ -523,6 +540,15 @@ const handleLogin = async () => {
 .form-input:focus {
   outline: none;
   border-color: var(--color-brand-main);
+}
+
+/* Error state — subtle red border when credentials fail */
+.input-error .form-input {
+  border-color: #fca5a5;
+  background: #fff9f9;
+}
+.input-error .input-icon {
+  color: #ef4444;
 }
 
 /* Toggle password */

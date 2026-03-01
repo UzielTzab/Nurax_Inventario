@@ -11,31 +11,31 @@
 
       <!-- Stats Cards -->
       <div class="stats-grid">
-          <StatsCard
-            label="Ingresos de Hoy"
-            :value="formatMoney(todayIncome) + ' MXN'"
-            subtitle="Calculado hoy"
-            :icon="CurrencyDollarIcon"
-            icon-type="success"
-          />
-        
-        <div class="stat-card">
-          <div class="stat-icon sales-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
+        <template v-if="salesStore.isLoading">
+          <div v-for="i in 2" :key="'sk-s-'+i" class="skeleton-stat-card">
+            <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
+              <AppSkeleton width="110px" height="0.75rem" />
+              <AppSkeleton width="70px" height="1.75rem" />
+            </div>
           </div>
-          <div class="stat-content">
-            <h3>Ventas Totales</h3>
-            <p class="stat-value">{{ salesCount }}</p>
-            <p class="stat-subtitle">Transacciones realizadas</p>
-          </div>
-        </div>
+        </template>
+        <template v-else>
+        <StatsCard
+          label="Ingresos de Hoy"
+          :value="'$' + formatMoney(todayIncome)"
+          subtitle=""
+          variant="brand"
+        />
+        <StatsCard
+          label="Ventas Totales"
+          :value="salesCount"
+          subtitle=""
+        />
+        </template>
       </div>
 
-      <!-- Weekly Trend Chart -->
       <!-- Charts Grid -->
-      <div class="charts-grid-section">
+      <div class="charts-grid-section" v-if="!salesStore.isLoading">
         <!-- Weekly Trend Chart -->
         <div class="chart-card">
           <h3>Tendencia Semanal</h3>
@@ -58,6 +58,18 @@
                :options="barChartOptions"
              />
           </div>
+        </div>
+      </div>
+
+      <!-- Skeleton: Charts -->
+      <div v-if="salesStore.isLoading" class="charts-grid-section">
+        <div class="chart-card">
+          <AppSkeleton width="160px" height="1rem" style="margin-bottom:1.5rem" />
+          <AppSkeleton width="100%" height="250px" radius="12px" />
+        </div>
+        <div class="chart-card">
+          <AppSkeleton width="200px" height="1rem" style="margin-bottom:1.5rem" />
+          <AppSkeleton width="100%" height="250px" radius="12px" />
         </div>
       </div>
 
@@ -154,7 +166,18 @@
           </div>
         </div>
         <div class="table-container">
-          <table class="transactions-table">
+          <!-- Skeleton table rows -->
+          <template v-if="salesStore.isLoading">
+            <div v-for="i in 6" :key="'sk-sale-'+i" class="skeleton-table-row">
+              <AppSkeleton width="50px" height="0.85rem" />
+              <AppSkeleton width="100px" height="0.85rem" />
+              <AppSkeleton width="130px" height="0.85rem" />
+              <AppSkeleton width="70px" height="0.85rem" />
+              <AppSkeleton width="70px" height="1.4rem" radius="20px" />
+              <AppSkeleton width="32px" height="32px" radius="8px" />
+            </div>
+          </template>
+          <table v-else class="transactions-table">
             <thead>
               <tr>
                 <th>Hora</th>
@@ -249,14 +272,13 @@
               </template>
             </tbody>
           </table>
+          <!-- Paginación usando el componente reutilizable -->
+          <Pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="filteredSales.length"
+          />
         </div>
-        
-        <!-- Paginación usando el componente reutilizable -->
-        <Pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="filteredSales.length"
-        />
       </div>
     </div>
     <ConfirmationModal
@@ -275,11 +297,13 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
-import { CurrencyDollarIcon } from '@heroicons/vue/24/outline';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useStoreSettings } from '@/composables/useStoreSettings';
+import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
 
 import type { Sale } from '@/stores/sales.store';
 import {
@@ -312,12 +336,14 @@ ChartJS.register(
 
 import { storeToRefs } from 'pinia';
 const salesStore = useSalesStore();
+const { settings: storeSettings, loadSettings } = useStoreSettings();
 const selectedPeriod = ref('today');
 const customStartDate = ref('');
 const customEndDate = ref('');
 
 onMounted(() => {
   salesStore.fetchSales();
+  loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
 });
 
 // ── Búsqueda y filtros ──
@@ -361,55 +387,20 @@ const formatDateTime = (date: Date | string) => {
 
 // ── Reimprimir ticket desde historial ──
 const printSaleTicket = (sale: Sale) => {
-  const printWindow = window.open('', '', 'height=600,width=400');
-  if (!printWindow) return;
-
-  const ticketHtml = `
-    <html>
-      <head>
-        <title>Ticket #${sale.id}</title>
-        <style>
-          body { font-family: 'Courier New', monospace; padding: 20px; font-size: 14px; max-width: 300px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 20px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-          .company { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-          .info { font-size: 12px; }
-          .items { width: 100%; margin-bottom: 20px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-          .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-          .item-name { flex: 1; margin-right: 10px; }
-          .total { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 10px; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; }
-          .reprint { text-align:center; font-size:11px; color:#666; margin-top:8px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company">NOMBRE DE LA EMPRESA</div>
-          <div class="info">
-            <p>${formatDateTime(sale.created_at)}</p>
-            <p>Ticket ${sale.id}</p>>
-          </div>
-        </div>
-        <div class="items">
-          ${sale.items.map(item => `
-            <div class="item-row">
-              <span class="item-name">${item.quantity ?? 1}x ${item.product_name}</span>
-            </div>
-          `).join('')}
-        </div>
-        <div class="total">
-          <span>TOTAL</span>
-          <span>$${formatMoney(Number(sale.total))}</span>
-        </div>
-        <div class="footer"><p>¡Gracias por su compra!</p></div>
-        <div class="reprint">— REIMPRESIÓN —</div>
-      </body>
-    </html>
-  `;
-
-  printWindow.document.write(ticketHtml);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+  const html = buildTicketHtml({
+    store: storeSettings.value,
+    items: sale.items.map(item => ({
+      name: item.product_name,
+      quantity: item.quantity ?? 1,
+      price: item.unit_price ?? (Number(sale.total) / (sale.items.length || 1)),
+    })),
+    total: Number(sale.total),
+    ticketId: sale.id,
+    date: formatDateTime(sale.created_at),
+    paperWidth: getStoredPaperWidth(),
+    isReprint: true,
+  });
+  openTicketPrint(html);
 };
 
 // ── Revertir Venta ──
@@ -778,54 +769,7 @@ const barChartOptions: ChartOptions<'bar'> = {
   margin-bottom: 2rem;
 }
 
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
 
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon svg {
-  width: 28px;
-  height: 28px;
-}
-
-.income-icon {
-  background: #ECFDF5;
-  color: #10B981;
-}
-
-.sales-icon {
-  background: #EFF6FF;
-  color: #3B82F6;
-}
-
-.stat-content h3 {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin: 0 0 0.25rem 0;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  line-height: 1.2;
-}
 
 .charts-grid-section {
   display: grid;

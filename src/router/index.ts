@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
+// Views - Landing
+import LandingPage from '@/views/LandingPage.vue'
+
 // Views - Auth
 import Login from '@/views/Login.vue'
 
@@ -14,7 +17,8 @@ import Settings from '@/views/Settings.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/auth/login'
+    component: LandingPage,
+    meta: { title: 'Nurax - Gestión Inteligente de Inventario', public: true }
   },
   {
     path: '/auth/login',
@@ -66,18 +70,23 @@ const router = createRouter({
 })
 
 // Guard de navegación
-router.beforeEach((to) => {
-  const { isAuthenticated, currentUser } = useAuth()
+router.beforeEach(async (to) => {
+  const { isAuthenticated, currentUser, initSession } = useAuth()
 
-  // Rutas públicas
+  // Esperar a que se restaure la sesión desde los tokens guardados.
+  // initSession() usa un singleton → solo llama al backend UNA vez,
+  // sin importar cuántas veces el guard se ejecute.
+  await initSession()
+
+  // Rutas públicas (login, etc.)
   if (to.meta.public) return true
 
-  // Si no está autenticado → login
+  // Si después de initSession() no hay sesión válida → login
   if (!isAuthenticated.value) return '/auth/login'
 
-  // Redirigir la base de dashboard dinámicamente según el rol
+  // Redirigir la base del dashboard según el rol
   if (to.path === '/dashboard' && currentUser.value) {
-    return currentUser.value.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory';
+    return currentUser.value.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
   }
 
   // Verificar roles si la ruta los requiere
@@ -85,7 +94,6 @@ router.beforeEach((to) => {
   if (requiredRoles && currentUser.value) {
     const userRole = currentUser.value.role
     if (!requiredRoles.includes(userRole)) {
-      // Redirigir al área correcta según el rol
       return userRole === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
     }
   }

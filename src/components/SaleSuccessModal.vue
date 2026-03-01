@@ -45,7 +45,13 @@
         <!-- Body -->
         <div class="modal-body">
           <div class="ticket-preview">
-            <div class="company-name">NOMBRE DE LA EMPRESA.</div>
+            <!-- Logo del negocio -->
+            <div v-if="settings.logo_url" class="ticket-logo">
+              <img :src="settings.logo_url" alt="Logo" />
+            </div>
+            <div class="company-name">{{ settings.store_name || 'NOMBRE DE LA EMPRESA' }}</div>
+            <div v-if="settings.address" class="ticket-store-detail">{{ settings.address }}</div>
+            <div v-if="settings.phone" class="ticket-store-detail">Tel: {{ settings.phone }}</div>
             <div class="ticket-info">
               <p>{{ currentDate }}</p>
               <p>Ticket #{{ ticketNumber }}</p>
@@ -55,16 +61,16 @@
               <div v-for="item in cart" :key="item.id" class="ticket-item">
                 <span class="item-qty">{{ item.quantity }}x</span>
                 <span class="item-name">{{ item.name }}</span>
-                <span class="item-price">${{ (Number(item.price) * item.quantity).toFixed(2) }}</span>
+                <span class="item-price">{{ settings.currency_symbol }} {{ (Number(item.price) * item.quantity).toFixed(2) }}</span>
               </div>
             </div>
             <div class="ticket-divider"></div>
             <div class="ticket-total">
               <span>TOTAL</span>
-              <span>${{ total.toFixed(2) }}</span>
+              <span>{{ settings.currency_symbol }} {{ total.toFixed(2) }}</span>
             </div>
             <div class="ticket-footer">
-              <p>¡Gracias por su compra!</p>
+              <p>{{ settings.ticket_message || '¡Gracias por su compra!' }}</p>
             </div>
           </div>
         </div>
@@ -96,8 +102,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
+import { useStoreSettings } from '@/composables/useStoreSettings';
+import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
 
 interface CartItem {
   id: string | number;
@@ -118,9 +126,13 @@ const emit = defineEmits<{
   revert: [saleId: string | number, cart: CartItem[]];
 }>();
 
-// Estado de confirmación
-const confirmingRevert = ref(false);
+const { settings, loadSettings } = useStoreSettings();
 
+onMounted(() => {
+  loadSettings();
+});
+
+const confirmingRevert = ref(false);
 const ticketNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
 
 const currentDate = computed(() => {
@@ -139,101 +151,20 @@ const confirmRevert = () => {
 };
 
 const printTicket = () => {
-  const printWindow = window.open('', '', 'height=600,width=400');
-  if (!printWindow) return;
-
-  const ticketHtml = `
-    <html>
-      <head>
-        <title>Ticket de Compra</title>
-        <style>
-          body {
-            font-family: 'Courier New', Courier, monospace;
-            padding: 20px;
-            font-size: 14px;
-            max-width: 300px;
-            margin: 0 auto;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .company {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 5px;
-          }
-          .info {
-            font-size: 12px;
-          }
-          .items {
-            width: 100%;
-            margin-bottom: 20px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .item-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-          }
-          .item-name {
-            flex: 1;
-            margin-right: 10px;
-          }
-          .total {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 10px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company">TEKNOGADGET S.A. DE C.V.</div>
-          <div class="info">
-            <p>${currentDate.value}</p>
-            <p>Ticket #${ticketNumber}</p>
-          </div>
-        </div>
-        
-        <div class="items">
-          ${props.cart.map(item => `
-            <div class="item-row">
-              <span class="item-name">${item.quantity}x ${item.name}</span>
-              <span>$${(Number(item.price) * item.quantity).toFixed(2)}</span>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="total">
-          <span>TOTAL</span>
-          <span>$${props.total.toFixed(2)}</span>
-        </div>
-        
-        <div class="footer">
-          <p>¡Gracias por su compra!</p>
-        </div>
-      </body>
-    </html>
-  `;
-
-  printWindow.document.write(ticketHtml);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 250);
+  const html = buildTicketHtml({
+    store: settings.value,
+    items: props.cart.map(item => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    total: props.total,
+    ticketId: props.saleId,
+    date: currentDate.value,
+    paperWidth: getStoredPaperWidth(),
+    isReprint: false,
+  });
+  openTicketPrint(html);
 };
 </script>
 
@@ -432,7 +363,25 @@ const printTicket = () => {
   font-weight: 700;
   font-size: 1rem;
   color: #111827;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.ticket-logo {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.ticket-logo img {
+  max-width: 90px;
+  max-height: 50px;
+  object-fit: contain;
+}
+
+.ticket-store-detail {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #6B7280;
+  margin-bottom: 0.15rem;
 }
 
 .ticket-info {

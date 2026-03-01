@@ -10,22 +10,9 @@
             <p class="page-subtitle">Administra la identidad de tu tienda y personaliza la experiencia de tus clientes en los recibos.</p>
           </div>
           <div class="header-actions">
-            <!-- AppButton could be imported, but we can also use standard styling as previous pages -->
-            <button class="btn-action primary" @click="saveSettings">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path fill-rule="evenodd" d="M19.902 4.098a3.75 3.75 0 0 0-5.304 0l-4.5 4.5a3.75 3.75 0 0 0 1.035 6.037.75.75 0 0 1-.646 1.353 5.25 5.25 0 0 1-1.449-8.45l4.5-4.5a5.25 5.25 0 1 1 7.424 7.424l-1.757 1.757a.75.75 0 1 1-1.06-1.06l1.757-1.757a3.75 3.75 0 0 0 0-5.304Zm-7.389 4.267a.75.75 0 0 1 1-.353 5.25 5.25 0 0 1 1.449 8.45l-4.5 4.5a5.25 5.25 0 1 1-7.424-7.424l1.757-1.757a.75.75 0 1 1 1.06 1.06l-1.757 1.757a3.75 3.75 0 1 0 5.304 5.304l4.5-4.5a3.75 3.75 0 0 0-1.035-6.037.75.75 0 0 1-.354-1Z" clip-rule="evenodd" />
-                <path d="M17.25 2.25h-10.5a.75.75 0 0 0-.75.75v18a.75.75 0 0 0 .75.75h10.5a.75.75 0 0 0 .75-.75v-18a.75.75 0 0 0-.75-.75Z" v-if="false" />
-              </svg>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" v-if="false"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" v-if="false" />
-                <!-- Using a regular SAVE icon instead of link -->
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
+            <AppButton variant="fill" @click="saveSettings" :loading="isSaving">
               Guardar Cambios
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -37,26 +24,18 @@
             <!-- SECTION 1: Información General -->
             <div class="settings-card">
               <div class="card-header">
-                <div class="icon-box brand">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.809c0-.63-.25-1.233-.695-1.677a.5.5 0 00-.012-.012l-6.5-6.5a2.25 2.25 0 00-3.18 0l-6.5 6.5A.5.5 0 002.36 8.13V21h3.64m0 0v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21" />
-                  </svg>
-                </div>
+                <HomeModernIcon class="home-icon-style"/>
                 <h2>Información General</h2>
               </div>
 
               <div class="form-grid">
                 <!-- Nombre del negocio -->
                 <div class="input-group">
-                  <label>Nombre del Negocio</label>
-                  <div class="input-with-icon right">
-                    <input type="text" v-model="settings.storeName" placeholder="Escribe el nombre de tu negocio" />
-                    <span class="icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                      </svg>
-                    </span>
-                  </div>
+                  <AppInput
+                    v-model="settings.storeName"
+                    label="Nombre del Negocio"
+                    placeholder="Escribe el nombre de tu negocio"
+                  />
                 </div>
 
                 <!-- Simbolo de moneda -->
@@ -64,9 +43,9 @@
                   <label>Símbolo de Moneda</label>
                   <div class="select-wrapper">
                     <select v-model="settings.currency">
-                      <option value="MXN">$ MXN (Peso Mexicano)</option>
-                      <option value="USD">$ USD (Dólar Estadounidense)</option>
-                      <option value="EUR">€ EUR (Euro)</option>
+                      <option value="$ MXN">$ MXN (Peso Mexicano)</option>
+                      <option value="$ USD">$ USD (Dólar Estadounidense)</option>
+                      <option value="€ EUR">€ EUR (Euro)</option>
                     </select>
                     <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -76,16 +55,11 @@
 
                 <!-- Dirección Física -->
                 <div class="input-group full-width">
-                  <label>Dirección Física</label>
-                  <div class="input-with-icon left">
-                    <span class="icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                      </svg>
-                    </span>
-                    <input type="text" v-model="settings.address" placeholder="Ej. Av. Reforma 123, Col. Centro, CDMX" />
-                  </div>
+                  <AppInput
+                    v-model="settings.address"
+                    label="Dirección Física"
+                    placeholder="Ej. Av. Reforma 123, Col. Centro, CDMX"
+                  />
                 </div>
 
                 <!-- WhatsApp de Contacto -->
@@ -102,14 +76,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                       </svg>
                     </div>
-                    <div class="input-with-icon right phone-number">
-                      <input type="text" v-model="settings.phone" placeholder="55 9876 5432" />
-                      <span class="icon text-green-500">
-                        <!-- Chat icon placeholder for WhatsApp -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                        </svg>
-                      </span>
+                    <div class="phone-number-field">
+                      <AppInput
+                        v-model="settings.phone"
+                        type="tel"
+                        placeholder="55 9876 5432"
+                      />
                     </div>
                   </div>
                 </div>
@@ -132,14 +104,39 @@
                 <!-- Dropzone de logo -->
                 <div class="input-group">
                   <label>Logo para el Ticket</label>
-                  <div class="dropzone">
-                    <div class="dropzone-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
-                      </svg>
-                    </div>
-                    <p class="dropzone-text">Arrastra tu logo aquí</p>
-                    <span class="dropzone-hint">PNG, JPG hasta 2MB</span>
+                  <!-- Hidden real file input -->
+                  <input
+                    ref="logoInputRef"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    style="display:none"
+                    @change="onLogoFile"
+                  />
+                  <!-- Dropzone visual -->
+                  <div
+                    class="dropzone"
+                    :class="{ 'dropzone-has-image': settings.logoUrl }"
+                    @click="logoInputRef?.click()"
+                    @dragover.prevent
+                    @drop.prevent="onLogoDrop"
+                  >
+                    <!-- Preview if image selected -->
+                    <template v-if="settings.logoUrl">
+                      <img :src="settings.logoUrl" class="dropzone-preview" alt="Logo preview" />
+                      <button class="dropzone-remove" @click.stop="settings.logoUrl = ''" title="Quitar logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
+                      </button>
+                    </template>
+                    <!-- Empty state -->
+                    <template v-else>
+                      <div class="dropzone-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                        </svg>
+                      </div>
+                      <p class="dropzone-text">Haz clic o arrastra tu logo</p>
+                      <span class="dropzone-hint">PNG, JPG, WebP · Máx. 2 MB</span>
+                    </template>
                   </div>
                 </div>
 
@@ -151,6 +148,31 @@
                     placeholder="Ej. ¡Gracias por su preferencia!"
                     rows="4"
                   ></textarea>
+                </div>
+
+                <!-- Tamaño de papel para impresión -->
+                <div class="input-group full-width">
+                  <label>Formato de Papel para Impresión</label>
+                  <div class="paper-size-options">
+                    <label
+                      v-for="opt in paperSizeOptions"
+                      :key="opt.value"
+                      class="paper-size-btn"
+                      :class="{ 'selected': paperWidth === opt.value }"
+                    >
+                      <input
+                        type="radio"
+                        name="paperSize"
+                        :value="opt.value"
+                        v-model="paperWidth"
+                        style="display:none"
+                        @change="onPaperWidthChange"
+                      />
+                      <span class="paper-icon">🖨️</span>
+                      <span class="paper-label"> {{ opt.label }}</span>
+                      <span class="paper-desc"> {{ opt.desc }}</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -174,8 +196,10 @@
               <!-- Ticket Simulation -->
               <div class="ticket-simulation">
                 <div class="ticket-header">
-                  <div class="ticket-logo">
-                    {{ settings.storeName ? settings.storeName.charAt(0).toUpperCase() : 'N' }}
+                  <!-- Show uploaded logo or fallback letter -->
+                  <div class="ticket-logo" :class="{ 'ticket-logo-img': settings.logoUrl }">
+                    <img v-if="settings.logoUrl" :src="settings.logoUrl" alt="Logo" />
+                    <span v-else>{{ settings.storeName ? settings.storeName.charAt(0).toUpperCase() : 'N' }}</span>
                   </div>
                   <h3 class="ticket-store-name">{{ settings.storeName || 'Nombre de la Tienda' }}</h3>
                   <div class="ticket-address">
@@ -265,42 +289,137 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppButton from '@/components/ui/AppButton.vue';
+import AppInput from '@/components/ui/AppInput.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { HomeModernIcon } from '@heroicons/vue/24/outline';
+import apiClient from '@/services/api';
+import { getStoredPaperWidth, savePaperWidth, type PaperWidth } from '@/utils/ticketBuilder';
 
 const { enqueueSnackbar } = useSnackbar();
 
-// Form Data - Defaulting to match mockup placeholder
+// Ref for the hidden file input and selected logo file
+const logoInputRef = ref<HTMLInputElement | null>(null);
+const logoFile = ref<File | null>(null);
+
+// Form Data — populated from backend on mount
 const settings = ref({
-  storeName: 'Nurax Café',
-  currency: 'MXN',
-  address: 'Av. Reforma 123, Col. Centro, CDMX, México',
+  storeName: '',
+  currency: '$ MXN',
+  address: '',
   countryCode: '+52',
-  phone: '55 9876 5432',
-  thankYouMessage: '¡Gracias por su preferencia!\nVuelva pronto.\nSíguenos en IG: @nuraxcafe'
+  phone: '',
+  thankYouMessage: '',
+  logoUrl: '' as string,
 });
 
-// Format address roughly by comma to simulate multi-line address
+// ── Paper width preference (local storage) ────────────────────────────────────
+const paperWidth = ref<PaperWidth>(getStoredPaperWidth());
+
+const paperSizeOptions: { value: PaperWidth; label: string; desc: string }[] = [
+  { value: '58mm', label: '58 mm', desc: ' Impresoras pequeñas' },
+  { value: '80mm', label: '80 mm', desc: ' Estándar (recomendado)' },
+  { value: 'A4',   label: 'A4',    desc: ' Impresora de escritorio' },
+];
+
+const onPaperWidthChange = () => {
+  savePaperWidth(paperWidth.value);
+};
+
+// ── Load store settings from backend ─────────────────────────────────────────
+onMounted(async () => {
+  const res = await apiClient.get<any>('/store/');
+  if (res.success && res.data) {
+    const d = res.data;
+    settings.value.storeName      = d.store_name      ?? '';
+    settings.value.currency       = d.currency_symbol ?? '$ MXN';
+    settings.value.address        = d.address         ?? '';
+    settings.value.phone          = d.phone           ?? '';
+    settings.value.thankYouMessage = d.ticket_message ?? '';
+    settings.value.logoUrl        = d.logo_url        ?? '';
+  }
+});
+
+// ── Logo file handling ────────────────────────────────────────────────────────
+const onLogoFile = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    enqueueSnackbar({ type: 'error', title: 'Archivo muy grande', message: 'El logo no debe superar 2 MB.', duration: 3000 });
+    return;
+  }
+  logoFile.value = file;
+  // Immediate local preview
+  settings.value.logoUrl = URL.createObjectURL(file);
+};
+
+const onLogoDrop = (e: DragEvent) => {
+  const file = e.dataTransfer?.files?.[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  if (file.size > 2 * 1024 * 1024) {
+    enqueueSnackbar({ type: 'error', title: 'Archivo muy grande', message: 'El logo no debe superar 2 MB.', duration: 3000 });
+    return;
+  }
+  logoFile.value = file;
+  settings.value.logoUrl = URL.createObjectURL(file);
+};
+
+// ── Format address for ticket preview ────────────────────────────────────────
 const formattedAddressLines = computed(() => {
   if (!settings.value.address) return [];
   const parts = settings.value.address.split(',');
   if (parts.length <= 2) return [settings.value.address];
-  
-  // Combine first 2 parts, then the rest
   const line1 = parts.slice(0, 2).join(',').trim();
   const line2 = parts.slice(2).join(',').trim();
   return [line1, line2];
 });
 
-const saveSettings = () => {
-  // In a real app we'd dispatch to a store or apiClient 
-  enqueueSnackbar({
-    type: 'success',
-    title: 'Configuración Guardada',
-    message: 'Se han guardado correctamente los ajustes del negocio.',
-    duration: 3500
-  });
+// ── Save to backend ───────────────────────────────────────────────────────────
+const isSaving = ref(false);
+
+const saveSettings = async () => {
+  isSaving.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('store_name',      settings.value.storeName);
+    formData.append('currency_symbol', settings.value.currency);
+    formData.append('address',         settings.value.address);
+    formData.append('phone',           settings.value.phone);
+    formData.append('ticket_message',  settings.value.thankYouMessage);
+
+    if (logoFile.value) {
+      formData.append('logo_file', logoFile.value);
+    }
+
+    const res = await apiClient.patch<any>('/store/1/', formData);
+
+    if (res.success && res.data) {
+      // Update logo URL with Cloudinary's final URL
+      if (res.data.logo_url) {
+        settings.value.logoUrl = res.data.logo_url;
+        logoFile.value = null; // already uploaded
+      }
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Configuración Guardada',
+        message: 'Los ajustes del negocio se guardaron correctamente.',
+        duration: 3500,
+      });
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Error al guardar',
+        message: res.error || 'No se pudo guardar la configuración.',
+        duration: 4000,
+      });
+    }
+  } catch (err) {
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+  } finally {
+    isSaving.value = false;
+  }
 };
 </script>
 
@@ -311,9 +430,23 @@ const saveSettings = () => {
   height: 100%;
 }
 
+.settings-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .settings-inner {
   background: var(--color-card-stats-fill);
-  max-width: 1400px;
+  max-width: 100%;
   min-height: 100vh;
   margin: 0 auto;
   padding: 1.75rem 2rem;
@@ -585,11 +718,19 @@ textarea:focus {
   background: #fff;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
 .dropzone:hover {
   border-color: var(--color-brand-main);
   background: #f8faf9;
+}
+
+.dropzone-has-image {
+  border-style: solid;
+  border-color: var(--color-brand-main);
+  background: #f0faf5;
 }
 
 .dropzone-icon {
@@ -607,6 +748,40 @@ textarea:focus {
 .dropzone-icon svg {
   width: 20px;
   height: 20px;
+}
+
+.dropzone-preview {
+  max-height: 90px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.dropzone-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.dropzone-remove:hover {
+  background: rgba(220, 38, 38, 0.8);
+}
+
+.dropzone-remove svg {
+  width: 14px;
+  height: 14px;
 }
 
 .dropzone-text {
@@ -692,8 +867,8 @@ textarea:focus {
 }
 
 .ticket-logo {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   background: #111827;
   color: white;
   border-radius: 50%;
@@ -703,6 +878,18 @@ textarea:focus {
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ticket-logo-img {
+  background: transparent;
+}
+
+.ticket-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .ticket-store-name {
@@ -815,4 +1002,70 @@ textarea:focus {
   width: 14px;
   height: 14px;
 }
+
+.home-icon-style{
+  width: 24px;
+  height: 24px;
+}
+
+.pencil-icon-style{
+  width: 24px;
+  height: 24px;
+}
+
+.tion-icon-style{
+  width: 24px;
+  height: 24px;
+}
+
+/* ── Paper size selector ── */
+.paper-size-options {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.paper-size-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.875rem 1.25rem;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #F9FAFB;
+  transition: all 0.2s;
+  min-width: 90px;
+  text-align: center;
+  user-select: none;
+}
+
+.paper-size-btn:hover {
+  border-color: var(--color-brand-main, #06402B);
+  background: rgba(6, 64, 43, 0.04);
+}
+
+.paper-size-btn.selected {
+  border-color: var(--color-brand-main, #06402B);
+  background: rgba(6, 64, 43, 0.08);
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.1);
+}
+
+.paper-icon {
+  font-size: 1.4rem;
+}
+
+.paper-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.paper-desc {
+  font-size: 0.7rem;
+  color: #6B7280;
+  line-height: 1.2;
+}
+
 </style>
