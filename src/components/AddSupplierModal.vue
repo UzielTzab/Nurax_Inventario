@@ -29,38 +29,33 @@
 
             <!-- Nombre de la empresa -->
             <div class="form-group full-width">
-              <label for="sup-name">Nombre de la Empresa *</label>
-              <input
-                type="text"
+              <AppInput
                 id="sup-name"
                 v-model="form.name"
-                required
+                label="Nombre de la Empresa"
                 placeholder="Ej: TechGlobal Inc."
-                class="form-input"
+                required
               />
             </div>
 
             <!-- Persona de contacto + Teléfono -->
             <div class="form-row">
               <div class="form-group">
-                <label for="sup-contact">Persona de Contacto *</label>
-                <input
-                  type="text"
+                <AppInput
                   id="sup-contact"
                   v-model="form.contactPerson"
-                  required
+                  label="Persona de Contacto"
                   placeholder="Ej: Juan Pérez"
-                  class="form-input"
+                  required
                 />
               </div>
               <div class="form-group">
-                <label for="sup-phone">Teléfono</label>
-                <input
-                  type="tel"
+                <AppInput
                   id="sup-phone"
                   v-model="form.phone"
+                  type="tel"
+                  label="Teléfono"
                   placeholder="Ej: +52 55 1234 5678"
-                  class="form-input"
                 />
               </div>
             </div>
@@ -68,36 +63,31 @@
             <!-- Email + Sitio Web -->
             <div class="form-row">
               <div class="form-group">
-                <label for="sup-email">Correo Electrónico</label>
-                <input
-                  type="email"
+                <AppInput
                   id="sup-email"
                   v-model="form.email"
+                  type="email"
+                  label="Correo Electrónico"
                   placeholder="correo@empresa.com"
-                  class="form-input"
                 />
               </div>
               <div class="form-group">
-                <label for="sup-website">Sitio Web</label>
-                <input
-                  type="text"
+                <AppInput
                   id="sup-website"
                   v-model="form.website"
+                  label="Sitio Web"
                   placeholder="www.empresa.com"
-                  class="form-input"
                 />
               </div>
             </div>
 
             <!-- Dirección -->
             <div class="form-group full-width">
-              <label for="sup-address">Dirección</label>
-              <input
-                type="text"
+              <AppInput
                 id="sup-address"
                 v-model="form.address"
+                label="Dirección"
                 placeholder="Ej: Av. Reforma 123, Ciudad de México"
-                class="form-input"
               />
             </div>
 
@@ -121,6 +111,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppInput from '@/components/ui/AppInput.vue'
 import { useSuppliers } from '@/composables/useSuppliers'
 
 const props = defineProps<{ isOpen: boolean }>()

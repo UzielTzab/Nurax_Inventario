@@ -3,21 +3,20 @@
 
 @theme {
   /* Marca - Nueva Paleta */
-  /* para el color brand main será un gradiente del #227d52 al #13452d en alineación diagonal vertical*/
-  --color-brand-main: #227d52;       /* Verde Bosque Profundo */
+  --color-brand-main: #227d52;       
   --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     
-  --color-brand-secondary: #06402B;  /* Verde Bosque (igual al main) */
-  --color-brand-contrast: #06402B;   /* Alias para compatibilidad */
+  --color-brand-secondary: #06402B;  
+  --color-brand-contrast: #06402B;   
   
   /* Fondos y Diseño */
-  --color-background: #ffffff;         /* Blanco Puro */
-  --color-card-stats-fill: #F3F4F6;    /* Blanco Grisáceo */
-  --color-card-fill: #ffffff;        /* Blanco Puro */
-  --color-card-border: #e5e7eb;      /* Gris Claro */
+  --color-background: #ffffff;         
+  --color-card-stats-fill: #F3F4F6;    
+  --color-card-fill: #ffffff;        
+  --color-card-border: #e5e7eb;      
   
   /* Textos - Nuevos */
-  --color-text-main: #1f2937;        /* Carbón */
-  --color-text-secondary: #6b7280;   /* Gris Medio */
+  --color-text-main: #1f2937;        
+  --color-text-secondary: #6b7280;
   
   /* Estados */
   --color-status-success: #22c55e;
@@ -70,4 +69,61 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* ──────────────────────────────────────────
+   Global Skeleton Layout Utilities
+   Used by AppSkeleton.vue across all views
+   ────────────────────────────────────────── */
+
+/* Stat card skeleton — matches StatsCard dimensions */
+.skeleton-stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 90px;
+}
+
+/* Table skeleton wrapper — matches ProductTable outer card */
+.skeleton-table-wrap {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.skeleton-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 0.25rem;
+}
+
+.skeleton-table-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.125rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.skeleton-table-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-cell-product {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 240px;
 }

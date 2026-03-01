@@ -68,14 +68,12 @@
               <div class="product-data-section">
                 <!-- Name -->
                 <div class="form-group">
-                  <label for="name">Nombre del Producto *</label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    v-model="formData.name" 
-                    required 
+                  <AppInput
+                    id="name"
+                    v-model="formData.name"
+                    label="Nombre del Producto"
                     placeholder="Ej: Laptop Gamer X1"
-                    class="form-input"
+                    required
                   />
                 </div>
 
@@ -105,15 +103,13 @@
                     </div>
                   </div>
                 </div>
-                <input 
-                  type="text" 
-                  id="sku" 
-                  v-model="formData.sku" 
-                  required 
-                  readonly
+                <AppInput
+                  id="sku"
+                  v-model="formData.sku"
                   placeholder="SKU-..."
-                  class="form-input sku-readonly-input"
-                  style="background-color: #f9fafb; cursor: not-allowed; color: #9ca3af;"
+                  readonly
+                  disabled
+                  hint="Generado automáticamente"
                 />
               </div>
             </div>
@@ -121,16 +117,13 @@
             <!-- Price & Stock -->
             <div class="form-row">
               <div class="form-group">
-                <label for="price">Precio ($) *</label>
-                <input 
-                  type="number" 
-                  id="price" 
-                  v-model.number="formData.price" 
-                  step="0.01" 
-                  min="0" 
-                  required 
+                <AppInput
+                  id="price"
+                  v-model="formData.price"
+                  type="number"
+                  label="Precio ($)"
                   placeholder="0.00"
-                  class="form-input"
+                  required
                 />
               </div>
               <div class="form-group">
@@ -213,6 +206,7 @@
 import { ref, watch, reactive, computed } from 'vue';
 import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppInput from '@/components/ui/AppInput.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
 

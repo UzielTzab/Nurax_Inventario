@@ -35,10 +35,7 @@
         <!-- Área derecha topbar -->
         <div class="topbar-right">
           <!-- Botón Vender (Acceso Global) -->
-          <AppButton variant="fill" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
+          <AppButton variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
             Vender
           </AppButton>
 
@@ -73,12 +70,18 @@
             >
             <div class="topbar-avatar">
               <img
-                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || currentUser?.username || 'U')}&background=06402b&color=fff`"
-                :alt="currentUser?.name || currentUser?.username"
+                v-if="currentUser?.avatar_url || profilePhotoPreview"
+                :src="profilePhotoPreview || currentUser?.avatar_url"
+                :alt="displayName"
+              />
+              <img
+                v-else
+                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=06402b&color=fff`"
+                :alt="displayName"
               />
             </div>
               <div class="topbar-profile-text">
-                <span class="topbar-name">{{ currentUser?.name || currentUser?.username || 'Usuario' }}</span>
+                <span class="topbar-name">{{ displayName }}</span>
                 <span class="topbar-email">{{ currentUser?.email || '' }}</span>
               </div>
               <ChevronDownIcon
@@ -94,12 +97,18 @@
                 <div class="dropdown-header">
                   <div class="dropdown-avatar">
                     <img
-                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || currentUser?.username || 'U')}&background=06402b&color=fff&size=80`"
-                      :alt="currentUser?.name || currentUser?.username"
+                      v-if="currentUser?.avatar_url || profilePhotoPreview"
+                      :src="profilePhotoPreview || currentUser?.avatar_url"
+                      :alt="displayName"
+                    />
+                    <img
+                      v-else
+                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=06402b&color=fff&size=80`"
+                      :alt="displayName"
                     />
                   </div>
                   <div>
-                    <p class="dropdown-name">{{ currentUser?.name || currentUser?.username || 'Usuario' }}</p>
+                    <p class="dropdown-name">{{ displayName }}</p>
                     <p class="dropdown-email">{{ currentUser?.email || '' }}</p>
                     <span class="dropdown-role-badge">
                       {{ currentUser?.role === 'admin' ? 'Administrador' : 'Cliente' }}
@@ -178,27 +187,72 @@
               </button>
             </div>
             <div class="pm-avatar-section">
-              <div class="pm-avatar">
-                <img :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(profileForm.name || 'U')}&background=06402b&color=fff&size=80`" :alt="profileForm.name" />
+              <!-- Avatar with upload overlay -->
+              <div class="pm-avatar pm-avatar-clickable" @click="profilePhotoInputRef?.click()" title="Cambiar foto">
+                <img
+                  v-if="profilePhotoPreview"
+                  :src="profilePhotoPreview"
+                  :alt="profileForm.name"
+                />
+                <img
+                  v-else
+                  :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(profileForm.name || 'U')}&background=06402b&color=fff&size=80`"
+                  :alt="profileForm.name"
+                />
+                <!-- Camera overlay -->
+                <div class="pm-avatar-overlay">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M1 8a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 8.07 3h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 16.07 6H17a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8Zm13.5 3a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM10 14a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" />
+                  </svg>
+                </div>
               </div>
+              <!-- Hidden file input -->
+              <input
+                ref="profilePhotoInputRef"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style="display:none"
+                @change="onProfilePhotoFile"
+              />
               <div>
                 <p class="pm-avatar-label">{{ profileForm.name }}</p>
                 <span class="dropdown-role-badge">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cliente' }}</span>
+                <div class="pm-photo-actions">
+                  <button class="pm-photo-btn" @click="profilePhotoInputRef?.click()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M1 8a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 8.07 3h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 16.07 6H17a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8Zm13.5 3a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM10 14a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" />
+                    </svg>
+                    Cambiar foto
+                  </button>
+                  <button class="pm-photo-btn pm-photo-btn-remove" 
+                    v-if="profilePhotoPreview"
+                    @click="removeProfilePhoto"
+                  >
+                    Quitar
+                  </button>
+                </div>
               </div>
             </div>
             <div class="pm-body">
               <div class="pm-field">
-                <label class="pm-label">Nombre</label>
-                <input v-model="profileForm.name" type="text" class="pm-input" placeholder="Tu nombre completo" />
+                <AppInput
+                  v-model="profileForm.name"
+                  label="Nombre"
+                  placeholder="Tu nombre completo"
+                />
               </div>
               <div class="pm-field">
-                <label class="pm-label">Correo electrónico</label>
-                <input v-model="profileForm.email" type="email" class="pm-input" placeholder="correo@empresa.com" />
+                <AppInput
+                  v-model="profileForm.email"
+                  type="email"
+                  label="Correo electrónico"
+                  placeholder="correo@empresa.com"
+                />
               </div>
             </div>
             <div class="pm-footer">
-              <AppButton variant="outline" @click="showProfileEdit = false">Cancelar</AppButton>
-              <AppButton variant="fill" @click="saveProfile">Guardar cambios</AppButton>
+              <AppButton variant="outline" @click="showProfileEdit = false" :disabled="isSavingProfile">Cancelar</AppButton>
+              <AppButton variant="fill" @click="saveProfile" :loading="isSavingProfile">Guardar cambios</AppButton>
             </div>
           </div>
         </div>
@@ -365,7 +419,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
@@ -377,6 +431,7 @@ import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppInput from '@/components/ui/AppInput.vue';
 import {
   Bars3Icon,
   MagnifyingGlassIcon,
@@ -391,6 +446,7 @@ import {
   InformationCircleIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  ShoppingCartIcon,
 } from '@heroicons/vue/24/outline';
 
 const salesStore = useSalesStore();
@@ -403,13 +459,25 @@ const profileWrapperRef = ref<HTMLElement | null>(null);
 const showNotifications = ref(false);
 const notificationWrapperRef = ref<HTMLElement | null>(null);
 
-const { currentUser, logout } = useAuth();
+const { currentUser, logout, updateAvatarUrl } = useAuth();
 const router = useRouter();
 
 // Formulario de edición de perfil
 const profileForm = reactive({
   name: currentUser.value?.name ?? '',
   email: currentUser.value?.email ?? '',
+});
+
+/**
+ * Sanea el nombre a mostrar: descarta valores que claramente son
+ * placeholders de TypeScript/DRF ('string', '', null, undefined)
+ * y usa username como fallback.
+ */
+const INVALID_NAMES = new Set(['string', 'str', 'nombre', 'name', 'null', 'undefined']);
+const displayName = computed(() => {
+  const raw = currentUser.value?.name ?? '';
+  if (raw && !INVALID_NAMES.has(raw.toLowerCase().trim())) return raw;
+  return currentUser.value?.username || 'Usuario';
 });
 
 const toggleProfileMenu = () => {
@@ -423,18 +491,194 @@ const toggleNotifications = () => {
 };
 
 const openProfileEdit = () => {
-  profileForm.name = currentUser.value?.name || currentUser.value?.username || '';
+  // Use the sanitized displayName so 'string' placeholder never appears in the modal
+  profileForm.name  = displayName.value !== 'Usuario' ? displayName.value : '';
   profileForm.email = currentUser.value?.email || '';
+  // Reset pending state
+  profilePhotoPreview.value = currentUser.value?.avatar_url || '';
+  profilePendingFile.value  = null;
+  pendingRemovePhoto.value  = false;
   showProfileMenu.value = false;
   showProfileEdit.value = true;
 };
 
-const saveProfile = () => {
-  if (currentUser.value) {
-    currentUser.value.name = profileForm.name;
-    currentUser.value.email = profileForm.email;
+// ── Profile photo ──────────────────────────────────────────
+const profilePhotoInputRef    = ref<HTMLInputElement | null>(null);
+const profilePhotoPreview     = ref('');   // data-URL for local preview
+const profilePendingFile      = ref<File | null>(null); // file waiting to be uploaded on save
+const pendingRemovePhoto      = ref(false);              // user pressed "Quitar"
+
+/**
+ * Comprime una imagen usando Canvas API.
+ * Redimensiona a máx maxDim×maxDim y ajusta calidad JPEG hasta quedar ≤ maxBytes.
+ * Devuelve un File con el resultado comprimido.
+ */
+const compressImage = (file: File, maxDim = 800, maxBytes = 1 * 1024 * 1024): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('No se pudo decodificar la imagen'));
+      img.onload = () => {
+        // Calcular nuevas dimensiones manteniendo aspect ratio
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height / width) * maxDim);
+            width  = maxDim;
+          } else {
+            width  = Math.round((width / height) * maxDim);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Intentar calidades decrecientes hasta quedar bajo maxBytes
+        const qualities = [0.85, 0.75, 0.65, 0.50, 0.35];
+        let dataUrl = '';
+        for (const q of qualities) {
+          dataUrl = canvas.toDataURL('image/jpeg', q);
+          // dataUrl base64 ≈ 4/3 del tamaño binario
+          const approxBytes = Math.round((dataUrl.length - 22) * 0.75);
+          if (approxBytes <= maxBytes) break;
+        }
+
+        // Convertir dataURL a File
+        const arr    = dataUrl.split(',');
+        const mime   = arr[0].match(/:(.*?);/)![1];
+        const bstr   = atob(arr[1]);
+        let n        = bstr.length;
+        const u8arr  = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+
+        const compressed = new File(
+          [u8arr],
+          file.name.replace(/\.[^.]+$/, '.jpg'),
+          { type: mime, lastModified: Date.now() }
+        );
+        resolve(compressed);
+      };
+      img.src = e.target!.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
+ * Called when the user picks a new file.
+ * Compresses automatically if > 500 KB, then shows local preview.
+ * Does NOT upload to the backend (that happens on "Guardar cambios").
+ */
+const onProfilePhotoFile = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  // Validar tipo de archivo
+  if (!file.type.startsWith('image/')) {
+    enqueueSnackbar({ type: 'error', title: 'Formato inválido', message: 'Por favor selecciona una imagen (JPG, PNG, WEBP).', duration: 3000 });
+    if (e.target) (e.target as HTMLInputElement).value = '';
+    return;
   }
-  showProfileEdit.value = false;
+
+  // Límite absoluto: 15 MB (imágenes claramente corruptas o no imagen)
+  if (file.size > 15 * 1024 * 1024) {
+    enqueueSnackbar({ type: 'error', title: 'Archivo demasiado grande', message: 'El archivo supera 15 MB. Por favor elige una imagen más pequeña.', duration: 4000 });
+    if (e.target) (e.target as HTMLInputElement).value = '';
+    return;
+  }
+
+  let finalFile = file;
+
+  // Comprimir si pesa más de 500 KB para garantizar que el upload sea fluido
+  if (file.size > 500 * 1024) {
+    try {
+      finalFile = await compressImage(file);
+      // Solo informar si la compresión fue significativa
+      const ratio = Math.round((1 - finalFile.size / file.size) * 100);
+      if (ratio > 10) {
+        enqueueSnackbar({
+          type: 'info',
+          title: 'Imagen optimizada',
+          message: `Se optimizó automáticamente (${ratio}% más ligera) sin perder calidad visible.`,
+          duration: 3500
+        });
+      }
+    } catch {
+      // Si la compresión falla, usar el archivo original y advertir solo si supera el límite del backend
+      if (file.size > 2 * 1024 * 1024) {
+        enqueueSnackbar({ type: 'warning', title: 'No se pudo optimizar', message: 'La imagen es muy pesada. Intenta con otra imagen.', duration: 4000 });
+        if (e.target) (e.target as HTMLInputElement).value = '';
+        return;
+      }
+    }
+  }
+
+  // Mostrar preview local
+  const reader = new FileReader();
+  reader.onload = () => { profilePhotoPreview.value = reader.result as string; };
+  reader.readAsDataURL(finalFile);
+
+  // Guardar archivo comprimido para el upload en "Guardar cambios"
+  profilePendingFile.value  = finalFile;
+  pendingRemovePhoto.value  = false;
+
+  if (e.target) (e.target as HTMLInputElement).value = '';
+};
+
+
+/**
+ * "Quitar" button: clears the preview locally.
+ * The actual deletion from the profile is done on save.
+ */
+const removeProfilePhoto = () => {
+  profilePhotoPreview.value   = '';
+  profilePendingFile.value    = null;
+  pendingRemovePhoto.value    = true;
+};
+// ─────────────────────────────────────────────────────────────
+
+const isSavingProfile = ref(false);
+
+const saveProfile = async () => {
+  isSavingProfile.value = true;
+
+  try {
+    // 1. Upload new photo if user picked one
+    if (profilePendingFile.value) {
+      const result = await updateAvatarUrl(profilePendingFile.value);
+      if (result.success && result.url) {
+        if (currentUser.value) currentUser.value.avatar_url = result.url;
+        enqueueSnackbar({ type: 'success', title: 'Foto actualizada', message: 'Tu foto de perfil se guardó correctamente.', duration: 3000 });
+      } else {
+        enqueueSnackbar({ type: 'error', title: 'Error al subir foto', message: result.error || 'No se pudo subir la imagen.', duration: 3500 });
+      }
+      profilePendingFile.value = null;
+    }
+
+    // 2. If user pressed "Quitar", clear avatar on backend
+    if (pendingRemovePhoto.value) {
+      // Pass null to signal removal (updateAvatarUrl with null or a dedicated composable call)
+      // For now, clear locally — backend removal can be added when the endpoint is available
+      if (currentUser.value) currentUser.value.avatar_url = '';
+      pendingRemovePhoto.value = false;
+    }
+
+    // 3. Save name & email
+    if (currentUser.value) {
+      currentUser.value.name  = profileForm.name;
+      currentUser.value.email = profileForm.email;
+    }
+
+    showProfileEdit.value = false;
+  } finally {
+    isSavingProfile.value = false;
+  }
 };
 
 // ===== EXCEL =====
@@ -1095,8 +1339,70 @@ defineEmits(['quickSell']);
   overflow: hidden;
   border: 2.5px solid rgba(6, 64, 43, 0.2);
   flex-shrink: 0;
+  position: relative;
 }
 .pm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Clickable avatar with camera overlay */
+.pm-avatar-clickable {
+  cursor: pointer;
+}
+
+.pm-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+}
+
+.pm-avatar-clickable:hover .pm-avatar-overlay {
+  opacity: 1;
+}
+
+.pm-avatar-overlay svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+/* Photo action buttons */
+.pm-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pm-photo-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--color-brand-main, #06402B);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.pm-photo-btn:hover { background: #0a5c3a; }
+.pm-photo-btn svg { width: 14px; height: 14px; }
+
+.pm-photo-btn-remove {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.pm-photo-btn-remove:hover { background: #fef2f2; }
 
 .pm-avatar-label {
   font-size: 0.9375rem;

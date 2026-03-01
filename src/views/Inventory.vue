@@ -12,17 +12,11 @@
             <p class="page-subtitle">Administración de inventario y ventas</p>
           </div>
           <div class="header-actions">
-            <AppButton variant="outline" @click="handleAddProduct">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
-                Nuevo Producto
+            <AppButton variant="outline" :icon="PlusIcon" @click="handleAddProduct">
+              Nuevo Producto
             </AppButton>
-            <AppButton variant="fill" @click="handleQuickSell">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h14m-7 2.5a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-                Vender
+            <AppButton variant="fill" :icon="ShoppingCartIcon" @click="handleQuickSell">
+              Vender
             </AppButton>
           </div>
         </div>
@@ -64,10 +58,19 @@
 
         <!-- Stats Cards -->
         <div class="stats-grid">
+          <template v-if="productStore.isLoading">
+            <div v-for="i in 3" :key="'sk-stat-'+i" class="skeleton-stat-card">
+              <AppSkeleton width="44px" height="44px" radius="10px" />
+              <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
+                <AppSkeleton width="110px" height="0.75rem" />
+                <AppSkeleton width="60px" height="1.75rem" />
+              </div>
+            </div>
+          </template>
+          <template v-else>
           <StatsCard
             label="Productos totales"
             :value="totalProducts"
-            :trend="{ direction: 'up', value: '+12% vs last month' }"
             :icon="CubeIcon"
             icon-type="brand"
             variant="brand"
@@ -75,41 +78,65 @@
           <StatsCard
             label="Valor del inventario"
             :value="formatCurrency(inventoryValue) + ' MXN'"
-            subtitle="Calculado diariamente"
             :icon="CurrencyDollarIcon"
             icon-type="success"
           />
           <StatsCard
             label="Productos sin stock"
             :value="outOfStockProducts.length"
-            :subtitle="outOfStockProducts.length > 0 ? 'Requiere atención' : 'Inventario saludable'"
             :variant="outOfStockProducts.length > 0 ? 'danger' : 'success'"
             :icon="ExclamationTriangleIcon"
             :icon-type="outOfStockProducts.length > 0 ? 'danger' : 'success'"
           />
 
+          </template>
         </div>
 
+        <!-- Skeleton: Product Table -->
+        <template v-if="productStore.isLoading">
+          <div class="skeleton-table-wrap">
+            <div class="skeleton-table-header">
+              <AppSkeleton width="160px" height="1rem" />
+              <AppSkeleton width="90px" height="2rem" radius="9999px" />
+            </div>
+            <div v-for="i in 6" :key="'sk-row-'+i" class="skeleton-table-row">
+              <div class="skeleton-cell-product">
+                <AppSkeleton width="46px" height="46px" radius="10px" />
+                <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                  <AppSkeleton width="130px" height="0.9rem" />
+                  <AppSkeleton width="80px" height="0.75rem" />
+                </div>
+              </div>
+              <AppSkeleton width="80px" height="0.875rem" />
+              <AppSkeleton width="40px" height="0.875rem" />
+              <AppSkeleton width="80px" height="0.875rem" />
+              <AppSkeleton width="70px" height="1.4rem" radius="20px" />
+              <AppSkeleton width="32px" height="32px" radius="6px" />
+            </div>
+          </div>
+        </template>
+
         <!-- Product Table (with integrated filter panel) -->
-        <ProductTable
-          :products="pagedProducts"
-          :filters="filters"
-          :low-stock-count="lowStockProducts.length"
-          :out-of-stock-count="outOfStockProducts.length"
-          @edit="handleEditProduct"
-          @delete="handleDeleteProduct"
-          @delete-multiple="handleBulkDelete"
-          @restock="handleRestock"
-          @update:filters="onFiltersUpdate"
-        />
+        <template v-else>
+          <ProductTable
+            :products="pagedProducts"
+            :filters="filters"
+            :low-stock-count="lowStockProducts.length"
+            :out-of-stock-count="outOfStockProducts.length"
+            @edit="handleEditProduct"
+            @delete="handleDeleteProduct"
+            @delete-multiple="handleBulkDelete"
+            @restock="handleRestock"
+            @update:filters="onFiltersUpdate"
+          />
 
-
-        <!-- Pagination -->
-        <Pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="filteredProducts.length"
-        />
+          <!-- Pagination -->
+          <Pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="filteredProducts.length"
+          />
+        </template>
 
       </div>
     </div>
@@ -142,9 +169,12 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  PlusIcon,
+  ShoppingCartIcon
 } from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import StatsCard from '@/components/dashboard/StatsCard.vue';
@@ -411,7 +441,7 @@ const handleConfirmation = () => {
 
 .inventory-inner {
   background: var(--color-card-stats-fill);
-  max-width: 1800px;
+  max-width: 100%;
   min-height: 100vh;
   margin: 0 auto;
   padding: 1.75rem 2rem;

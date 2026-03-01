@@ -1,278 +1,177 @@
 <template>
-  <div v-if="totalPages > 0" class="pagination">
-   
-
-    <!-- Controls -->
-    <div class="pagination-controls">
-      <!-- First page -->
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === 1"
-        title="Primera página"
-        @click="go(1)"
-      >
-        <ChevronDoubleLeftIcon class="btn-icon" />
-      </button>
-
-      <!-- Prev page -->
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === 1"
-        title="Página anterior"
-        @click="go(currentPage - 1)"
-      >
-        <ChevronLeftIcon class="btn-icon" />
-      </button>
-
-      <!-- Page numbers -->
-      <template v-for="item in pageItems" :key="item">
-        <span v-if="item === '...'" class="pagination-ellipsis">…</span>
-        <button
-          v-else
-          class="pagination-number"
-          :class="{ 'pagination-active': currentPage === item }"
-          @click="go(item as number)"
-        >
-          {{ item }}
-        </button>
-      </template>
-
-      <!-- Next page -->
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === totalPages"
-        title="Página siguiente"
-        @click="go(currentPage + 1)"
-      >
-        <ChevronRightIcon class="btn-icon" />
-      </button>
-
-      <!-- Last page -->
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === totalPages"
-        title="Última página"
-        @click="go(totalPages)"
-      >
-        <ChevronDoubleRightIcon class="btn-icon" />
-      </button>
+  <div v-if="total > 0" class="pagination-wrapper">
+    <!-- Left: info + page size -->
+    <div class="pagination-left">
+      <span class="pagination-info">
+        {{ rangeStart }}–{{ rangeEnd }} de {{ total }}
+      </span>
+      <select class="page-size-select" :value="pageSize" @change="onPageSizeChange">
+        <option v-for="s in pageSizes" :key="s" :value="s">{{ s }} por página</option>
+      </select>
     </div>
 
-    <!-- Page size selector -->
-    <div class="pagination-size">
-      <label for="page-size-select" class="size-label">Filas:</label>
-      <select
-        id="page-size-select"
-        class="size-select"
-        :value="pageSize"
-        @change="onPageSizeChange"
-      >
-        <option v-for="opt in pageSizeOptions" :key="opt" :value="opt">{{ opt }}</option>
-      </select>
+    <!-- Right: page buttons -->
+    <div class="pagination-right">
+      <button class="page-btn" :disabled="currentPage <= 1" @click="goTo(currentPage - 1)" title="Página anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+
+      <template v-for="page in visiblePages" :key="page">
+        <span v-if="page === '...'" class="page-ellipsis">…</span>
+        <button
+          v-else
+          class="page-btn"
+          :class="{ 'page-btn--active': page === currentPage }"
+          @click="goTo(page as number)"
+        >{{ page }}</button>
+      </template>
+
+      <button class="page-btn" :disabled="currentPage >= totalPages" @click="goTo(currentPage + 1)" title="Página siguiente">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+        </svg>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-} from '@heroicons/vue/24/outline'
 
-// ── Props ──────────────────────────────────────────────────────────────────
-interface Props {
-  /** Current active page (1-indexed). Use v-model:current-page */
+const props = withDefaults(defineProps<{
   currentPage: number
-  /** Number of rows per page. Use v-model:page-size */
   pageSize: number
-  /** Total number of items across ALL pages */
   total: number
-  /** Page-size options shown in the dropdown */
-  pageSizeOptions?: number[]
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  pageSizeOptions: () => [5, 10, 20, 50],
+  pageSizes?: number[]
+}>(), {
+  pageSizes: () => [10, 25, 50, 100]
 })
 
-// ── Emits ──────────────────────────────────────────────────────────────────
 const emit = defineEmits<{
   'update:currentPage': [page: number]
-  'update:pageSize': [size: number]
+  'update:pageSize':    [size: number]
 }>()
 
-// ── Computed ───────────────────────────────────────────────────────────────
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 
-/**
- * Builds the array of page numbers to show, with ellipsis where needed.
- * Example for 10 pages at page 5: [1, '...', 4, 5, 6, '...', 10]
- */
-const pageItems = computed<(number | '...')[]>(() => {
+const rangeStart = computed(() => Math.min((props.currentPage - 1) * props.pageSize + 1, props.total))
+const rangeEnd   = computed(() => Math.min(props.currentPage * props.pageSize, props.total))
+
+// Build visible page numbers with ellipsis
+const visiblePages = computed(() => {
   const total = totalPages.value
-  const cur = props.currentPage
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1)
-  }
+  const cur   = props.currentPage
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
 
-  const items: (number | '...')[] = [1]
-
-  if (cur > 3) items.push('...')
+  const pages: (number | '...')[] = [1]
+  if (cur > 3)  pages.push('...')
 
   const start = Math.max(2, cur - 1)
-  const end = Math.min(total - 1, cur + 1)
+  const end   = Math.min(total - 1, cur + 1)
+  for (let i = start; i <= end; i++) pages.push(i)
 
-  for (let i = start; i <= end; i++) items.push(i)
-
-  if (cur < total - 2) items.push('...')
-
-  items.push(total)
-
-  return items
+  if (cur < total - 2) pages.push('...')
+  pages.push(total)
+  return pages
 })
 
-// ── Methods ────────────────────────────────────────────────────────────────
-function go(page: number) {
-  if (page < 1 || page > totalPages.value || page === props.currentPage) return
+const goTo = (page: number) => {
+  if (page < 1 || page > totalPages.value) return
   emit('update:currentPage', page)
 }
 
-function onPageSizeChange(e: Event) {
+const onPageSizeChange = (e: Event) => {
   const size = Number((e.target as HTMLSelectElement).value)
   emit('update:pageSize', size)
-  // Return to first page when changing size
   emit('update:currentPage', 1)
 }
 </script>
 
 <style scoped>
-.pagination {
+.pagination-wrapper {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
-  border-top: 1px solid #e5e7eb;
-  gap: 1rem;
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-card-border, #e5e7eb);
+  background: var(--color-card-fill, #fff);
 }
 
-/* Info */
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
 .pagination-info {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #6b7280;
   white-space: nowrap;
 }
 
-.pagination-info strong {
-  color: #111827;
-  font-weight: 600;
+.page-size-select {
+  font-size: 0.8125rem;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
 }
+.page-size-select:focus { border-color: var(--color-brand-main, #227d52); }
 
-/* Controls */
-.pagination-controls {
+.pagination-right {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.25rem;
 }
 
-.pagination-btn,
-.pagination-number {
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 34px;
-  padding: 0 0.4rem;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
-  color: #374151;
-  cursor: pointer;
   transition: all 0.15s;
-  font-size: 0.875rem;
-  font-weight: 500;
   font-family: inherit;
-  line-height: 1;
 }
-
-.btn-icon {
-  width: 15px;
-  height: 15px;
-}
-
-.pagination-btn:hover:not(:disabled),
-.pagination-number:hover:not(.pagination-active) {
+.page-btn svg { width: 16px; height: 16px; }
+.page-btn:hover:not(:disabled) {
   background: #f3f4f6;
   border-color: #d1d5db;
 }
-
-.pagination-btn:disabled {
-  opacity: 0.35;
+.page-btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
-
-.pagination-active {
-  background: var(--color-brand-main, #06402B) !important;
-  border-color: var(--color-brand-main, #06402B) !important;
-  color: white !important;
-  font-weight: 700 !important;
+.page-btn--active {
+  background: var(--color-brand-main, #227d52);
+  border-color: var(--color-brand-main, #227d52);
+  color: #fff;
+}
+.page-btn--active:hover {
+  background: var(--color-brand-secondary, #06402B);
+  border-color: var(--color-brand-secondary, #06402B);
 }
 
-.pagination-ellipsis {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 34px;
+.page-ellipsis {
+  font-size: 0.875rem;
   color: #9ca3af;
-  font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
-}
-
-/* Page-size selector */
-.pagination-size {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.size-label {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.size-select {
-  padding: 0.35rem 0.6rem;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  background: white;
-  color: #374151;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  transition: border-color 0.15s;
-}
-
-.size-select:focus {
-  border-color: var(--color-brand-main, #06402B);
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .pagination {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .pagination-info {
-    text-align: center;
-  }
+  padding: 0 0.25rem;
+  user-select: none;
 }
 </style>

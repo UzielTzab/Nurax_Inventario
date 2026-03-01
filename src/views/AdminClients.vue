@@ -21,39 +21,38 @@
 
         <!-- Stats -->
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-brand">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-              </svg>
+          <template v-if="isLoading">
+            <div v-for="i in 3" :key="i" class="skeleton-stat-card">
+              <AppSkeleton width="44px" height="44px" radius="10px" />
+              <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
+                <AppSkeleton width="90px" height="0.75rem" />
+                <AppSkeleton width="50px" height="1.75rem" />
+              </div>
             </div>
-            <div>
-              <p class="stat-label">Total Clientes</p>
-              <p class="stat-value">{{ clients.length }}</p>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-success">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <div>
-              <p class="stat-label">Activos</p>
-              <p class="stat-value">{{ activeClients }}</p>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-warning">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <div>
-              <p class="stat-label">Inactivos</p>
-              <p class="stat-value">{{ clients.length - activeClients }}</p>
-            </div>
-          </div>
+          </template>
+          <template v-else>
+          <StatsCard
+            label="Total Clientes"
+            :value="clients.length"
+            :icon="UsersIcon"
+            icon-type="brand"
+            variant="brand"
+          />
+          <StatsCard
+            label="Activos"
+            :value="activeClients"
+            :icon="CheckCircleIcon"
+            icon-type="success"
+            :variant="activeClients > 0 ? 'success' : 'default'"
+          />
+          <StatsCard
+            label="Inactivos"
+            :value="clients.length - activeClients"
+            :icon="ExclamationTriangleIcon"
+            :icon-type="(clients.length - activeClients) > 0 ? 'warning' : 'success'"
+            :variant="(clients.length - activeClients) > 0 ? 'warning' : 'default'"
+          />
+          </template>
         </div>
 
         <!-- Search + Filter -->
@@ -82,15 +81,38 @@
             <thead>
               <tr>
                 <th>Cliente</th>
-                <th>Empresa</th>
-                <th>Plan</th>
-                <th>Fecha alta</th>
+                <th>Rol</th>
+                <th>Fecha de alta</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="client in filteredClients" :key="client.id" class="table-row">
+              <!-- Skeleton rows while loading -->
+              <template v-if="isLoading">
+                <tr v-for="i in 5" :key="'sk-'+i" class="table-row">
+                  <td>
+                    <div class="client-info">
+                      <AppSkeleton width="38px" height="38px" rounded />
+                      <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                        <AppSkeleton width="120px" height="0.875rem" />
+                        <AppSkeleton width="160px" height="0.75rem" />
+                      </div>
+                    </div>
+                  </td>
+                  <td><AppSkeleton width="60px" height="1.4rem" radius="20px" /></td>
+                  <td><AppSkeleton width="80px" height="0.875rem" /></td>
+                  <td><AppSkeleton width="70px" height="1.4rem" radius="20px" /></td>
+                  <td>
+                    <div style="display:flex;gap:0.75rem;align-items:center;">
+                      <AppSkeleton width="44px" height="24px" radius="999px" />
+                      <AppSkeleton width="32px" height="32px" radius="8px" />
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <!-- Actual rows -->
+              <tr v-else v-for="client in filteredClients" :key="client.id" class="table-row">
                 <td>
                   <div class="client-info">
                     <div class="client-avatar" :style="{ background: client.avatarColor }">
@@ -102,17 +124,14 @@
                     </div>
                   </div>
                 </td>
-                <td class="td-secondary">{{ client.company }}</td>
-                <td>
-                  <span class="plan-badge" :class="'plan-' + client.plan">
-                    {{ client.plan }}
-                  </span>
+                <td class="td-secondary">
+                  <span class="plan-badge plan-pro">{{ client.role }}</span>
                 </td>
                 <td class="td-secondary">{{ client.joinDate }}</td>
                 <td>
-                  <span class="status-badge" :class="client.active ? 'status-active' : 'status-inactive'">
+                  <span class="status-badge" :class="client.is_active ? 'status-active' : 'status-inactive'">
                     <span class="status-dot"></span>
-                    {{ client.active ? 'Activo' : 'Inactivo' }}
+                    {{ client.is_active ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
                 <td>
@@ -120,11 +139,11 @@
                     <!-- Toggle switch de activar/desactivar -->
                     <button
                       class="toggle-switch"
-                      :class="{ 'toggle-on': client.active, 'toggle-off': !client.active }"
+                      :class="{ 'toggle-on': client.is_active, 'toggle-off': !client.is_active }"
                       @click="confirmToggle(client)"
-                      :title="client.active ? 'Desactivar cuenta' : 'Activar cuenta'"
+                      :title="client.is_active ? 'Desactivar cuenta' : 'Activar cuenta'"
                       role="switch"
-                      :aria-checked="client.active"
+                      :aria-checked="client.is_active"
                     >
                       <span class="toggle-thumb"></span>
                     </button>
@@ -137,7 +156,7 @@
                   </div>
                 </td>
               </tr>
-              <tr v-if="filteredClients.length === 0 && !isLoading">
+              <tr v-if="!isLoading && filteredClients.length === 0">
                 <td colspan="6" class="empty-state">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
@@ -201,15 +220,15 @@
           <div class="modal-header">
             <div class="modal-title-row">
               <!-- Ícono contextual -->
-              <div class="modal-icon-wrap" :class="toggleTarget.active ? 'icon-warn' : 'icon-success'">
-                <svg v-if="toggleTarget.active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-success'">
+                <svg v-if="toggleTarget.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                 </svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
                 </svg>
               </div>
-              <h3 class="modal-title">{{ toggleTarget.active ? 'Desactivar cuenta' : 'Activar cuenta' }}</h3>
+              <h3 class="modal-title">{{ toggleTarget.is_active ? 'Desactivar cuenta' : 'Activar cuenta' }}</h3>
             </div>
             <button class="modal-close" @click="toggleTarget = null">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -229,7 +248,7 @@
               </div>
             </div>
             <!-- Mensaje contextual -->
-            <p v-if="toggleTarget.active" class="toggle-msg toggle-msg-warn">
+            <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
               Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
             </p>
             <p v-else class="toggle-msg toggle-msg-success">
@@ -238,7 +257,7 @@
             <div class="modal-footer">
               <AppButton variant="outline" @click="toggleTarget = null" type="button">Cancelar</AppButton>
               <AppButton variant="fill" @click="applyToggle" type="button">
-                {{ toggleTarget?.active ? 'Sí, desactivar' : 'Sí, activar' }}
+                {{ toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar' }}
               </AppButton>
             </div>
           </div>
@@ -274,6 +293,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import StatsCard from '@/components/dashboard/StatsCard.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import { UsersIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
 
@@ -283,10 +305,9 @@ interface Client {
   id: string | number;
   name: string;
   email: string;
-  company: string;
-  plan: 'básico' | 'pro' | 'enterprise';
+  role: string;
   joinDate: string;
-  active: boolean;
+  is_active: boolean;
   avatarColor: string;
 }
 
@@ -311,7 +332,7 @@ const newClient = ref({
   plan: 'básico' as Client['plan'],
 });
 
-const activeClients = computed(() => clients.value.filter(c => c.active).length);
+const activeClients = computed(() => clients.value.filter(c => c.is_active).length);
 
 const filteredClients = computed(() => {
   let list = [...clients.value];
@@ -319,12 +340,11 @@ const filteredClients = computed(() => {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(c =>
       c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      c.company.toLowerCase().includes(q)
+      c.email.toLowerCase().includes(q)
     );
   }
-  if (statusFilter.value === 'active') list = list.filter(c => c.active);
-  if (statusFilter.value === 'inactive') list = list.filter(c => !c.active);
+  if (statusFilter.value === 'active') list = list.filter(c => c.is_active);
+  if (statusFilter.value === 'inactive') list = list.filter(c => !c.is_active);
   return list;
 });
 
@@ -337,19 +357,29 @@ const confirmToggle = (client: Client) => {
 const applyToggle = async () => {
   if (!toggleTarget.value) return;
   const client = toggleTarget.value;
+  const newState = !client.is_active;
+  toggleTarget.value = null; // Cierra el modal inmediatamente
   try {
-    const response = await apiClient.patch<{ active: boolean }>(`/clients/${client.id}/toggle_active/`, {});
-    if (response.success && response.data) {
-      client.active = response.data.active;
-      enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: 'El estado del cliente fue actualizado.', duration: 3000 });
+    // Enviamos el nuevo estado deseado de forma explícita en el body
+    const response = await apiClient.patch<{ is_active: boolean }>(
+      `/users/${client.id}/toggle_active/`,
+      { is_active: newState }
+    );
+    if (response.success && response.data !== undefined) {
+      // Actualizamos localmente con el valor que devuelve el servidor
+      client.is_active = response.data.is_active ?? newState;
+      const action = client.is_active ? 'activado' : 'desactivado';
+      enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: `El usuario fue ${action} correctamente.`, duration: 3000 });
+      // Re-fetch para confirmar el estado persistido en el servidor
+      await fetchClients();
     } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 3000 });
+      const msg = response.status === 400
+        ? 'No puedes desactivar tu propia cuenta de administrador.'
+        : (response.error || 'No se pudo actualizar el estado.');
+      enqueueSnackbar({ type: 'error', title: 'Acción no permitida', message: msg, duration: 4000 });
     }
   } catch (error) {
-    console.error("No tienes permisos o el cliente no existe", error);
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
-  } finally {
-    toggleTarget.value = null;
   }
 };
 
@@ -361,12 +391,12 @@ const deleteClient = async () => {
   if (!deleteTarget.value) return;
   const targetId = deleteTarget.value.id;
   try {
-    const response = await apiClient.delete(`/clients/${targetId}/`);
+    const response = await apiClient.delete(`/users/${targetId}/`);
     if (response.success) {
       clients.value = clients.value.filter(c => c.id !== targetId);
-      enqueueSnackbar({ type: 'success', title: 'Cliente eliminado', message: 'El cliente ha sido eliminado exitosamente.', duration: 3000 });
+      enqueueSnackbar({ type: 'success', title: 'Usuario eliminado', message: 'La cuenta ha sido eliminada exitosamente.', duration: 3000 });
     } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar al cliente', duration: 3000 });
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar la cuenta.', duration: 3000 });
     }
   } catch (err) {
     console.error(err);
@@ -379,23 +409,25 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
-    const response = await apiClient.get<any[]>('/clients/');
+    // Consumir /api/users/?role=cliente — aquí están TODOS los usuarios registrados
+    const response = await apiClient.get<any[]>('/users/?role=cliente');
     if (response.success && response.data) {
-      clients.value = response.data.map(c => ({
-        id: c.id,
-        name: c.name,
-        email: c.email,
-        company: c.company,
-        plan: c.plan,
-        active: c.active,
-        joinDate: new Date(c.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
-        avatarColor: c.avatar_color || '#06402B'
+      clients.value = response.data.map((u, index) => ({
+        id: u.id,
+        name: u.name || u.username || 'Sin nombre',
+        email: u.email,
+        role: u.role || 'cliente',
+        is_active: u.is_active,
+        joinDate: u.date_joined
+          ? new Date(u.date_joined).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—',
+        avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length] ?? '#06402B',
       }));
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudieron cargar los clientes.', duration: 3000 });
     }
   } catch (error) {
-    console.error('Error fetching clients:', error);
+    console.error('Error fetching users:', error);
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
     isLoading.value = false;
@@ -502,48 +534,6 @@ const addClient = () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-}
-
-.stat-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon-wrap svg {
-  width: 22px;
-  height: 22px;
-}
-
-.stat-icon-brand { background: rgba(6, 64, 43, 0.08); color: var(--color-brand-main); }
-.stat-icon-success { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
-.stat-icon-warning { background: rgba(249, 115, 22, 0.1); color: #ea580c; }
-
-.stat-label {
-  font-size: 0.8125rem;
-  color: #6b7280;
-  margin: 0 0 0.25rem 0;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
 }
 
 /* Toolbar */

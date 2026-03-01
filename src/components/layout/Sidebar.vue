@@ -40,7 +40,6 @@
       </div>
     </nav>
 
-
   </aside>
 </template>
 
@@ -72,6 +71,8 @@ const router = useRouter();
 const route = useRoute();
 const emit = defineEmits(['quickSell', 'close']);
 const { currentUser } = useAuth();
+
+// ─────────────────────────────────────────────────────────────
 
 // Tipos para el menú
 interface MenuItem {
@@ -198,13 +199,12 @@ defineProps<{
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 1.25rem 0;
+  padding: 1.25rem 0 0;
   overflow-y: auto;
 }
 
 .sidebar-header {
   padding: 0 1.25rem;
-  margin-bottom: 2.5rem;
 }
 
 .logo {
@@ -402,11 +402,285 @@ defineProps<{
 
 .nav-item-active .nav-icon,
 .nav-item-active .nav-icon svg {
-  color: var(--color-brand-main); /* Icono en sólido main */
+  color: var(--color-brand-main);
 }
 
+/* ══════════ Sidebar Profile Card ══════════ */
+.sidebar-profile {
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sidebar-profile:hover {
+  background: rgba(6, 64, 43, 0.04);
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-letter {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-brand-main);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.profile-avatar-edit {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.profile-avatar-edit svg {
+  width: 9px;
+  height: 9px;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-role {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ══════════ Profile Modal ══════════ */
+.profile-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.profile-modal-card {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.profile-modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.profile-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.profile-modal-close:hover { background: #e5e7eb; }
+.profile-modal-close svg { width: 16px; height: 16px; }
+
+.profile-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.profile-modal-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.profile-modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-brand-main);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 3px solid #e5e7eb;
+}
+
+.profile-modal-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-modal-avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.btn-change-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-brand-main);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-change-photo:hover { background: #0a5c3a; }
+.btn-change-photo svg { width: 16px; height: 16px; }
+
+.btn-remove-photo {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-remove-photo:hover { background: #fef2f2; }
+
+.profile-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.profile-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.2rem;
+}
+
+.profile-field p {
+  font-size: 0.9375rem;
+  color: #374151;
+  margin: 0;
+  font-weight: 500;
+}
+
+.profile-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-profile-cancel {
+  padding: 0.5rem 1.25rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-profile-cancel:hover { background: #e5e7eb; }
+
+.btn-profile-save {
+  padding: 0.5rem 1.25rem;
+  background: var(--color-brand-main);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-profile-save:hover { background: #0a5c3a; }
+
+/* Modal transitions */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.modal-fade-enter-active .profile-modal-card {
+  transition: transform 0.25s ease;
+}
+.modal-fade-enter-from .profile-modal-card {
+  transform: scale(0.95) translateY(-10px);
+}
 
 </style>
-
-
-

@@ -1,31 +1,67 @@
 <template>
   <button 
     :type="type"
-    :disabled="disabled"
+    :disabled="disabled || loading"
     class="app-button"
     :class="[
       `app-button--${variant}`,
-      { 'app-button--full-width': fullWidth }
+      { 'app-button--full-width': fullWidth },
+      { 'app-button--loading': loading },
+      { 'app-button--icon-only': iconOnly }
     ]"
     @click="handleClick"
   >
-    <slot />
+    <!-- Spinner (visible only when loading) -->
+    <span v-if="loading" class="app-btn-spinner" aria-hidden="true"></span>
+
+    <!-- Content: ícono + texto (siempre en layout, invisible cuando carga) -->
+    <span :class="{ 'app-btn-content--hidden': loading }" class="app-btn-content">
+      <!-- Ícono izquierdo (antes del texto) -->
+      <component
+        v-if="icon && iconPosition === 'left'"
+        :is="icon"
+        class="app-btn-icon"
+        aria-hidden="true"
+      />
+      <!-- Slot: texto o contenido personalizado -->
+      <slot />
+      <!-- Ícono derecho (después del texto) -->
+      <component
+        v-if="icon && iconPosition === 'right'"
+        :is="icon"
+        class="app-btn-icon"
+        aria-hidden="true"
+      />
+    </span>
   </button>
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue';
+
 interface Props {
-  type?: 'button' | 'submit' | 'reset';
-  variant?: 'fill' | 'outline';
-  disabled?: boolean;
-  fullWidth?: boolean;
+  type?:          'button' | 'submit' | 'reset';
+  variant?:       'fill' | 'outline';
+  disabled?:      boolean;
+  fullWidth?:     boolean;
+  loading?:       boolean;
+  /** Componente Heroicon a renderizar dentro del botón */
+  icon?:          Component;
+  /** Posición del ícono respecto al texto. Default: 'left' */
+  iconPosition?:  'left' | 'right';
+  /** true cuando el botón sólo tiene ícono (sin texto) — ajusta el padding */
+  iconOnly?:      boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  type: 'button',
-  variant: 'fill',
-  disabled: false,
-  fullWidth: false
+  type:           'button',
+  variant:        'fill',
+  disabled:       false,
+  fullWidth:      false,
+  loading:        false,
+  icon:           undefined,
+  iconPosition:   'left',
+  iconOnly:       false,
 });
 
 const emit = defineEmits<{
@@ -33,7 +69,7 @@ const emit = defineEmits<{
 }>();
 
 const handleClick = (event: MouseEvent) => {
-  if (!props.disabled) {
+  if (!props.disabled && !props.loading) {
     emit('click', event);
   }
 };
@@ -41,22 +77,28 @@ const handleClick = (event: MouseEvent) => {
 
 <style scoped>
 /* 
-  Botón Base - Configura aquí los valores compartidos (espaciado, border-radius, tipografía) 
+  Botón Base - Configura aquí los valores compartidos
 */
 .app-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem; /* 10px */
-  font-weight: 400;
-  font-size: 0.9375rem; /* 15px */
-  padding: 0.625rem 1.5rem; /* 10px 24px */
+  gap: 0.625rem;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding: 0.625rem 1.25rem;
   border-radius: 30px;
   outline: none;
   white-space: nowrap;
   transition: all 0.2s ease;
   cursor: pointer;
   font-family: inherit;
+}
+
+/* Modificador: sólo ícono — padding cuadrado */
+.app-button--icon-only {
+  padding: 0.625rem;
 }
 
 .app-button:disabled {
@@ -84,8 +126,8 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--fill:disabled {
-  background-color: #d1d5db; /* gray-300 */
-  color: #6b7280; /* gray-500 */
+  background-color: #d1d5db;
+  color: #6b7280;
   box-shadow: none;
 }
 
@@ -101,19 +143,67 @@ const handleClick = (event: MouseEvent) => {
 
 .app-button--outline:hover:not(:disabled) {
   border-color: var(--color-brand-main, #06402B);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06) ;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .app-button--outline:disabled {
-  background-color: #f9fafb; /* gray-50 */
-  color: #9ca3af; /* gray-400 */
-  border-color: #e5e7eb; /* gray-200 */
+  background-color: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
 }
 
-/* Estilos para los iconos (SVG) dentro del botón */
-.app-button > :deep(svg) {
-  width: 20px;
-  height: 30px;
+/* ── Content span ── */
+.app-btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-btn-content--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── Heroicon vía prop `icon` ── */
+.app-btn-icon {
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+}
+
+/* SVGs pasados por slot (compatibilidad retroactiva con uso existente) */
+.app-button :deep(svg) {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Loading state ── */
+.app-btn-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-btn-spinner::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+/* Outline variant spinner uses brand color */
+.app-button--outline .app-btn-spinner::after {
+  border-color: rgba(6, 64, 43, 0.25);
+  border-top-color: var(--color-brand-main, #06402B);
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
 }
 </style>
