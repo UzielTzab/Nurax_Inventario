@@ -389,7 +389,7 @@
     </section>
 
     <!-- ===== TESTIMONIALS ===== -->
-    <section class="lp-testimonials" id="testimonials">
+    <!-- <section class="lp-testimonials" id="testimonials">
       <div class="lp-section-header">
         <h2 class="lp-section-title">Lo que dicen<br /><span class="lp-gradient-text">nuestros clientes</span></h2>
       </div>
@@ -406,10 +406,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- ===== PRICING ===== -->
-    <section class="lp-pricing" id="pricing">
+    <!-- <section class="lp-pricing" id="pricing">
       <div class="lp-section-header">
         <span class="lp-badge lp-badge--dark">💎 Planes</span>
         <h2 class="lp-section-title">Elige el plan<br /><span class="lp-gradient-text">perfecto para ti</span></h2>
@@ -433,7 +433,7 @@
           </a>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- ===== CTA FINAL ===== -->
     <section class="lp-cta">
