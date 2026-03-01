@@ -566,6 +566,7 @@ const steps = [
   { icon: '💰', title: '¡Empieza a vender!', desc: 'Registra ventas, controla stock y haz crecer tu negocio desde el primer día.' },
 ]
 
+/*
 const testimonials = [
   { name: 'María García', role: 'Dueña de Tienda de Ropa', text: 'Antes usaba Excel y siempre tenía errores. Con Nurax controlo todo desde el celular y mis ventas aumentaron 40% porque nunca me quedo sin stock.' },
   { name: 'Carlos Mendoza', role: 'Restaurantero', text: 'Increíble cómo algo tan complejo puede ser tan simple. Mis empleados aprendieron en una hora y el control de insumos es perfecto.' },
@@ -598,6 +599,7 @@ const plans = [
     features: ['Todo lo de Profesional', 'Usuarios ilimitados', 'API access', 'Onboarding dedicado', 'SLA garantizado 99.9%'],
   },
 ]
+*/
 </script>
 
 <style scoped>
