@@ -172,8 +172,9 @@
     </div>
 
     <!-- Modal Nuevo Cliente -->
-    <transition name="modal-fade">
-      <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
+    <Teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
         <div class="modal-card" data-aos="zoom-in" data-aos-duration="250">
           <div class="modal-header">
             <h3 class="modal-title">Nuevo Cliente</h3>
@@ -205,17 +206,19 @@
               </select>
             </div>
             <div class="modal-footer">
-              <AppButton variant="outline" @click="showAddModal = false" type="button">Cancelar</AppButton>
-              <AppButton variant="fill" type="submit">Agregar Cliente</AppButton>
+              <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+              <AppButton variant="fill" type="submit" :loading="isSubmitting">Agregar Cliente</AppButton>
             </div>
           </form>
         </div>
       </div>
-    </transition>
+      </transition>
+    </Teleport>
 
     <!-- Modal Confirmar Cambio de Estado -->
-    <transition name="modal-fade">
-      <div v-if="toggleTarget" class="modal-backdrop" @click.self="toggleTarget = null">
+    <Teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="toggleTarget" class="modal-backdrop" @click.self="toggleTarget = null">
         <div class="modal-card modal-card-sm">
           <div class="modal-header">
             <div class="modal-title-row">
@@ -255,19 +258,21 @@
               Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
             </p>
             <div class="modal-footer">
-              <AppButton variant="outline" @click="toggleTarget = null" type="button">Cancelar</AppButton>
-              <AppButton variant="fill" @click="applyToggle" type="button">
+              <AppButton variant="outline" @click="toggleTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+              <AppButton variant="fill" @click="applyToggle" type="button" :loading="isSubmitting">
                 {{ toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar' }}
               </AppButton>
             </div>
           </div>
         </div>
       </div>
-    </transition>
+      </transition>
+    </Teleport>
 
     <!-- Confirm Delete Modal -->
-    <transition name="modal-fade">
-      <div v-if="deleteTarget" class="modal-backdrop" @click.self="deleteTarget = null">
+    <Teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="deleteTarget" class="modal-backdrop" @click.self="deleteTarget = null">
         <div class="modal-card modal-card-sm">
           <div class="modal-header">
             <h3 class="modal-title">Eliminar Cliente</h3>
@@ -280,13 +285,14 @@
           <div class="modal-body">
             <p class="delete-msg">¿Estás seguro de eliminar a <strong>{{ deleteTarget?.name }}</strong>? Esta acción no se puede deshacer.</p>
             <div class="modal-footer">
-              <AppButton variant="outline" @click="deleteTarget = null" type="button">Cancelar</AppButton>
-              <AppButton variant="fill" @click="deleteClient" type="button">Sí, eliminar</AppButton>
+              <AppButton variant="outline" @click="deleteTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+              <AppButton variant="fill" @click="deleteClient" type="button" :loading="isSubmitting">Sí, eliminar</AppButton>
             </div>
           </div>
         </div>
       </div>
-    </transition>
+      </transition>
+    </Teleport>
   </DashboardLayout>
 </template>
 
@@ -320,6 +326,7 @@ const AVATAR_COLORS = [
 
 const clients = ref<Client[]>([]);
 const isLoading = ref(false);
+const isSubmitting = ref(false);
 
 const searchQuery = ref('');
 const statusFilter = ref<'all' | 'active' | 'inactive'>('all');
@@ -360,7 +367,7 @@ const applyToggle = async () => {
   if (!toggleTarget.value) return;
   const client = toggleTarget.value;
   const newState = !client.is_active;
-  toggleTarget.value = null; // Cierra el modal inmediatamente
+  isSubmitting.value = true;
   try {
     // Enviamos el nuevo estado deseado de forma explícita en el body
     const response = await apiClient.patch<{ is_active: boolean }>(
@@ -382,6 +389,9 @@ const applyToggle = async () => {
     }
   } catch (error) {
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+  } finally {
+    isSubmitting.value = false;
+    toggleTarget.value = null; // Cerramos el modal solo al terminar para poder mostrar el loading antes
   }
 };
 
@@ -392,6 +402,7 @@ const confirmDelete = (client: Client) => {
 const deleteClient = async () => {
   if (!deleteTarget.value) return;
   const targetId = deleteTarget.value.id;
+  isSubmitting.value = true;
   try {
     const response = await apiClient.delete(`/users/${targetId}/`);
     if (response.success) {
@@ -404,6 +415,7 @@ const deleteClient = async () => {
     console.error(err);
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
+    isSubmitting.value = false;
     deleteTarget.value = null;
   }
 };
@@ -440,21 +452,32 @@ onMounted(() => {
   fetchClients();
 });
 
-const addClient = () => {
-  const colorIndex = clients.value.length % AVATAR_COLORS.length;
-  clients.value.push({
-    id: Date.now().toString(),
-    name: newClient.value.name,
-    email: newClient.value.email,
-    company: newClient.value.company || '—',
-    plan: newClient.value.plan,
-    role: 'cliente',
-    joinDate: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
-    is_active: true,
-    avatarColor: AVATAR_COLORS[colorIndex] ?? '#06402B',
-  });
-  newClient.value = { name: '', email: '', company: '', plan: 'básico' };
-  showAddModal.value = false;
+const addClient = async () => {
+  isSubmitting.value = true;
+  try {
+    const payload = {
+      name: newClient.value.name,
+      email: newClient.value.email,
+      company: newClient.value.company || '',
+      plan: newClient.value.plan,
+      role: 'cliente',
+      username: newClient.value.email.split('@')[0], 
+    };
+    
+    const response = await apiClient.post('/users/', payload);
+    if (response.success) {
+      enqueueSnackbar({ type: 'success', title: 'Cliente creado', message: 'El cliente se registró correctamente.', duration: 3000 });
+      await fetchClients(); // Recargar la lista con los IDs reales de la DB
+      newClient.value = { name: '', email: '', company: '', plan: 'básico' };
+      showAddModal.value = false;
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el cliente. Verifica los datos.', duration: 4000 });
+    }
+  } catch (error) {
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión con el servidor.', duration: 3000 });
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 

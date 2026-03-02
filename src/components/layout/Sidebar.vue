@@ -56,6 +56,8 @@ import {
   UsersIcon as UsersOutline,
   UserGroupIcon as UserGroupOutline,
   Cog6ToothIcon as Cog6ToothOutline,
+  CurrencyDollarIcon as CurrencyDollarOutline,
+  BanknotesIcon as BanknotesOutline,
 } from '@heroicons/vue/24/outline';
 
 // Heroicons Solid (activo)
@@ -65,6 +67,8 @@ import {
   UsersIcon as UsersSolid,
   UserGroupIcon as UserGroupSolid,
   Cog6ToothIcon as Cog6ToothSolid,
+  CurrencyDollarIcon as CurrencyDollarSolid,
+  BanknotesIcon as BanknotesSolid,
 } from '@heroicons/vue/24/solid';
 
 const router = useRouter();
@@ -100,6 +104,10 @@ watch(() => route.path, (path) => {
     activeItem.value = 'suppliers';
   } else if (path.includes('/dashboard/inventory') || path === '/dashboard') {
     activeItem.value = 'inventory';
+  } else if (path.includes('/dashboard/shifts')) {
+    activeItem.value = 'shifts';
+  } else if (path.includes('/dashboard/expenses')) {
+    activeItem.value = 'expenses';
   } else if (path.includes('/dashboard/clients')) {
     activeItem.value = 'clients';
   } else if (path.includes('/dashboard/settings')) {
@@ -136,6 +144,22 @@ const allMenuSections: MenuSection[] = [
         roles: ['cliente'],
         iconOutline: UsersOutline,
         iconSolid: UsersSolid,
+      },
+      {
+        id: 'shifts',
+        label: 'Corte de Caja',
+        route: '/dashboard/shifts',
+        roles: ['cliente'],
+        iconOutline: BanknotesOutline,
+        iconSolid: BanknotesSolid,
+      },
+      {
+        id: 'expenses',
+        label: 'Gastos',
+        route: '/dashboard/expenses',
+        roles: ['cliente'],
+        iconOutline: CurrencyDollarOutline,
+        iconSolid: CurrencyDollarSolid,
       },
       {
         id: 'settings',

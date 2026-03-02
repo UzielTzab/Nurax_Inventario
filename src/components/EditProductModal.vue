@@ -1,7 +1,8 @@
 <template>
-  <!-- Backdrop overlay -->
-  <Transition name="fade">
-    <div v-if="isOpen && product" @click="$emit('close')" class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
+  <div>
+    <!-- Backdrop overlay -->
+    <Transition name="fade">
+      <div v-if="isOpen && product" @click="$emit('close')" class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
       <!-- Modal -->
       <Transition name="modal">
         <div v-if="isOpen && product" @click.stop class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -116,7 +117,13 @@
                     disabled
                     class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
                   >
-                  <p class="text-xs text-gray-500 mt-1">El SKU no se puede modificar</p>
+                  <p class="text-xs text-gray-500 mt-1 mb-3">El SKU no se puede modificar</p>
+                  
+                  <div class="qr-container bg-white p-3 border border-gray-200 rounded-lg flex flex-col items-center justify-center">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Código QR</p>
+                    <QrcodeVue :value="formData.sku" :size="96" level="M" />
+                    <button type="button" class="mt-2 text-xs text-indigo-600 font-semibold hover:text-indigo-800" @click="printLabel">Imprimir Etiqueta</button>
+                  </div>
                 </div>
               </div>
 
@@ -200,7 +207,13 @@
             </div> <!-- cierra product-top-row -->
 
             <!-- Action Buttons -->
-            <div class="flex gap-3 pt-4 border-t border-gray-200">
+            <div class="flex gap-3 pt-4 border-t border-gray-200 flex-wrap sm:flex-nowrap">
+              <AppButton variant="outline" type="button" class="flex-1" @click="showKardex = true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Kárdex / Ajuste
+              </AppButton>
               <AppButton variant="outline" type="button" class="flex-1" @click="$emit('close')">
                 Cancelar
               </AppButton>
@@ -215,13 +228,25 @@
       </Transition>
     </div>
   </Transition>
+
+  <KardexModal 
+    :is-open="showKardex" 
+    :product="computedProductToKardex" 
+    @close="showKardex = false" 
+    @product-updated="onProductUpdatedInsideKardex"
+  />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { XMarkIcon, PencilSquareIcon, CheckIcon } from '@heroicons/vue/24/outline';
+import QrcodeVue from 'qrcode.vue';
+import KardexModal from './KardexModal.vue';
+import { computed } from 'vue';
 
 interface Product {
+  id?: number | string;
   name: string;
   category: string;
   sku: string;
@@ -242,6 +267,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'productUpdated']);
 
+const showKardex = ref(false);
+
 const formData = ref({
   name: '',
   category: '',
@@ -252,6 +279,17 @@ const formData = ref({
   image: '',
   trackingMode: 'bulk' as 'bulk' | 'serialized'
 });
+
+const computedProductToKardex = computed(() => {
+   if(!props.product) return null;
+   return { ...props.product, stock: formData.value.quantity };
+});
+
+const onProductUpdatedInsideKardex = () => {
+    // We could emit a refresh to parent or just reflect it.
+    // For now we assume the ProductStore is updated, so if they close the 
+    // edit product modal, the table will be fresh anyway.
+};
 
 // Load product data when modal opens
 watch(() => props.product, (newProduct) => {
@@ -281,6 +319,43 @@ const handleImageUpload = (event: Event) => {
     };
     reader.readAsDataURL(file);
   }
+};
+
+const printLabel = () => {
+    // Generate an iframe HTML to print the label
+    const html = `
+      <html>
+        <head>
+          <style>
+             @page { size: 58mm 50mm; margin: 2mm; }
+             body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+             h3 { font-size: 14px; margin: 4px 0; }
+             p { font-size: 10px; margin: 2px 0; color: #555; }
+             .qr { width: 40mm; height: 40mm; margin: 4px auto; }
+          </style>
+        </head>
+        <body>
+            <h3>${formData.value.name}</h3>
+            <div id="qr-placeholder"></div>
+            <p>SKU: ${formData.value.sku}</p>
+            <p>${formData.value.price}</p>
+            <script>
+               window.onload = function() {
+                 let parentQr = window.parent.document.querySelector('.qr-container canvas');
+                 if(parentQr) document.getElementById('qr-placeholder').appendChild(parentQr.cloneNode(true));
+                 setTimeout(() => { window.print(); }, 200);
+               }
+            <\/script>
+        </body>
+      </html>
+    `;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentWindow?.document.open();
+    iframe.contentWindow?.document.write(html);
+    iframe.contentWindow?.document.close();
+    setTimeout(() => { document.body.removeChild(iframe) }, 2000);
 };
 
 const handleSubmit = () => {

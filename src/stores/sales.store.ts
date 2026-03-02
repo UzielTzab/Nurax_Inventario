@@ -11,14 +11,21 @@ export interface SaleItem {
   subtotal: string | number;
 }
 
+export interface Payment {
+  id: number;
+  amount: number | string;
+  created_at: string;
+}
+
 export interface Sale {
   id: number;
   transaction_id: string;
   user: number;
-  status: string;
+  status: string; // 'completed', 'pending', 'cancelled', 'credit', 'layaway'
   total: string | number;
   created_at: string;
   items: SaleItem[];
+  payments?: Payment[]; // New array from backend
 }
 
 export const useSalesStore = defineStore('sales', () => {
@@ -126,16 +133,49 @@ export const useSalesStore = defineStore('sales', () => {
     return data;
   });
 
+  const addPayment = async (saleId: number, amount: number) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.post<Payment>('/payments/', {
+        sale: saleId,
+        amount
+      });
+      if (response.success && response.data) {
+        // Update local sale record
+        const sale = sales.value.find(s => s.id === saleId);
+        if (sale) {
+          if (!sale.payments) sale.payments = [];
+          sale.payments.push(response.data);
+          
+          // Optionally, if the total paid >= total, we could update status to 'completed'
+          const paid = sale.payments.reduce((acc, p) => acc + parseFloat(String(p.amount)), 0);
+          if (paid >= parseFloat(String(sale.total))) {
+            sale.status = 'completed';
+          }
+        }
+        return { success: true, data: response.data };
+      } else {
+        error.value = response.error || 'Error al registrar abono';
+        return { success: false, error: error.value };
+      }
+    } catch(err: any) {
+      const msg = err.message || 'Error de conexión';
+      error.value = msg;
+      return { success: false, error: msg };
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   // Modal State
   const isModalOpen = ref(false);
 
   const openModal = () => {
-    console.log('SalesStore: Opening modal');
     isModalOpen.value = true;
   };
 
   const closeModal = () => {
-    console.log('SalesStore: Closing modal');
     isModalOpen.value = false;
   };
 
@@ -147,6 +187,7 @@ export const useSalesStore = defineStore('sales', () => {
     addSale, 
     removeSale, 
     cancelSale,
+    addPayment,
     weeklyData, 
     isModalOpen, 
     openModal, 

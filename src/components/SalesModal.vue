@@ -11,7 +11,7 @@
         </button>
       </div>
 
-      <div class="sale-layout">
+      <div v-if="shiftsStore.hasOpenShift" class="sale-layout">
         
         <!-- Left Panel: Search + Grid -->
         <div class="left-panel">
@@ -148,15 +148,28 @@
               variant="fill"
               fullWidth
               :disabled="cart.length === 0"
+              :loading="isSubmitting"
               @click="handleCheckout"
             >
               FINALIZAR VENTA
               <ArrowRightIcon class="w-5 h-5" />
             </AppButton>
+         </div>
         </div>
-
       </div>
-    </div>
+
+      <div v-else class="empty-state">
+         <div class="warning-icon-bg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-orange-500">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+         </div>
+         <h2 class="text-2xl font-bold mt-4">Caja Cerrada</h2>
+         <p class="text-gray-500 max-w-sm mt-2">Para poder realizar ventas, primero debes abrir tu turno y registrar tu fondo de caja inicial.</p>
+         <button class="btn-checkout mt-6" style="padding: 1rem 2rem; border-radius: 8px; background: var(--color-brand-main); color: white; cursor: pointer; border: none; font-weight: bold;" @click="goToShifts">
+            Ir a Abrir Turno
+         </button>
+      </div>
   </div>
   </div>
 
@@ -175,6 +188,8 @@ import { ref, computed } from 'vue';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
+import { useShiftsStore } from '@/stores/shifts.store';
+import { useRouter } from 'vue-router';
 import {
   MagnifyingGlassIcon,
   QrCodeIcon,
@@ -186,9 +201,10 @@ import {
   ArrowRightIcon,
   PhotoIcon
 } from '@heroicons/vue/24/outline';
-
 const { enqueueSnackbar } = useSnackbar();
 const salesStore = useSalesStore();
+const shiftsStore = useShiftsStore();
+const router = useRouter();
 import type { Product } from '@/stores/product.store';
 
 interface CartItem extends Product {
@@ -210,6 +226,12 @@ const showSuccessModal = ref(false);
 const lastSaleId = ref<string | number>('');
 const lastCartSnapshot = ref<CartItem[]>([]);
 const lastTotal = ref(0);
+const isSubmitting = ref(false);
+
+const goToShifts = () => {
+  emit('close');
+  router.push('/dashboard/shifts');
+};
 
 const filteredProducts = computed(() => {
   if (!props.products) return [];
@@ -218,10 +240,11 @@ const filteredProducts = computed(() => {
   
   if (!query) return props.products;
   
-  return props.products.filter(product => 
-    product.name.toLowerCase().includes(query) || 
-    product.sku.toLowerCase().includes(query)
-  );
+  return props.products.filter(product => {
+    const nameStr = product.name ? String(product.name).toLowerCase() : '';
+    const skuStr = product.sku ? String(product.sku).toLowerCase() : '';
+    return nameStr.includes(query) || skuStr.includes(query);
+  });
 });
 
 // Helper to calculate available stock visually
@@ -301,9 +324,13 @@ const total = computed(() => {
 });
 
 const handleCheckout = async () => {
-  // Play sound
-  const audio = new Audio('/Fx_Sucess.wav');
-  audio.play().catch(e => console.error('Error playing sound:', e));
+  if (cart.value.length === 0 || isSubmitting.value) return;
+  isSubmitting.value = true;
+  
+  try {
+    // Play sound
+    const audio = new Audio('/Fx_Sucess.wav');
+    audio.play().catch(e => console.error('Error playing sound:', e));
 
   // Guardar snapshot de la venta antes de registrarla
   lastCartSnapshot.value = [...cart.value];
@@ -338,6 +365,9 @@ const handleCheckout = async () => {
       message: result.error || 'Ocurrió un error al procesar la venta.',
       duration: 5000
     });
+  }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

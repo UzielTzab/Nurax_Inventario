@@ -207,7 +207,7 @@ const containerClass = computed(() => ({
   transition: color 0.2s;
 }
 
-.app-input-icon svg {
+.app-input-icon :deep(svg) {
   width: 18px;
   height: 18px;
 }

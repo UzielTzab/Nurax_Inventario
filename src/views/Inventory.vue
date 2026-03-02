@@ -147,6 +147,7 @@
       :is-open="showAddProductModal"
       :product-to-edit="selectedProduct"
       :existing-skus="allSkus"
+      :loading="isSubmitting"
       @close="showAddProductModal = false"
       @product-added="handleSaveNewProduct"
       @product-updated="handleUpdateProduct"
@@ -210,6 +211,7 @@ const {
 
 const showAddProductModal = ref(false);
 const selectedProduct = ref<Product | null>(null);
+const isSubmitting = ref(false);
 
 const confirmationState = ref({
   isOpen: false,
@@ -255,9 +257,10 @@ const filteredProducts = computed(() => {
 
   // Filter by category
   if (filters.value.category) {
-    products = products.filter(p =>
-      String(p.category).toLowerCase() === filters.value.category.toLowerCase()
-    );
+    products = products.filter(p => {
+      const matchName = (p.category_name || String(p.category)).toLowerCase();
+      return matchName === filters.value.category.toLowerCase();
+    });
   }
 
   // Filter by price range
@@ -310,21 +313,27 @@ const handleAddProduct = () => {
 };
 
 const handleSaveNewProduct = async (newProduct: Product) => {
-  const result = await productStore.addProduct(newProduct);
-  if (result.success) {
-    enqueueSnackbar({
-      type: 'success',
-      title: 'Producto Agregado',
-      message: `${newProduct.name} se agregó al inventario exitosamente.`,
-      duration: 3000
-    });
-  } else {
-    enqueueSnackbar({
-      type: 'error',
-      title: 'Error al agregar',
-      message: result.error || 'No se pudo crear el producto',
-      duration: 4000
-    });
+  isSubmitting.value = true;
+  try {
+    const result = await productStore.addProduct(newProduct);
+    if (result.success) {
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Producto Agregado',
+        message: `${newProduct.name} se agregó al inventario exitosamente.`,
+        duration: 3000
+      });
+      showAddProductModal.value = false;
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Error al agregar',
+        message: result.error || 'No se pudo crear el producto',
+        duration: 4000
+      });
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -334,21 +343,27 @@ const handleEditProduct = (product: Product) => {
 };
 
 const handleUpdateProduct = async (updatedProduct: Product) => {
-  const result = await productStore.updateProduct(updatedProduct);
-  if (result.success) {
-    enqueueSnackbar({
-      type: 'success',
-      title: 'Producto Actualizado',
-      message: `${updatedProduct.name} ha sido actualizado correctamente.`,
-      duration: 3000
-    });
-  } else {
-    enqueueSnackbar({
-      type: 'error',
-      title: 'Error al actualizar',
-      message: result.error || 'No se pudo actualizar el producto',
-      duration: 4000
-    });
+  isSubmitting.value = true;
+  try {
+    const result = await productStore.updateProduct(updatedProduct);
+    if (result.success) {
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Producto Actualizado',
+        message: `${updatedProduct.name} ha sido actualizado correctamente.`,
+        duration: 3000
+      });
+      showAddProductModal.value = false;
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Error al actualizar',
+        message: result.error || 'No se pudo actualizar el producto',
+        duration: 4000
+      });
+    }
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

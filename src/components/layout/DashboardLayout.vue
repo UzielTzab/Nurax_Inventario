@@ -35,17 +35,17 @@
         <!-- Área derecha topbar -->
         <div class="topbar-right">
           <!-- Botón Vender (Acceso Global) -->
-          <AppButton variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
+          <AppButton v-if="currentUser?.role === 'cliente'" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
             Vender
           </AppButton>
 
           <!-- Notificaciones -->
           <div class="topbar-notification-wrapper" ref="notificationWrapperRef">
-            <button class="icon-btn" title="Notificaciones" @click="toggleNotifications">
-              <BellIcon class="w-5 h-5" />
+            <!-- <button class="icon-btn" title="Notificaciones" @click="toggleNotifications">
+              <BellIcon class="w-5 h-5" /> -->
               <!-- Un pequeño badge si hay notificaciones, opcional -->
-              <span v-if="productStore.lowStockProducts.length > 0 || productStore.outOfStockProducts.length > 0" class="notification-badge"></span>
-            </button>
+              <!-- <span v-if="productStore.lowStockProducts.length > 0 || productStore.outOfStockProducts.length > 0" class="notification-badge"></span>
+            </button> -->
 
             <!-- Panel de Notificaciones Flotante -->
             <transition name="dropdown">
@@ -131,7 +131,7 @@
                 <!-- Excel Import/Export -->
                 <div class="dropdown-menu">
                   <!-- usar el botón appButton que es un componente, usar el varian fill -->
-                  <AppButton
+                  <!-- <AppButton
                     variant="outline"
                     color="primary"
                     size="sm"
@@ -139,7 +139,7 @@
                   >
                     <TableCellsIcon class="w-5 h-5" />
                     <span>Importar / Exportar Excel</span>
-                  </AppButton>
+                  </AppButton> -->
                 </div>
 
                 <div class="dropdown-divider"></div>
@@ -435,10 +435,7 @@ import AppInput from '@/components/ui/AppInput.vue';
 import {
   Bars3Icon,
   MagnifyingGlassIcon,
-  BellIcon,
-  ChevronDownIcon,
   UserCircleIcon,
-  TableCellsIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
   ArrowDownTrayIcon,
@@ -483,11 +480,6 @@ const displayName = computed(() => {
 const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value;
   if(showProfileMenu.value) showNotifications.value = false;
-};
-
-const toggleNotifications = () => {
-  showNotifications.value = !showNotifications.value;
-  if(showNotifications.value) showProfileMenu.value = false;
 };
 
 const openProfileEdit = () => {
@@ -692,13 +684,6 @@ const excelFileInput = ref<HTMLInputElement | null>(null);
 
 const expectedColumns = ['Nombre', 'SKU', 'Categoría', 'Precio', 'Stock', 'Imagen URL'];
 
-const openExcelModal = () => {
-  showProfileMenu.value = false;
-  excelTab.value = 'import';
-  resetImport();
-  showExcelModal.value = true;
-};
-
 const closeExcelModal = () => {
   showExcelModal.value = false;
   resetImport();
@@ -872,7 +857,7 @@ const handleSaleReverted = async (saleId: string | number, items: { id: string |
     items.forEach(item => {
       const product = productStore.products.find(p => p.id === item.id);
       if (product) {
-        productStore.updateStock(item.id, product.stock + item.quantity);
+        product.stock += item.quantity;
       }
     });
     // We should probably explicitly fetch sales so the store gets the new "cancelled" status
@@ -1254,7 +1239,7 @@ defineEmits(['quickSell']);
 /* === CONTENT CARD === */
 .content-card {
   flex: 1;
-  background: #ffffff;
+  background: var(--color-card-stats-fill);
   border-radius: 20px;
   overflow-y: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
