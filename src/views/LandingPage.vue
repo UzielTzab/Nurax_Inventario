@@ -11,7 +11,7 @@
           <a href="#features" class="lp-nav__link">Funciones</a>
           <a href="#qr-scanner" class="lp-nav__link">Scanner QR</a>
           <a href="#stats" class="lp-nav__link">Resultados</a>
-          <a href="#testimonials" class="lp-nav__link">Testimonios</a>
+          <!-- <a href="#testimonials" class="lp-nav__link">Testimonios</a> -->
           <a href="#pricing" class="lp-nav__link">Precios</a>
         </div>
         <a href="/auth/login" class="lp-btn lp-btn--fill lp-nav__cta">
@@ -195,7 +195,6 @@
       <div class="lp-qr__inner">
         <!-- Left: Copy -->
         <div class="lp-qr__copy">
-          <span class="lp-badge lp-badge--neon">📱 Nuevo · Scanner QR</span>
           <h2 class="lp-qr__title">
             Escanea.
             <span class="lp-qr__title--glow">Vende.</span>
@@ -352,7 +351,6 @@
     <section class="lp-stats" id="stats">
       <div class="lp-stats__inner">
         <div class="lp-stats__text">
-          <span class="lp-badge lp-badge--light">📈 Resultados reales</span>
           <h2 class="lp-stats__title">Números que hablan<br /><span class="lp-gradient-text">por sí solos</span></h2>
           <p class="lp-stats__desc">Los negocios que usan Nurax reportan mejoras significativas en su operación desde el primer mes de uso.</p>
           <a href="/auth/login" class="lp-btn lp-btn--fill lp-btn--lg" style="margin-top:2rem;">
@@ -453,7 +451,7 @@
     <footer class="lp-footer">
       <div class="lp-footer__inner">
         <div class="lp-footer__brand">
-          <img src="/nurax_logo_dark.png" alt="Nurax" class="lp-footer__logo" />
+          <img src="/nurax_logo.png" alt="Nurax" class="lp-footer__logo" />
           <span class="lp-footer__name">Nurax</span>
           <p class="lp-footer__tagline">Gestión inteligente para negocios inteligentes.</p>
         </div>
@@ -478,7 +476,7 @@
         </div>
       </div>
       <div class="lp-footer__bottom">
-        <p>© 2025 Nurax Systems. Todos los derechos reservados.</p>
+        <p>© 2026 Onux Systems. Todos los derechos reservados.</p>
       </div>
     </footer>
   </div>

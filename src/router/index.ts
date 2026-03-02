@@ -13,6 +13,8 @@ import SalesHistory from '@/views/SalesHistory.vue'
 import Suppliers from '@/views/Suppliers.vue'
 import AdminClients from '@/views/AdminClients.vue'
 import Settings from '@/views/Settings.vue'
+import Shifts from '@/views/Shifts.vue'
+import Expenses from '@/views/Expenses.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -49,6 +51,16 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Proveedores', roles: ['cliente'] }
   },
   {
+    path: '/dashboard/shifts',
+    component: Shifts,
+    meta: { title: 'Corte de Caja', roles: ['cliente'] }
+  },
+  {
+    path: '/dashboard/expenses',
+    component: Expenses,
+    meta: { title: 'Gastos', roles: ['cliente'] }
+  },
+  {
     path: '/dashboard/clients',
     component: AdminClients,
     meta: { title: 'Clientes', roles: ['admin'] }
@@ -78,10 +90,15 @@ router.beforeEach(async (to) => {
   // sin importar cuántas veces el guard se ejecute.
   await initSession()
 
-  // Rutas públicas (login, etc.)
+  // Si el usuario ya está logueado e intenta entrar al login, mandarlo directo a su dashboard.
+  if (to.path === '/auth/login' && isAuthenticated.value) {
+    return currentUser.value?.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
+  }
+
+  // Rutas públicas (landing, etc.) se permiten si no cayeron en el caso de arriba
   if (to.meta.public) return true
 
-  // Si después de initSession() no hay sesión válida → login
+  // Si después de initSession() no hay sesión válida y no es ruta pública → login
   if (!isAuthenticated.value) return '/auth/login'
 
   // Redirigir la base del dashboard según el rol

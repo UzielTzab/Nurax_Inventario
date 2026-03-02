@@ -83,14 +83,7 @@
                 <label for="category">Categoría *</label>
                 <select id="category" v-model="formData.category" required class="form-input">
                   <option value="">Seleccione una categoría</option>
-                  <option :value="1">Laptop</option>
-                  <option :value="2">Smartphone</option>
-                  <option :value="3">Audio</option>
-                  <option :value="4">Wearable</option>
-                  <option :value="5">Fotografía</option>
-                  <option :value="6">Gaming</option>
-                  <option :value="7">Accesorios</option>
-                  <option :value="8">Otros</option>
+                  <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -174,17 +167,14 @@
                   <span>Nuevo</span>
                 </button>
               </div>
-              <p v-if="formData.supplierId" class="supplier-hint">
-                📦 {{ supplierName }}
-              </p>
             </div>
             
               </div> <!-- /product-data-section -->
             </div>     <!-- /product-top-row -->
             <!-- Actions -->
             <div class="form-actions">
-              <AppButton variant="outline" type="button" @click="$emit('close')">Cancelar</AppButton>
-              <AppButton variant="fill" type="submit">
+              <AppButton variant="outline" type="button" @click="$emit('close')" :disabled="loading">Cancelar</AppButton>
+              <AppButton variant="fill" type="submit" :loading="loading">
                 {{ productToEdit ? 'Guardar Cambios' : 'Agregar Producto' }}
               </AppButton>
             </div>
@@ -203,12 +193,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive, computed } from 'vue';
+import { ref, watch, reactive, onMounted } from 'vue';
 import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
+import apiClient from '@/services/api';
 
 interface Product {
   id: string | number;
@@ -219,18 +210,36 @@ interface Product {
   price: string | number;
   image?: string | null;
   supplierId?: string;
+  supplier?: string | number | null;
 }
 
 const props = defineProps<{
   isOpen: boolean;
   productToEdit?: Product | null;
   existingSkus?: string[];
+  loading?: boolean;
 }>();
 
 const emit = defineEmits(['close', 'productAdded', 'productUpdated']);
 
 const { suppliers } = useSuppliers();
 const showAddSupplierModal = ref(false);
+
+const categoriesList = ref<Array<{id: number | string, name: string}>>([]);
+const fetchCategories = async () => {
+  try {
+    const res = await apiClient.get<any>('/categories/');
+    if (res.success && res.data) {
+       categoriesList.value = res.data.results || res.data;
+    }
+  } catch(e) {
+    console.error("Error fetching categories:", e);
+  }
+};
+
+onMounted(() => {
+  fetchCategories();
+});
 
 const formData = reactive({
   name: '',
@@ -245,10 +254,7 @@ const formData = reactive({
 const imagePreview = ref('');
 const rawImageFile = ref<File | null>(null);
 
-const supplierName = computed(() => {
-  if (!formData.supplierId) return ''
-  return suppliers.value.find(s => s.id === formData.supplierId)?.name ?? ''
-});
+
 
 // Reset or populate form when modal opens
 watch(() => props.isOpen, (newVal) => {
@@ -261,7 +267,7 @@ watch(() => props.isOpen, (newVal) => {
         stock: props.productToEdit.stock,
         price: props.productToEdit.price,
         image: props.productToEdit.image,
-        supplierId: props.productToEdit.supplierId ?? '',
+        supplierId: props.productToEdit.supplierId ?? props.productToEdit.supplier ?? '',
       });
       imagePreview.value = props.productToEdit.image || '';
       rawImageFile.value = null; // No new file by default
@@ -340,13 +346,14 @@ const handleSubmit = () => {
     const updatedProduct: any = {
       ...props.productToEdit,
       name: formData.name,
-      category: formData.category, // Debe ser el ID numérico si viene mapeado, de momento se manda 'Laptop', se ajustará en store o backend fallback
+      category: formData.category,
       sku: formData.sku,
       stock: formData.stock,
       price: formData.price,
       // Pass real file so Store knows to use FormData
       imageFile: rawImageFile.value,
       supplierId: formData.supplierId,
+      supplier: formData.supplierId,
     };
     emit('productUpdated', updatedProduct);
   } else {
@@ -358,10 +365,10 @@ const handleSubmit = () => {
       price: formData.price,
       imageFile: rawImageFile.value,
       supplierId: formData.supplierId,
+      supplier: formData.supplierId,
     };
     emit('productAdded', newProduct);
   }
-  emit('close');
 };
 </script>
 

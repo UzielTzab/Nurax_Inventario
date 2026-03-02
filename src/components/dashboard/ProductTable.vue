@@ -101,7 +101,7 @@
                 </div>
                 <div class="product-details">
                   <div class="product-name">{{ product.name }}</div>
-                  <div class="product-category">{{ product.category }}</div>
+                  <div class="product-category">{{ (product as any).category_name || product.category }}</div>
                 </div>
               </div>
             </td>
@@ -243,7 +243,7 @@ const filterPanelOpen = ref(false);
 const localFilters = ref<Filters>({ ...props.filters });
 
 const categories = computed(() => {
-  const cats = new Set(props.products.map(p => p.category));
+  const cats = new Set(props.products.map(p => (p as any).category_name || String(p.category)));
   return Array.from(cats).sort();
 });
 
@@ -692,7 +692,7 @@ td {
   font-size: 0.7rem;
   font-weight: 600;
   padding: 0.125rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;

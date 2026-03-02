@@ -134,19 +134,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- <tr v-for="product in selectedSupplier.products" :key="product.sku">
+                            <tr v-for="product in supplierProducts" :key="product.sku">
                                 <td class="font-medium">{{ product.name }}</td>
                                 <td class="text-sm text-gray">{{ product.sku }}</td>
-                                <td>${{ product.cost.toFixed(2) }}</td>
+                                <td>${{ Number(product.price).toFixed(2) }}</td>
                                 <td>
                                     <span :class="['stock-badge', product.stock > 10 ? 'success' : 'warning']">
                                         {{ product.stock }}
                                     </span>
                                 </td>
-                            </tr> -->
+                            </tr>
+                            <tr v-if="supplierProducts.length === 0">
+                               <td colspan="4" style="text-align: center; color: #6b7280; padding: 2rem;">No hay productos asignados a este proveedor.</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <p style="margin-top: 1rem; color: #6B7280; font-size: 0.875rem;">(Los productos por proveedor aún se están consultando desde el servidor)</p>
                 </div>
              </div>
           </div>
@@ -175,15 +177,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
+import { useProductStore } from '@/stores/product.store';
 
 const { enqueueSnackbar } = useSnackbar();
-const { suppliers, deleteSupplier } = useSuppliers();
+const { suppliers, deleteSupplier, fetchSuppliers } = useSuppliers();
+const productStore = useProductStore();
+
+onMounted(() => {
+  if (suppliers.value.length === 0) {
+    fetchSuppliers();
+  }
+});
+
+// Asegurar que tengamos productos siempre cargados (si no lo están ya del main layout)
+if (productStore.products.length === 0) {
+  productStore.fetchProducts();
+}
 
 const confirmationState = ref({
   isOpen: false,
@@ -252,6 +267,11 @@ const viewSupplierDetails = (supplier: Supplier) => {
 const closeModal = () => {
     selectedSupplier.value = null;
 };
+
+const supplierProducts = computed(() => {
+    if (!selectedSupplier.value) return [];
+    return productStore.products.filter(p => p.supplier == selectedSupplier.value!.id);
+});
 </script>
 
 <style scoped>

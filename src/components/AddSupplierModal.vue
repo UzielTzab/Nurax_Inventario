@@ -93,8 +93,8 @@
 
             <!-- Actions -->
             <div class="form-actions">
-              <AppButton variant="outline" type="button" @click="$emit('close')">Cancelar</AppButton>
-              <AppButton variant="fill" type="submit">
+              <AppButton variant="outline" type="button" @click="$emit('close')" :disabled="isSubmitting">Cancelar</AppButton>
+              <AppButton variant="fill" type="submit" :loading="isSubmitting">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="btn-icon">
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, watch, ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import { useSuppliers } from '@/composables/useSuppliers'
@@ -121,6 +121,7 @@ const emit = defineEmits<{
 }>()
 
 const { addSupplier } = useSuppliers()
+const isSubmitting = ref(false)
 
 const form = reactive({
   name: '',
@@ -145,6 +146,8 @@ watch(() => props.isOpen, (val) => {
 })
 
 async function handleSubmit() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
   try {
     const created = await addSupplier({
       name: form.name,
@@ -162,6 +165,8 @@ async function handleSubmit() {
     }
   } catch(e) {
     console.error("Error creating supplier from modal", e);
+  } finally {
+    isSubmitting.value = false;
   }
 }
 </script>

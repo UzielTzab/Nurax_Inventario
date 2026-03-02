@@ -27,7 +27,8 @@ export function useSuppliers() {
     try {
       const response = await apiClient.get<Supplier[]>('/suppliers/')
       if (response.success && response.data) {
-        suppliers.value = response.data
+        // En caso de que el backend use paginación de DRF, extraemos .results
+        suppliers.value = Array.isArray(response.data) ? response.data : (response.data as any).results || []
       } else {
         error.value = response.error || 'No se pudieron cargar los proveedores'
       }
