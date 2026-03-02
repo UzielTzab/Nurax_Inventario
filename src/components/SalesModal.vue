@@ -21,13 +21,14 @@
               <MagnifyingGlassIcon class="search-icon" />
               <input 
                 v-model="searchQuery"
+                @keyup.enter="handleScanSubmit"
                 type="text" 
-                placeholder="Buscar producto por nombre o código/SKU..." 
+                placeholder="Escanea o busca por producto/SKU..." 
                 class="search-input"
                 autofocus
               />
             </div>
-            <button class="icon-btn" title="Escanear">
+            <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
               <QrCodeIcon class="w-5 h-5" />
             </button>
             <button class="icon-btn" title="Filtros">
@@ -173,6 +174,22 @@
   </div>
   </div>
 
+  <!-- Scanner Overlay para SalesModal -->
+  <Transition name="fade">
+    <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
+       <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+         <h3 style="font-weight: 600; font-size: 1.25rem;">Escanear Producto</h3>
+         <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000;">
+           <qrcode-stream @detect="onDecodeSku"></qrcode-stream>
+         </div>
+         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">Apunta usando la cámara de tu dispositivo</p>
+         <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+           <XMarkIcon class="icon" style="width:20px; height:20px;" /> Cancelar
+         </button>
+       </div>
+    </div>
+  </Transition>
+
   <SaleSuccessModal 
     :is-open="showSuccessModal"
     :cart="lastCartSnapshot"
@@ -199,8 +216,12 @@ import {
   TrashIcon,
   TagIcon,
   ArrowRightIcon,
-  PhotoIcon
+  PhotoIcon,
+  XMarkIcon
 } from '@heroicons/vue/24/outline';
+import apiClient from '@/services/api';
+import { QrcodeStream } from 'vue-qrcode-reader';
+
 const { enqueueSnackbar } = useSnackbar();
 const salesStore = useSalesStore();
 const shiftsStore = useShiftsStore();
@@ -227,6 +248,48 @@ const lastSaleId = ref<string | number>('');
 const lastCartSnapshot = ref<CartItem[]>([]);
 const lastTotal = ref(0);
 const isSubmitting = ref(false);
+
+const isScanning = ref(false);
+
+const handleScanSubmit = () => {
+  const query = searchQuery.value.trim();
+  if (query) {
+    processScan(query);
+  }
+};
+
+const onDecodeSku = (detectedCodes: any[]) => {
+  if (detectedCodes.length > 0) {
+    const sku = detectedCodes[0].rawValue;
+    isScanning.value = false;
+    processScan(sku);
+  }
+};
+
+const processScan = async (sku: string) => {
+  try {
+    const res = await apiClient.get<any>(`/products/?sku=${sku}`);
+    if (res.success && res.data && res.data.length > 0) {
+      const product = res.data[0] as Product;
+      
+      const audio = new Audio('/Fx_Sucess.wav');
+      audio.play().catch(e => console.error(e));
+      
+      addToCart(product);
+      searchQuery.value = ''; // Limpiar input para siguiente escaneo rápido
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Producto no encontrado',
+        message: 'Intenta buscarlo por nombre o reintenta escanear.',
+        duration: 4000
+      });
+      // Optionally re-focus or highlight search input here
+    }
+  } catch(e) {
+    console.error("Scan error:", e);
+  }
+};
 
 const goToShifts = () => {
   emit('close');
