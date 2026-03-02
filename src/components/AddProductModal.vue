@@ -96,14 +96,18 @@
                     </div>
                   </div>
                 </div>
-                <AppInput
-                  id="sku"
-                  v-model="formData.sku"
-                  placeholder="SKU-..."
-                  readonly
-                  disabled
-                  hint="Generado automáticamente"
-                />
+                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                  <AppInput
+                    style="flex: 1;"
+                    id="sku"
+                    v-model="formData.sku"
+                    placeholder="Escriba o escanee..."
+                    hint="Si dejas vacío, autogenerará"
+                  />
+                  <button type="button" @click="isScanning = true" class="btn-scan" title="Escanear SKU" style="height: 44px; width: 44px; margin-bottom: 22px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #16a34a; cursor: pointer;">
+                    <QrCodeIcon style="width: 20px; height: 20px;" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -184,6 +188,22 @@
     </div>
   </Transition>
 
+  <!-- Scanner Overlay para AddProduct -->
+  <Transition name="fade">
+    <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
+       <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+         <h3 style="font-weight: 600; font-size: 1.25rem;">Escanear Código</h3>
+         <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000;">
+           <qrcode-stream @detect="onDecodeSku"></qrcode-stream>
+         </div>
+         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">Centra el código de barras o QR en la cámara</p>
+         <AppButton variant="outline" type="button" @click="isScanning = false" style="width: 100%;">
+           <XMarkIcon class="icon" style="width:20px; height:20px; display:inline;" /> Cancelar
+         </AppButton>
+       </div>
+    </div>
+  </Transition>
+
   <!-- Sub-modal: Crear Proveedor -->
   <AddSupplierModal
     :is-open="showAddSupplierModal"
@@ -194,7 +214,8 @@
 
 <script setup lang="ts">
 import { ref, watch, reactive, onMounted } from 'vue';
-import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon, QrCodeIcon } from '@heroicons/vue/24/outline';
+import { QrcodeStream } from 'vue-qrcode-reader';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
@@ -226,6 +247,18 @@ const { suppliers } = useSuppliers();
 const showAddSupplierModal = ref(false);
 
 const categoriesList = ref<Array<{id: number | string, name: string}>>([]);
+const isScanning = ref(false);
+
+const onDecodeSku = (detectedCodes: any[]) => {
+  if (detectedCodes.length > 0) {
+    formData.sku = detectedCodes[0].rawValue;
+    // Play bip sound
+    const audio = new Audio('/Fx_Sucess.wav');
+    audio.play().catch(e => console.error('Error playing sound:', e));
+    isScanning.value = false;
+  }
+};
+
 const fetchCategories = async () => {
   try {
     const res = await apiClient.get<any>('/categories/');
