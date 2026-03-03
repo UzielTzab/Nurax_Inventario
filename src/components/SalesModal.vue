@@ -309,7 +309,7 @@ const processScan = async (sku: string) => {
     if (res.success && res.data && res.data.length > 0) {
       const product = res.data[0] as Product;
       
-      const audio = new Audio('/Fx_Scanning.wav');
+      const audio = new Audio('/sounds/Fx_Scanning.wav');
       audio.play().catch(e => console.error(e));
       
       addToCart(product);
@@ -429,7 +429,7 @@ const handleCheckout = async () => {
   
   try {
     // Play sound
-    const audio = new Audio('/Fx_Sucess.wav');
+    const audio = new Audio('/sounds/Fx_Sucess.wav');
     audio.play().catch(e => console.error('Error playing sound:', e));
 
   // Guardar snapshot de la venta antes de registrarla

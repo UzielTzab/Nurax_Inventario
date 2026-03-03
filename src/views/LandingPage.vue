@@ -4,7 +4,7 @@
     <nav class="lp-nav" :class="{ 'lp-nav--scrolled': scrolled }">
       <div class="lp-nav__inner">
         <div class="lp-nav__brand">
-          <img src="/nurax_logo.png" alt="Nurax Logo" class="lp-nav__logo" />
+          <img src="/images/nurax_logo.png" alt="Nurax Logo" class="lp-nav__logo" />
           <span class="lp-nav__brand-name">Nurax</span>
         </div>
         <div class="lp-nav__links">
@@ -68,7 +68,7 @@
         </div>
         <div class="lp-hero__visual">
           <div class="lp-hero__img-wrapper">
-            <img src="/hero_dashboard.png" alt="Dashboard Nurax" class="lp-hero__img" />
+            <img src="/images/hero_dashboard.png" alt="Dashboard Nurax" class="lp-hero__img" />
             <!-- Floating cards -->
             <div class="lp-float-card lp-float-card--1">
               <span class="lp-float-icon">📦</span>
@@ -134,7 +134,7 @@
             </ul>
           </div>
           <div class="lp-feature-card__img">
-            <img src="/feature_inventory.png" alt="Inventario" />
+            <img src="/images/feature_inventory.png" alt="Inventario" />
           </div>
         </div>
 
@@ -152,7 +152,7 @@
             </ul>
           </div>
           <div class="lp-feature-card__img">
-            <img src="/feature_sales.png" alt="Ventas" />
+            <img src="/images/feature_sales.png" alt="Ventas" />
           </div>
         </div>
 
@@ -170,7 +170,7 @@
             </ul>
           </div>
           <div class="lp-feature-card__img">
-            <img src="/feature_suppliers.png" alt="Proveedores" />
+            <img src="/images/feature_suppliers.png" alt="Proveedores" />
           </div>
         </div>
 
@@ -365,7 +365,7 @@
           </div>
         </div>
         <div class="lp-stats__img">
-          <img src="/stats_growth.png" alt="Crecimiento" />
+          <img src="/images/stats_growth.png" alt="Crecimiento" />
         </div>
       </div>
     </section>
@@ -451,7 +451,7 @@
     <footer class="lp-footer">
       <div class="lp-footer__inner">
         <div class="lp-footer__brand">
-          <img src="/nurax_logo.png" alt="Nurax" class="lp-footer__logo" />
+          <img src="/images/nurax_logo.png" alt="Nurax" class="lp-footer__logo" />
           <span class="lp-footer__name">Nurax</span>
           <p class="lp-footer__tagline">Gestión inteligente para negocios inteligentes.</p>
         </div>

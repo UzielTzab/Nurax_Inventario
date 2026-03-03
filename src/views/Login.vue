@@ -10,7 +10,7 @@
         <!-- Character illustration -->
         <div class="character-wrapper" data-aos="fade-up" data-aos-delay="200">
           <img
-            src="/worker_3d.png"
+            src="/images/worker_3d.png"
             alt="Personaje trabajando"
             class="character-image"
             @error="onImgError"
@@ -44,7 +44,7 @@
         <div class="form-logo" data-aos="fade-down" data-aos-delay="100">
           <div class="logo-badge">
              <!-- Leaf icon -->
-            <img src="/public/nurax_logo.png" alt="Leaf Icon" class="logo-icon">
+            <img src="/public/images/nurax_logo.png" alt="Leaf Icon" class="logo-icon">
           </div>
         </div>
 

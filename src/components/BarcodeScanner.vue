@@ -266,7 +266,7 @@ const onDetect = (detectedCodes: any[]) => {
     barcode.value = code;
     
     // Play success sound
-    const audio = new Audio('/Fx_Scanning.wav');
+    const audio = new Audio('/sounds/Fx_Scanning.wav');
     audio.play().catch(e => console.log('Audio play failed:', e));
     
     stopCamera(); 
@@ -363,7 +363,7 @@ const scanProduct = () => {
 const processTransaction = () => {
   if (scannedProduct.value) {
     // Play success sound FIRST (before emitting event)
-    const audio = new Audio('/Fx_Scanning.wav');
+    const audio = new Audio('/sounds/Fx_Scanning.wav');
     audio.play();
     
     // Emit with serial number if serialized
