@@ -4,7 +4,7 @@
       <!-- Spinner with Logo -->
       <div class="spinner-container">
         <div class="spinner"></div>
-        <img class="spinner-logo" src="/public/nurax_logo.png" alt="Logo">
+        <img class="spinner-logo" src="/images/nurax_logo.png" alt="Logo">
       </div>
 
       <!-- Brand Name -->
