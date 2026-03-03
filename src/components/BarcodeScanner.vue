@@ -266,7 +266,7 @@ const onDetect = (detectedCodes: any[]) => {
     barcode.value = code;
     
     // Play success sound
-    const audio = new Audio('/Fx_Sucess.wav');
+    const audio = new Audio('/Fx_Scanning.wav');
     audio.play().catch(e => console.log('Audio play failed:', e));
     
     stopCamera(); 
