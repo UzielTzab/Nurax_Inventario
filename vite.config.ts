@@ -29,7 +29,7 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/nurax_logo.png',
+            src: '/images/nurax_logo_app_192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
