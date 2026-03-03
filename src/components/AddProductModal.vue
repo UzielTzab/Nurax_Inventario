@@ -193,8 +193,14 @@
     <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
        <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
          <h3 style="font-weight: 600; font-size: 1.25rem;">Escanear Código</h3>
-         <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000;">
-           <qrcode-stream @detect="onDecodeSku"></qrcode-stream>
+         <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000; position: relative;">
+           <qrcode-stream 
+             @detect="onDecodeSku"
+             @error="onError"
+             :formats="barcodeFormats"
+             :track="paintOutline"
+           ></qrcode-stream>
+           <div class="scanner-laser"></div>
          </div>
          <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">Centra el código de barras o QR en la cámara</p>
          <AppButton variant="outline" type="button" @click="isScanning = false" style="width: 100%;">
@@ -248,6 +254,37 @@ const showAddSupplierModal = ref(false);
 
 const categoriesList = ref<Array<{id: number | string, name: string}>>([]);
 const isScanning = ref(false);
+
+const barcodeFormats = ref<any[]>([
+  'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
+]);
+
+const onError = (err: any) => {
+  isScanning.value = false;
+  let errMsg = 'Error con la cámara: ';
+  if (err.name === 'NotAllowedError') errMsg += 'Permiso denegado.';
+  else if (err.name === 'NotFoundError') errMsg += 'No se encontró cámara.';
+  else if (err.name === 'NotSupportedError') errMsg += 'Contexto no seguro (HTTPS requerido).';
+  else if (err.name === 'NotReadableError') errMsg += 'Cámara en uso.';
+  else errMsg += err.message || err.name;
+  alert(errMsg);
+};
+
+const paintOutline = (detectedCodes: any[], ctx: CanvasRenderingContext2D) => {
+  for (const detectedCode of detectedCodes) {
+    const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(firstPoint.x, firstPoint.y);
+    for (const { x, y } of otherPoints) {
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(firstPoint.x, firstPoint.y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+};
 
 const onDecodeSku = (detectedCodes: any[]) => {
   if (detectedCodes.length > 0) {
@@ -918,5 +955,26 @@ select.form-input:focus {
 
 .sku-readonly-input::placeholder {
   color: #d1d5db;
+}
+
+/* Scanner Laser Animation */
+.scanner-laser {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #22c55e;
+  box-shadow: 0 0 10px 2px rgba(34, 197, 94, 0.5);
+  animation: scan-laser 2s infinite linear;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes scan-laser {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
 }
 </style>
