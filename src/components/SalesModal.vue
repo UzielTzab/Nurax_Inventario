@@ -309,7 +309,7 @@ const processScan = async (sku: string) => {
     if (res.success && res.data && res.data.length > 0) {
       const product = res.data[0] as Product;
       
-      const audio = new Audio('/Fx_Sucess.wav');
+      const audio = new Audio('/Fx_Scanning.wav');
       audio.play().catch(e => console.error(e));
       
       addToCart(product);

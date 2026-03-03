@@ -363,7 +363,7 @@ const scanProduct = () => {
 const processTransaction = () => {
   if (scannedProduct.value) {
     // Play success sound FIRST (before emitting event)
-    const audio = new Audio('/Fx_Sucess.wav');
+    const audio = new Audio('/Fx_Scanning.wav');
     audio.play();
     
     // Emit with serial number if serialized
