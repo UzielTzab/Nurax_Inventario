@@ -290,7 +290,7 @@ const onDecodeSku = (detectedCodes: any[]) => {
   if (detectedCodes.length > 0) {
     formData.sku = detectedCodes[0].rawValue;
     // Play bip sound
-    const audio = new Audio('/Fx_Scanning.wav');
+    const audio = new Audio('/sounds/Fx_Scanning.wav');
     audio.play().catch(e => console.error('Error playing sound:', e));
     isScanning.value = false;
   }
