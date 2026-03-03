@@ -17,17 +17,41 @@
               </button>
             </div>
             
-            <!-- Scanner Animation -->
-            <div class="bg-white/5 rounded-xl p-8 mb-6 text-center border border-white/5">
-              <div class="relative inline-block">
-                <QrCodeIcon class="h-32 w-32 text-brand-primary mx-auto opacity-80" :class="{ 'animate-pulse': isScanning }" />
+            <!-- Scanner Animation / Camera Stream -->
+            <div class="bg-white/5 rounded-xl p-6 mb-6 text-center border border-white/5 relative overflow-hidden min-h-[250px] flex flex-col items-center justify-center">
+              <!-- Actual Camera Stream -->
+              <div v-if="useCamera" class="w-full h-full absolute inset-0 bg-black">
+                <qrcode-stream 
+                  :formats="['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e']"
+                  @detect="onDetect" 
+                  @error="onCameraError"
+                />
+              </div>
+              
+              <!-- Placeholder Animation (when camera is off) -->
+              <div v-else class="relative inline-block py-2">
+                <QrCodeIcon class="h-24 w-24 text-brand-primary mx-auto opacity-80" :class="{ 'animate-pulse': isScanning }" />
                 <div v-if="isScanning" class="absolute inset-0 flex items-center justify-center">
                   <div class="h-1 w-full bg-brand-primary shadow-lg shadow-brand-primary/50 animate-scan"></div>
                 </div>
               </div>
-              <p class="mt-4 text-gray-400 font-bold uppercase tracking-widest text-xs">
-                {{ isScanning ? 'Escaneando...' : 'Apunta al código de barras' }}
-              </p>
+              
+              <!-- Camera Controls -->
+              <div v-if="!useCamera" class="mt-2 text-center relative z-10">
+                <p class="text-gray-400 font-bold uppercase tracking-widest text-xs mb-3">
+                  {{ isScanning ? 'Escaneando...' : 'Apunta al código de barras' }}
+                </p>
+                <button @click="startCamera" class="inline-flex items-center justify-center text-xs px-4 py-2 bg-brand-primary/20 text-brand-primary rounded-lg hover:bg-brand-primary/30 transition-colors font-bold uppercase tracking-widest border border-brand-primary/30">
+                  <VideoCameraIcon class="h-4 w-4 mr-2" />
+                  Activar Cámara
+                </button>
+              </div>
+              <div v-else class="absolute bottom-4 left-0 right-0 z-10 flex justify-center">
+                <button @click="stopCamera" class="inline-flex items-center justify-center text-xs px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-bold uppercase tracking-widest shadow-lg backdrop-blur-sm border border-red-400/50">
+                  <VideoCameraSlashIcon class="h-4 w-4 mr-2" />
+                  Detener Cámara
+                </button>
+              </div>
             </div>
 
             <!-- Manual Input -->
@@ -185,7 +209,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { QrCodeIcon, XMarkIcon, CheckCircleIcon, XCircleIcon, MagnifyingGlassIcon, ShoppingCartIcon } from '@heroicons/vue/24/outline';
+import { QrCodeIcon, XMarkIcon, CheckCircleIcon, XCircleIcon, MagnifyingGlassIcon, ShoppingCartIcon, VideoCameraIcon, VideoCameraSlashIcon } from '@heroicons/vue/24/outline';
+import { QrcodeStream } from 'vue-qrcode-reader';
 
 interface SerializedItem {
   serialNumber: string;
@@ -224,6 +249,48 @@ const selectedSerialItem = ref<SerializedItem | null>(null);
 const quantityToSell = ref(1);
 const errorMessage = ref('');
 
+const useCamera = ref(false);
+
+const startCamera = () => {
+  useCamera.value = true;
+  errorMessage.value = '';
+};
+
+const stopCamera = () => {
+  useCamera.value = false;
+};
+
+const onDetect = (detectedCodes: any[]) => {
+  if (detectedCodes.length > 0) {
+    const code = detectedCodes[0].rawValue;
+    barcode.value = code;
+    
+    // Play success sound
+    const audio = new Audio('/Fx_Sucess.wav');
+    audio.play().catch(e => console.log('Audio play failed:', e));
+    
+    stopCamera(); 
+    scanProduct();
+  }
+};
+
+const onCameraError = (err: any) => {
+  useCamera.value = false;
+  let errMsg = 'Error al acceder a la cámara. ';
+  if (err.name === 'NotAllowedError') {
+    errMsg += 'Permiso denegado.';
+  } else if (err.name === 'NotFoundError') {
+    errMsg += 'No se encontró cámara en el dispositivo.';
+  } else if (err.name === 'NotSupportedError') {
+    errMsg += 'El contexto no es seguro (debe ser HTTPS o localhost).';
+  } else if (err.name === 'NotReadableError') {
+    errMsg += 'La cámara ya está en uso por otra aplicación.';
+  } else {
+    errMsg += err.message || err.name;
+  }
+  errorMessage.value = errMsg;
+};
+
 // Reset when modal opens
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
@@ -233,6 +300,9 @@ watch(() => props.isOpen, (newVal) => {
     quantityToSell.value = 1;
     errorMessage.value = '';
     isScanning.value = false;
+    useCamera.value = false;
+  } else {
+    useCamera.value = false;
   }
 });
 
