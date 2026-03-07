@@ -425,10 +425,12 @@ import SalesModal from '@/components/SalesModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useProductStore } from '@/stores/product.store';
+import { watch } from 'vue';
 import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
 import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
+import Pusher from 'pusher-js';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
@@ -444,6 +446,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ShoppingCartIcon,
+  ChevronDownIcon,
 } from '@heroicons/vue/24/outline';
 
 const salesStore = useSalesStore();
@@ -831,8 +834,92 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 };
 
-onMounted(() => document.addEventListener('mousedown', handleClickOutside));
-onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside));
+let globalPusher: Pusher | null = null;
+let globalChannel: any = null;
+let globalChannelName = '';
+
+const initPusher = () => {
+  // Limpiar si ya existe
+  if (globalPusher) {
+    if (globalChannelName) globalPusher.unsubscribe(globalChannelName);
+    globalPusher.disconnect();
+  }
+
+  const userId = currentUser.value?.id;
+  if (!userId) {
+    console.warn("[Pusher] No se puede iniciar: Usuario no autenticado todavía.");
+    return;
+  }
+
+  console.log(`[Pusher] Iniciando conexión para usuario: ${userId}`);
+  
+  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || 'e70dbf94ba0a7be11d70';
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
+
+  globalPusher = new Pusher(pusherKey, {
+    cluster: pusherCluster,
+    forceTLS: true
+  });
+
+  globalPusher.connection.bind('state_change', (states: any) => {
+    console.log(`[Pusher] Estado de conexión: ${states.current}`);
+  });
+
+  globalPusher.connection.bind('error', (err: any) => {
+    console.error('[Pusher] Error de conexión:', err);
+  });
+
+  globalChannelName = `pos-user-${userId}`;
+  globalChannel = globalPusher.subscribe(globalChannelName);
+
+  globalChannel.bind('pusher:subscription_succeeded', () => {
+    console.log(`[Pusher] Suscrito con éxito al canal: ${globalChannelName}`);
+  });
+
+  globalChannel.bind('INVENTORY_UPDATED', (data: any) => {
+    console.log("[Pusher] ¡Evento INVENTORY_UPDATED recibido!", data);
+    productStore.fetchProducts();
+  });
+  
+  // Respaldos
+  globalChannel.bind('update', (data: any) => {
+    console.log("[Pusher] Fallback 'update' recibido", data);
+    productStore.fetchProducts();
+  });
+
+  globalChannel.bind('message', (data: any) => {
+    if (data?.message === 'update') {
+      console.log("[Pusher] Fallback 'message' con update recibido", data);
+      productStore.fetchProducts();
+    }
+  });
+};
+
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside);
+  
+  // Si ya tenemos usuario, iniciamos de una vez
+  if (currentUser.value) {
+    initPusher();
+  }
+});
+
+// Vigilar al usuario por si la sesión tarda en cargar
+watch(currentUser, (newUser, oldUser) => {
+  if (newUser && newUser.id !== oldUser?.id) {
+    initPusher();
+  }
+}, { immediate: true });
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
+
+  if (globalPusher) {
+    console.log("[Pusher] Desconectando...");
+    if (globalChannelName) globalPusher.unsubscribe(globalChannelName);
+    globalPusher.disconnect();
+  }
+});
 
 const handleSaleCompleted = (items: any[]) => {
   items.forEach(item => {

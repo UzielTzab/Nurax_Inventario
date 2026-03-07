@@ -163,7 +163,6 @@ const categoryBadge = (cat: string) => {
 <style scoped>
 .expenses-container {
   padding: 2rem;
-  max-width: 1200px;
   margin: 0 auto;
 }
 .header {
@@ -194,7 +193,7 @@ const categoryBadge = (cat: string) => {
 .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; }
 .btn-link:hover { text-decoration: underline; }
 
-.btn { padding: 0.75rem 1.2rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+.btn { padding: 0.75rem 1.2rem; border-radius: 24px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
 .btn-primary { background: var(--color-brand-main, #047857); color: white; }
 .btn-primary:hover:not(:disabled) { background: #065f46; }
 .btn-secondary { background: #e5e7eb; color: #374151; }
