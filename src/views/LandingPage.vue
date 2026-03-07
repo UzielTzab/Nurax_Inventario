@@ -985,7 +985,6 @@ const plans = [
   position: absolute;
   border-radius: 35%;
   filter: blur(80px);
-  will-change: transform;
   mix-blend-mode: normal;
 }
 .lp-mesh__orb--1 {
@@ -2119,7 +2118,6 @@ const plans = [
   transition:
     opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
 }
 .lp-reveal.lp-revealed {
   opacity: 1;
