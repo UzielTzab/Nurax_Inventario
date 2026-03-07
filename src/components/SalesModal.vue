@@ -308,16 +308,34 @@ const onDecodeSku = (detectedCodes: any[]) => {
 
 const processScan = async (sku: string) => {
   try {
-    // Enviar petición POST para que el backend dispare el evento de Pusher
-    const res = await apiClient.post<any>('/products/scan/', { sku });
-    
-    if (res.success) {
-      searchQuery.value = ''; // El carrito se actualiza vía Pusher
+    // 1. Intento de búsqueda local (rápido y a prueba de fallos con códigos de barra largos)
+    let productFound = props.products?.find((p: any) => p.sku === sku || p.name.toLowerCase() === sku.toLowerCase() || String(p.barcode) === sku);
+
+    // 2. Si no está en memoria local, buscarlo en el backend vía GET
+    if (!productFound) {
+      const res = await apiClient.get<any>(`/products/?search=${sku}`);
+      if (res.success && res.data && res.data.length > 0) {
+        productFound = res.data[0] as Product;
+      }
+    }
+
+    if (productFound) {
+      const audio = new Audio('/sounds/Fx_Scanning.wav');
+      audio.play().catch(e => console.error(e));
+      addToCart(productFound);
+      searchQuery.value = '';
+      
+      // Bloquear pusheo local rebotado por 1 segundo
+      isLocalScan = true;
+      setTimeout(() => isLocalScan = false, 1000);
+
+      // Opcional: avisar a otras pestañas (notificación silenciosa)
+      apiClient.post<any>('/products/scan/', { sku: productFound.sku }).catch(() => {});
     } else {
       enqueueSnackbar({
         type: 'error',
         title: 'Producto no encontrado',
-        message: 'Intenta buscarlo por nombre o reintenta escanear.',
+        message: 'Asegúrate de que el código de barras o SKU estén registrados correctamente.',
         duration: 4000
       });
     }
@@ -485,6 +503,7 @@ const handleRevert = (saleId: string | number, cartItems: { id: string | number;
 let pusher: Pusher | null = null;
 let channel: any = null;
 let channelName = '';
+let isLocalScan = false;
 
 onMounted(() => {
   const userId = currentUser.value?.id || 1;
@@ -500,14 +519,22 @@ onMounted(() => {
   channel = pusher.subscribe(channelName);
   
   channel.bind('PRODUCT_SCANNED', (data: any) => {
-    console.log("[Pusher] ¡Recibido escáner mágico!", data);
+    if (isLocalScan) return; // Evita loop o duplicación en el dispositivo maestro
+    console.log("[Pusher] ¡Recibido escáner mágico desde otro dispositivo!", data);
     
     if (data && data.product) {
        addToCart(data.product);
        const audio = new Audio('/sounds/Fx_Scanning.wav');
        audio.play().catch(e => console.error(e));
     } else if (data && data.sku) {
-       processScan(data.sku);
+       // Buscar local o silenciosamente en fallback, pero sin emitir otro POST
+       const skuToFind = data.sku;
+       const localProduct = props.products?.find((p: any) => p.sku === skuToFind || p.name.toLowerCase() === skuToFind.toLowerCase() || String(p.barcode) === skuToFind);
+       if (localProduct) {
+          addToCart(localProduct);
+          const audio = new Audio('/sounds/Fx_Scanning.wav');
+          audio.play().catch(e => console.error(e));
+       }
     }
   });
 });
