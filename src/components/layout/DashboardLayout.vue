@@ -425,6 +425,7 @@ import SalesModal from '@/components/SalesModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useProductStore } from '@/stores/product.store';
+import { useShiftsStore } from '@/stores/shifts.store';
 import { watch } from 'vue';
 import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
@@ -448,9 +449,9 @@ import {
   ShoppingCartIcon,
   ChevronDownIcon,
 } from '@heroicons/vue/24/outline';
-
 const salesStore = useSalesStore();
 const productStore = useProductStore();
+const shiftsStore = useShiftsStore();
 const isSidebarOpen = ref(false);
 const showProfileMenu = ref(false);
 const showProfileEdit = ref(false);
@@ -908,6 +909,9 @@ onMounted(() => {
 watch(currentUser, (newUser, oldUser) => {
   if (newUser && newUser.id !== oldUser?.id) {
     initPusher();
+    // Cargas globales iniciales para que el modal de caja funcioné donde sea:
+    productStore.fetchProducts();
+    shiftsStore.fetchShifts();
   }
 }, { immediate: true });
 
