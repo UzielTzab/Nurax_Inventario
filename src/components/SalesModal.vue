@@ -207,7 +207,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import Pusher from 'pusher-js';
+import { useAuth } from '@/composables/useAuth';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
@@ -229,6 +231,7 @@ import apiClient from '@/services/api';
 import { QrcodeStream } from 'vue-qrcode-reader';
 
 const { enqueueSnackbar } = useSnackbar();
+const { currentUser } = useAuth();
 const salesStore = useSalesStore();
 const shiftsStore = useShiftsStore();
 const router = useRouter();
@@ -305,15 +308,11 @@ const onDecodeSku = (detectedCodes: any[]) => {
 
 const processScan = async (sku: string) => {
   try {
-    const res = await apiClient.get<any>(`/products/?sku=${sku}`);
-    if (res.success && res.data && res.data.length > 0) {
-      const product = res.data[0] as Product;
-      
-      const audio = new Audio('/sounds/Fx_Scanning.wav');
-      audio.play().catch(e => console.error(e));
-      
-      addToCart(product);
-      searchQuery.value = ''; // Limpiar input para siguiente escaneo rápido
+    // Enviar petición POST para que el backend dispare el evento de Pusher
+    const res = await apiClient.post<any>('/products/scan/', { sku });
+    
+    if (res.success) {
+      searchQuery.value = ''; // El carrito se actualiza vía Pusher
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -321,7 +320,6 @@ const processScan = async (sku: string) => {
         message: 'Intenta buscarlo por nombre o reintenta escanear.',
         duration: 4000
       });
-      // Optionally re-focus or highlight search input here
     }
   } catch(e) {
     console.error("Scan error:", e);
@@ -483,6 +481,43 @@ const handleRevert = (saleId: string | number, cartItems: { id: string | number;
   emit('sale-reverted', saleId, cartItems);
   emit('close');
 };
+
+let pusher: Pusher | null = null;
+let channel: any = null;
+let channelName = '';
+
+onMounted(() => {
+  const userId = currentUser.value?.id || 1;
+  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
+
+  pusher = new Pusher(pusherKey, {
+    cluster: pusherCluster,
+    forceTLS: true
+  });
+  
+  channelName = `pos-user-${userId}`;
+  channel = pusher.subscribe(channelName);
+  
+  channel.bind('PRODUCT_SCANNED', (data: any) => {
+    console.log("[Pusher] ¡Recibido escáner mágico!", data);
+    
+    if (data && data.product) {
+       addToCart(data.product);
+       const audio = new Audio('/sounds/Fx_Scanning.wav');
+       audio.play().catch(e => console.error(e));
+    } else if (data && data.sku) {
+       processScan(data.sku);
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (channelName && pusher) {
+    pusher.unsubscribe(channelName);
+    pusher.disconnect();
+  }
+});
 </script>
 
 <style scoped>

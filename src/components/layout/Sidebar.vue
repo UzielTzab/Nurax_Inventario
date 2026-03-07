@@ -30,11 +30,16 @@
           :class="{ 'nav-item-active': activeItem === item.id }"
           @click.prevent="setActive(item)"
         >
-          <!-- Icon: outline when inactive, solid when active -->
-          <component
-            :is="activeItem === item.id ? item.iconSolid : item.iconOutline"
-            class="nav-icon"
-          />
+          <!-- Icon with animated swap -->
+          <span class="nav-icon-wrapper">
+            <Transition name="icon-swap" mode="out-in">
+              <component
+                :is="activeItem === item.id ? item.iconSolid : item.iconOutline"
+                :key="activeItem === item.id ? 'solid' : 'outline'"
+                class="nav-icon"
+              />
+            </Transition>
+          </span>
           <span class="nav-text">{{ item.label }}</span>
         </a>
       </div>
@@ -364,6 +369,7 @@ defineProps<{
   margin-top: 1rem;
 }
 
+/* ═══════ Nav items with smooth transitions ═══════ */
 .nav-item {
   display: flex;
   align-items: center;
@@ -375,8 +381,8 @@ defineProps<{
   text-decoration: none;
   font-size: 1rem;
   font-weight: 300;
-  transition: all 0.2s;
   position: relative;
+  transition: color 0.35s ease, background 0.35s ease;
 }
 
 .nav-item:hover {
@@ -385,19 +391,12 @@ defineProps<{
   cursor: pointer;
 }
 
+/* ═══════ Active state with animated pill ═══════ */
 .nav-item-active {
-  background: transparent;
-  font-weight: 700;
+  background: rgba(6, 64, 43, 0.04);
 }
 
-.nav-item-active .nav-text {
-  background: #000000;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Pill indicator izquierdo redondeado */
+/* Pill indicator — slides in from left */
 .nav-item-active::before {
   content: '';
   display: block;
@@ -407,13 +406,44 @@ defineProps<{
   transform: translateY(-50%);
   width: 10px;
   height: 100%;
-  /* Gradiente especial: verde claro -> verde oscuro -> verde claro */
   background: linear-gradient(210deg, #4ade80 0%, #06402b 100%);
   border-radius: 0 10px 10px 0;
+  animation: pillSlideIn 0.9s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes pillSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0.3) translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1) translateX(0);
+  }
 }
 
 .nav-item-active:hover {
-  background: rgba(6, 64, 43, 0.04);
+  background: rgba(6, 64, 43, 0.06);
+}
+
+/* Text transitions */
+.nav-text {
+  transition: color 0.35s ease;
+}
+
+.nav-item-active .nav-text {
+  color: #000000;
+  font-weight: 700;
+}
+
+/* ═══════ Icon Swap Animation ═══════ */
+.nav-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .nav-icon {
@@ -421,12 +451,28 @@ defineProps<{
   height: 20px;
   flex-shrink: 0;
   color: var(--color-text-secondary);
-  transition: color 0.2s;
+  transition: color 0.35s ease;
 }
 
 .nav-item-active .nav-icon,
 .nav-item-active .nav-icon svg {
   color: var(--color-brand-main);
+}
+
+/* Icon swap transition — scale bounce */
+.icon-swap-enter-active {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+.icon-swap-leave-active {
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+.icon-swap-enter-from {
+  opacity: 0;
+  transform: scale(0.5);
+}
+.icon-swap-leave-to {
+  opacity: 0;
+  transform: scale(0.5);
 }
 
 /* ══════════ Sidebar Profile Card ══════════ */
