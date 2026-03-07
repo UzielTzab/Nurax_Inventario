@@ -175,12 +175,57 @@ const CATEGORY_MAP: Record<number, string> = {
     }
   };
 
-  const deleteProduct = (id: string | number) => {
-    products.value = products.value.filter(p => p.id !== id);
+  const deleteProduct = async (id: string | number) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await apiClient.delete(`/products/${id}/`);
+      if (response.success) {
+        products.value = products.value.filter(p => p.id !== id);
+        return { success: true };
+      } else {
+        error.value = response.error || 'Error al eliminar en el servidor';
+        return { success: false, error: error.value };
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
   };
   
-  const bulkDeleteProducts = (ids: (string | number)[]) => {
-    products.value = products.value.filter(p => !ids.includes(p.id));
+  const bulkDeleteProducts = async (ids: (string | number)[]) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      // Usamos el endpoint oficial para borrado múltiple (o iteramos si no existe)
+      const response = await apiClient.post<any>('/products/bulk_delete/', { ids });
+      
+      if (response.success) {
+        products.value = products.value.filter(p => !ids.includes(p.id));
+        return { success: true };
+      } else {
+        error.value = response.error || 'Error borrando productos';
+        return { success: false, error: error.value };
+      }
+    } catch (err: any) {
+      // Fallback: Si el backend aún no tiene '/products/bulk_delete/', borramos uno por uno
+      console.warn("Bulk delete endpoint error, falling back to sequential delete:", err);
+      let successCount = 0;
+      for (const id of ids) {
+         try {
+           const res = await apiClient.delete(`/products/${id}/`);
+           if (res.success) {
+             products.value = products.value.filter(p => p.id !== id);
+             successCount++;
+           }
+         } catch(e) { /* ignore individual error to continue */ }
+      }
+      return { success: successCount > 0 };
+    } finally {
+      isLoading.value = false;
+    }
   };
   
   // NOTE: This now updates stock via the backend Kárdex to prevent "robo hormiga"

@@ -374,24 +374,33 @@ const handleDeleteProduct = (product: Product) => {
     message: `¿Estás seguro de que deseas eliminar ${product.name}?`,
     type: 'danger',
     confirmText: 'Sí, eliminar',
-    onConfirm: () => {
-      productStore.deleteProduct(product.id);
-      enqueueSnackbar({
-        type: 'success',
-        title: 'Producto Eliminado',
-        message: `${product.name} ha sido eliminado del inventario.`,
-        duration: 5000,
-        actionLabel: 'Deshacer',
-        onAction: () => {
-          productStore.addProduct(product);
-          enqueueSnackbar({
-            type: 'info',
-            title: 'Acción deshecha',
-            message: `El producto ${product.name} ha sido restaurado.`,
-            duration: 3000
-          });
-        }
-      });
+    onConfirm: async () => {
+      const result = await productStore.deleteProduct(product.id);
+      if (result.success) {
+        enqueueSnackbar({
+          type: 'success',
+          title: 'Producto Eliminado',
+          message: `${product.name} ha sido eliminado del inventario.`,
+          duration: 5000,
+          actionLabel: 'Deshacer',
+          onAction: () => {
+            productStore.addProduct(product);
+            enqueueSnackbar({
+              type: 'info',
+              title: 'Acción deshecha',
+              message: `El producto ${product.name} ha sido restaurado.`,
+              duration: 3000
+            });
+          }
+        });
+      } else {
+        enqueueSnackbar({
+          type: 'error',
+          title: 'Error al eliminar',
+          message: result.error || 'No se pudo eliminar el producto.',
+          duration: 5000
+        });
+      }
       confirmationState.value.isOpen = false;
     }
   };
@@ -404,27 +413,36 @@ const handleBulkDelete = (ids: string[]) => {
     message: `¿Estás seguro de que deseas eliminar ${ids.length} productos seleccionados?`,
     type: 'danger',
     confirmText: `Sí, eliminar ${ids.length} productos`,
-    onConfirm: () => {
+    onConfirm: async () => {
       // Store products to restore before deleting
       const productsToRestore = allProducts.value.filter(p => ids.includes(String(p.id)));
       
-      productStore.bulkDeleteProducts(ids);
-      enqueueSnackbar({
-        type: 'success',
-        title: 'Productos Eliminados',
-        message: `${ids.length} productos han sido eliminados del inventario.`,
-        duration: 5000,
-        actionLabel: 'Deshacer',
-        onAction: () => {
-          productsToRestore.forEach(p => productStore.addProduct(p));
-          enqueueSnackbar({
-            type: 'info',
-            title: 'Acción deshecha',
-            message: `Se han restaurado ${ids.length} productos.`,
-            duration: 3000
-          });
-        }
-      });
+      const result = await productStore.bulkDeleteProducts(ids);
+      if (result.success) {
+        enqueueSnackbar({
+          type: 'success',
+          title: 'Productos Eliminados',
+          message: `${ids.length} productos han sido eliminados del inventario.`,
+          duration: 5000,
+          actionLabel: 'Deshacer',
+          onAction: () => {
+            productsToRestore.forEach(p => productStore.addProduct(p));
+            enqueueSnackbar({
+              type: 'info',
+              title: 'Acción deshecha',
+              message: `Se han restaurado ${ids.length} productos.`,
+              duration: 3000
+            });
+          }
+        });
+      } else {
+        enqueueSnackbar({
+          type: 'error',
+          title: 'Error al eliminar múltiples',
+          message: result.error || 'No se pudieron eliminar todos los productos seleccionados.',
+          duration: 5000
+        });
+      }
       confirmationState.value.isOpen = false;
     }
   };

@@ -898,11 +898,6 @@ const initPusher = () => {
 
 onMounted(() => {
   document.addEventListener('mousedown', handleClickOutside);
-  
-  // Si ya tenemos usuario, iniciamos de una vez
-  if (currentUser.value) {
-    initPusher();
-  }
 });
 
 // Vigilar al usuario por si la sesión tarda en cargar
