@@ -4,6 +4,15 @@
     <div class="table-section-header">
       <span class="table-section-title">Listado de Productos</span>
       <div class="table-header-right">
+        <!-- View Toggle -->
+        <div class="view-toggle-group">
+          <button class="view-toggle-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'" title="Vista de tabla">
+            <Bars3Icon class="toggle-icon" />
+          </button>
+          <button class="view-toggle-btn" :class="{ active: viewMode === 'cards' }" @click="viewMode = 'cards'" title="Vista de tarjetas">
+            <Squares2X2Icon class="toggle-icon" />
+          </button>
+        </div>
         <button class="btn-filter" @click="toggleFilterPanel" :class="{ active: filterPanelOpen }">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M2.628 1.601C5.028 1.2 7.49 1 10 1s4.973.2 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clip-rule="evenodd" />
@@ -62,8 +71,8 @@
       </div>
     </Transition>
 
-    <!-- Table -->
-    <div class="product-table-container">
+    <!-- Table View -->
+    <div v-if="viewMode === 'table'" class="product-table-container">
       <table class="product-table">
         <thead>
           <tr>
@@ -166,7 +175,7 @@
                     </button>
                     <button class="dropdown-item item-danger" @click="handleDelete(product)">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l-.3-7.5z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
                       </svg>
                       Eliminar
                     </button>
@@ -187,13 +196,23 @@
         <p>Ajusta los filtros o agrega un nuevo producto</p>
       </div>
     </div>
+
+    <!-- Card View -->
+    <ProductCardGrid
+      v-else
+      :products="products"
+      @edit="(p) => emit('edit', p)"
+      @delete="(p) => emit('delete', p)"
+      @restock="(p) => emit('restock', p)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { PhotoIcon } from '@heroicons/vue/24/outline';
+import { PhotoIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/vue/24/outline';
 import Badge from '../ui/Badge.vue';
+import ProductCardGrid from './ProductCardGrid.vue';
 
 export interface Product {
   id: string | number;
@@ -237,6 +256,7 @@ const emit = defineEmits<{
 
 // --- Selection ---
 const selectedIds = ref<string[]>([]);
+const viewMode = ref<'table' | 'cards'>('table');
 
 // --- Filter panel ---
 const filterPanelOpen = ref(false);
@@ -397,6 +417,49 @@ const getStatusText = (stock: number) => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* =====================
+   View Toggle
+   ===================== */
+.view-toggle-group {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #9ca3af;
+}
+
+.view-toggle-btn:not(:last-child) {
+  border-right: 1px solid #e5e7eb;
+}
+
+.view-toggle-btn:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.view-toggle-btn.active {
+  background: var(--color-brand-main);
+  color: white;
+}
+
+.toggle-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* =====================

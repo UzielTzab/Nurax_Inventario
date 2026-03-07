@@ -10,7 +10,7 @@
         <!-- Character illustration -->
         <div class="character-wrapper" data-aos="fade-up" data-aos-delay="200">
           <img
-            src="/images/worker_3d.png"
+            src="/images/feature_inventory.png"
             alt="Personaje trabajando"
             class="character-image"
             @error="onImgError"
