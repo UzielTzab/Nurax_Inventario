@@ -1370,5 +1370,53 @@ const barChartOptions: ChartOptions<'bar'> = {
     padding: 0.75rem 0.5rem;
     white-space: nowrap;
   }
+
+  .period-filter-section {
+    align-items: flex-start; /* Fixes left-overflow */
+    width: 100%;
+  }
+
+  .period-pills {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .period-pill {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .custom-dates {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .date-input-group {
+    width: 100%;
+  }
+
+  .search-amount-section {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .search-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .amount-filter, .amount-input-wrapper {
+    width: 100%;
+  }
+
+  .amount-input.compact {
+    width: 100%;
+  }
 }
 </style>
