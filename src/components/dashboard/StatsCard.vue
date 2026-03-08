@@ -155,11 +155,33 @@ const trendClass = computed(() => {
 @media (max-width: 768px) {
   .stats-card {
     padding: 1rem;
-    min-width: 150px;
+    min-width: 120px;
+    gap: 0.25rem;
+  }
+
+  .stats-header {
+    margin-bottom: 0.25rem;
+    gap: 0.25rem;
+  }
+
+  .stats-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
   }
 
   .stats-value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .arrow-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .arrow-icon {
+    width: 12px;
+    height: 12px;
   }
 }
 

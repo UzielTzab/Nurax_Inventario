@@ -256,7 +256,7 @@ const emit = defineEmits<{
 
 // --- Selection ---
 const selectedIds = ref<string[]>([]);
-const viewMode = ref<'table' | 'cards'>('table');
+const viewMode = ref<'table' | 'cards'>(window.innerWidth <= 768 ? 'cards' : 'table');
 
 // --- Filter panel ---
 const filterPanelOpen = ref(false);

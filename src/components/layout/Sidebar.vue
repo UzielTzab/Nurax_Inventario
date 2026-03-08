@@ -6,7 +6,7 @@
         <div class="logo-icon-container">
           <div class="logo-icon">
             <!-- Leaf icon -->
-            <img src="/public/images/nurax_logo.png" alt="Logo">
+            <img src="/images/nurax_logo.png" alt="Logo">
           </div>
         </div>
         <div class="logo-text-container">

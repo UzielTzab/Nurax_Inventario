@@ -36,7 +36,6 @@
                 type="text" 
                 placeholder="Escanea o busca por producto/SKU..." 
                 class="search-input"
-                autofocus
               />
             </div>
             <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
@@ -1314,23 +1313,144 @@ onUnmounted(() => {
     height: 100vh;
     max-height: 100vh;
     border-radius: 0;
-    padding: 1rem;
+    padding: 1rem 0.5rem;
   }
   
-  .absolute-close-btn {
-    top: 1rem;
-    right: 1rem;
-    width: 36px;
-    height: 36px;
+  .modal-header {
+    margin-bottom: 0.75rem;
+    padding: 0 0.5rem;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
   }
 
   .sale-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    overflow: hidden; /* Prevent full-page scroll */
+  }
+  
+  .left-panel {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden; /* Allow internal scrolling in products-list */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .right-panel {
+    height: 35%; /* Reserve a portion of the screen for the cart */
+    min-height: 250px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .search-section {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .search-input-wrapper {
+    padding: 0.6rem 1rem;
+  }
+
+  .search-input {
+    height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .products-list {
+    overflow-y: auto; /* Scroll ONLY the products */
+    padding: 0.75rem;
+    flex: 1;
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+  }
+
+  .product-image {
+    min-height: 100px;
+  }
+
+  .product-name {
+    font-size: 0.85rem;
+  }
+  
+  .product-sku {
+    font-size: 0.65rem;
+  }
+
+  .product-header {
+    margin-bottom: 0.4rem;
+  }
+
+  .product-price {
+    font-size: 0.95rem;
+  }
+
+  .add-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cart-header {
+    padding: 1rem;
+  }
+
+  .cart-items-container {
+    overflow-y: auto; /* Internal scrolling for cart items too */
+    padding: 0 1rem;
+  }
+
+  .cart-item {
+    padding: 0.75rem 0;
+    gap: 0.5rem;
+  }
+  
+  .cart-item-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+  
+  .cart-item-name {
+    font-size: 0.85rem;
+  }
+
+  .qty-controls {
+    gap: 0.5rem;
+  }
+
+  .qty-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+  }
+
+  .qty-value {
+    width: 1.5rem;
+  }
+
+  .sale-totals {
+    padding: 1rem;
+  }
+
+  .btn-checkout {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
   }
 }
 

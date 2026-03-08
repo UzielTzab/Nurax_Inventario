@@ -415,6 +415,13 @@
         </div>
       </transition>
     </Teleport>
+
+    <!-- Open Shift Auto-Prompt -->
+    <OpenShiftModal 
+      :is-open="showOpenShiftModal"
+      @close="showOpenShiftModal = false"
+      @shift-opened="showOpenShiftModal = false"
+    />
   </div>
 </template>
 
@@ -422,6 +429,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
+import OpenShiftModal from '@/components/OpenShiftModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useProductStore } from '@/stores/product.store';
@@ -455,6 +463,7 @@ const shiftsStore = useShiftsStore();
 const isSidebarOpen = ref(false);
 const showProfileMenu = ref(false);
 const showProfileEdit = ref(false);
+const showOpenShiftModal = ref(false);
 const profileWrapperRef = ref<HTMLElement | null>(null);
 
 const showNotifications = ref(false);
@@ -896,8 +905,16 @@ const initPusher = () => {
   });
 };
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('mousedown', handleClickOutside);
+
+  // Auto-verificación de caja cerrada
+  if (currentUser.value) {
+    await shiftsStore.fetchShifts();
+    if (!shiftsStore.hasOpenShift) {
+      showOpenShiftModal.value = true;
+    }
+  }
 });
 
 // Vigilar al usuario por si la sesión tarda en cargar
@@ -1599,10 +1616,11 @@ defineEmits(['quickSell']);
     z-index: 100;
   }
 
-  .content-card { border-radius: 0; box-shadow: none; }
+  .content-card { border-radius: 0; box-shadow: none; overflow-x: hidden; }
   .mobile-menu-btn { display: flex; }
   .search-bar { max-width: none; }
   .topbar-profile-text { display: none; }
+  .notifications-dropdown-container { right: -10px; max-width: 90vw; }
 }
 
 /* ===== EXCEL DROPDOWN BUTTON ===== */

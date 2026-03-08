@@ -487,6 +487,27 @@ const handleConfirmation = () => {
   margin-bottom: 1.5rem;
 }
 
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Select the second child directly (Valor del inventario) regardless if real or skeleton */
+  .stats-grid > div:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .stats-grid > div:nth-child(1) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .stats-grid > div:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
 .tabs-actions-row {
   display: flex;
   justify-content: space-between;
