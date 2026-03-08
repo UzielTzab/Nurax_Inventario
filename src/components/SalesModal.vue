@@ -11,7 +11,18 @@
         </button>
       </div>
 
-      <div v-if="shiftsStore.hasOpenShift" class="sale-layout">
+      <div v-if="isInitializing" class="empty-state">
+         <div class="flex justify-center items-center">
+            <svg class="animate-spin h-12 w-12" style="color: var(--color-brand-main)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+         </div>
+         <h2 class="text-xl font-bold mt-4" style="color: #374151;">Cargando Terminal...</h2>
+         <p class="text-gray-500 max-w-sm mt-2">Sincronizando caja, inventario y ventas recientes.</p>
+      </div>
+
+      <div v-else-if="shiftsStore.hasOpenShift" class="sale-layout">
         
         <!-- Left Panel: Search + Grid -->
         <div class="left-panel">
@@ -251,6 +262,7 @@ const emit = defineEmits(['close', 'sale-completed', 'sale-reverted']);
 const searchQuery = ref('');
 const cart = ref<CartItem[]>([]);
 const showSuccessModal = ref(false);
+const isInitializing = ref(true);
 
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 let isRemoteUpdate = false;
@@ -526,15 +538,24 @@ let channel: any = null;
 let channelName = '';
 let isLocalScan = false;
 
-onMounted(() => {
-  // 1. Cargar el carrito guardado en la Base de Datos (si existe)
-  apiClient.get<any>('/products/my-cart/').then((res) => {
+onMounted(async () => {
+  isInitializing.value = true;
+  try {
+    // 1. Verificar estado de caja obligatoriamente para evitar falsos "Caja Cerrada"
+    await shiftsStore.fetchShifts();
+
+    // 2. Cargar el carrito guardado en la Base de Datos (si existe)
+    const res = await apiClient.get<any>('/products/my-cart/');
     if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
       isRemoteUpdate = true;
       cart.value = res.data.cart;
       isRemoteUpdate = false;
     }
-  }).catch(e => console.error("Error cargando carrito guardado:", e));
+  } catch (e) {
+    console.error("Error al inicializar Punto de Venta:", e);
+  } finally {
+    isInitializing.value = false;
+  }
 
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
