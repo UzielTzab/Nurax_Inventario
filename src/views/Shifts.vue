@@ -26,9 +26,15 @@
     <template v-else>
       <!-- Contenedor Principal (Con Turno Abierto) -->
       <div class="shifts-container" v-if="shiftsStore.hasOpenShift">
-        <div class="header">
-        <h1 class="page-title">Corte de Caja (Turno Actual)</h1>
-        <p class="subtitle">Gestiona tu turno. Aquí registrarás tu corte sólo cuando termines tu jornada.</p>
+      <div class="header flex justify-between items-start">
+        <div>
+          <h1 class="page-title">Corte de Caja (Turno Actual)</h1>
+          <p class="subtitle">Gestiona tu turno. Aquí registrarás tu corte sólo cuando termines tu jornada.</p>
+        </div>
+        <AppButton variant="fill" @click="router.push('/dashboard/inventory')">
+          <ArrowLeftIcon class="w-5 h-5 mr-1" />
+          Ir a Inventario
+        </AppButton>
       </div>
 
     <!-- Turno Abierto -->
@@ -55,7 +61,9 @@
             <strong>⚠️ Alerta:</strong> Sólo realiza esta acción al finalizar tu día de trabajo o terminar tu turno. Necesitarás contar el dinero de tu caja.
           </p>
           <div v-if="!intendeClose" class="mt-4">
-             <button @click="intendeClose = true" class="btn btn-primary bg-indigo-600">Preparar cierre de turno</button>
+             <AppButton @click="intendeClose = true" variant="fill">
+               Preparar cierre de turno
+             </AppButton>
           </div>
           <form v-else @submit.prevent="handleCloseShift" class="form-grid border-t pt-4 mt-2">
             <h4 class="font-bold text-gray-700">Por favor confirma tus saldos:</h4>
@@ -73,12 +81,14 @@
               <span v-else-if="calculatedDifference > 0">(Sobrante)</span>
               <span v-else>(Cuadre Exacto)</span>
             </div>
-            <div class="flex gap-4">
-               <button type="button" class="btn bg-gray-200 text-gray-700 flex-1" @click="intendeClose = false">Cancelar Transacción</button>
-               <button type="submit" class="btn btn-danger flex-1" :disabled="shiftsStore.isLoading">
-                 <span v-if="shiftsStore.isLoading">Cerrando...</span>
-                 <span v-else>Terminar Jornada y Cerrar Caja</span>
-               </button>
+            <div class="flex gap-4 mt-6">
+               <AppButton variant="outline" class="flex-1" type="button" @click="intendeClose = false">
+                 Cancelar Transacción
+               </AppButton>
+               <AppButton variant="fill" style="background-color: #ef4444; border-color: #ef4444;" class="flex-1 flex justify-center w-full" type="submit" :loading="shiftsStore.isLoading">
+                 <span v-if="!shiftsStore.isLoading">Terminar Jornada y Cerrar Caja</span>
+                 <span v-else>Cerrando...</span>
+               </AppButton>
             </div>
           </form>
         </div>
@@ -88,9 +98,15 @@
 
   <!-- Ningún Turno Abierto -->
   <div class="shifts-container" v-else>
-    <div class="header">
-      <h1 class="page-title">Bienvenido a tu Jornada</h1>
-      <p class="subtitle">Antes de empezar a vender, debes aperturar la caja indicando tu efectivo base o fondo inicial.</p>
+    <div class="header flex justify-between items-start">
+      <div>
+        <h1 class="page-title">Bienvenido a tu Jornada</h1>
+        <p class="subtitle">Antes de empezar a vender, debes aperturar la caja indicando tu efectivo base o fondo inicial.</p>
+      </div>
+      <AppButton variant="outline" @click="router.push('/dashboard/inventory')">
+        <ArrowLeftIcon class="w-5 h-5 mr-1" />
+        Ir a Inventario
+      </AppButton>
     </div>
 
     <div class="open-shift-card card">
@@ -103,10 +119,10 @@
             <label>Fondo de Caja (Efectivo inicial disponible para dar cambios):</label>
             <input type="number" step="0.01" v-model.number="openForm.starting_cash" required class="input input-lg text-center" placeholder="$ 0.00" />
           </div>
-          <button type="submit" class="btn btn-primary btn-lg" :disabled="shiftsStore.isLoading">
+          <AppButton type="submit" variant="fill" class="w-full flex justify-center py-3" style="font-size: 1.125rem;" :loading="shiftsStore.isLoading">
             <span v-if="shiftsStore.isLoading">Abriendo turno...</span>
             <span v-else>Abrir Turno</span>
-          </button>
+          </AppButton>
         </form>
       </div>
     </div>
@@ -179,11 +195,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import AppButton from '@/components/ui/AppButton.vue';
+import { ArrowLeftIcon } from '@heroicons/vue/24/outline';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
+
+const router = useRouter();
 
 const shiftsStore = useShiftsStore();
 const salesStore = useSalesStore();

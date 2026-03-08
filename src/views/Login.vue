@@ -44,7 +44,7 @@
         <div class="form-logo" data-aos="fade-down" data-aos-delay="100">
           <div class="logo-badge">
              <!-- Leaf icon -->
-            <img src="/public/images/nurax_logo.png" alt="Leaf Icon" class="logo-icon">
+            <img src="/images/nurax_logo.png" alt="Leaf Icon" class="logo-icon">
           </div>
         </div>
 

@@ -239,7 +239,20 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .empty-cards h3 { font-size: 1.125rem; font-weight: 600; color: #6b7280; margin: 0 0 0.5rem; }
 .empty-cards p { font-size: 0.875rem; margin: 0; }
 
-@media (max-width: 640px) {
-  .card-grid-inner { grid-template-columns: 1fr; padding: 1rem; }
+@media (max-width: 768px) {
+  .card-grid-inner { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 0.75rem; 
+    padding: 0.75rem; 
+  }
+  .card-name { font-size: 0.8rem; }
+  .card-category { font-size: 0.65rem; }
+  .card-body { padding: 0.75rem; gap: 0.5rem; }
+  .card-meta { gap: 0.25rem; }
+  .meta-label { font-size: 0.55rem; letter-spacing: 0; }
+  .meta-value { font-size: 0.75rem; }
+  .restock-icon { width: 12px; height: 12px; }
+  .btn-restock-card { font-size: 0.7rem; padding: 0.35rem; }
+  .card-status-badge { font-size: 0.55rem; padding: 0.1rem 0.3rem; }
 }
 </style>
