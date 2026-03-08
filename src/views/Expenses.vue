@@ -25,24 +25,36 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="expense in expensesStore.expenses" :key="expense.id">
-              <td>#{{ expense.id }}</td>
-              <td>{{ formatDate(expense.created_at) }}</td>
-              <td>
-                <span class="badge" :class="categoryBadge(expense.category)">
-                  {{ expense.category }}
-                </span>
-              </td>
-              <td class="description-cell">{{ expense.description }}</td>
-              <td>
-                <a :href="expense.receipt_url" target="_blank" v-if="expense.receipt_url" class="btn-link">Ver Recibo</a>
-                <span v-else class="text-muted">Ninguno</span>
-              </td>
-              <td align="right" class="font-bold text-danger">- ${{ expense.amount }}</td>
-            </tr>
-            <tr v-if="expensesStore.expenses.length === 0 && !expensesStore.isLoading">
-              <td colspan="6" class="text-center text-muted py-4">No hay gastos registrados</td>
-            </tr>
+            <template v-if="expensesStore.isLoading">
+              <tr v-for="i in 5" :key="'sk-exp-'+i">
+                <td><AppSkeleton width="40px" height="1rem" /></td>
+                <td><AppSkeleton width="80px" height="1rem" /></td>
+                <td><AppSkeleton width="90px" height="1.5rem" radius="99px" /></td>
+                <td><AppSkeleton width="150px" height="1rem" /></td>
+                <td><AppSkeleton width="80px" height="1rem" /></td>
+                <td align="right"><AppSkeleton width="60px" height="1rem" /></td>
+              </tr>
+            </template>
+            <template v-else>
+              <tr v-for="expense in expensesStore.expenses" :key="expense.id">
+                <td>#{{ expense.id }}</td>
+                <td>{{ formatDate(expense.created_at) }}</td>
+                <td>
+                  <span class="badge" :class="categoryBadge(expense.category)">
+                    {{ expense.category }}
+                  </span>
+                </td>
+                <td class="description-cell">{{ expense.description }}</td>
+                <td>
+                  <a :href="expense.receipt_url" target="_blank" v-if="expense.receipt_url" class="btn-link">Ver Recibo</a>
+                  <span v-else class="text-muted">Ninguno</span>
+                </td>
+                <td align="right" class="font-bold text-danger">- ${{ expense.amount }}</td>
+              </tr>
+              <tr v-if="expensesStore.expenses.length === 0">
+                <td colspan="6" class="text-center text-muted py-4">No hay gastos registrados</td>
+              </tr>
+            </template>
           </tbody>
        </table>
     </div>
@@ -96,6 +108,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useExpensesStore } from '@/stores/expenses.store';
 import { useSnackbar } from '@/composables/useSnackbar';
 

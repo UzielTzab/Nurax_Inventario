@@ -1,9 +1,32 @@
 <template>
   <DashboardLayout>
   <div class="shifts-wrapper">
-    <!-- Contenedor Principal (Con Turno Abierto) -->
-    <div class="shifts-container" v-if="shiftsStore.hasOpenShift">
-      <div class="header">
+    <!-- Skeleton Loading Inicial -->
+    <template v-if="shiftsStore.isLoading && shiftsStore.shifts.length === 0">
+       <div class="shifts-container">
+         <div class="header">
+            <AppSkeleton width="250px" height="2rem" style="margin-bottom:0.5rem" />
+            <AppSkeleton width="400px" height="1rem" />
+         </div>
+         <div class="active-shift-card card">
+           <div class="card-header">
+             <AppSkeleton width="150px" height="1.5rem" />
+           </div>
+           <div class="card-body">
+             <div class="stats-grid">
+               <AppSkeleton width="100%" height="80px" radius="8px" />
+               <AppSkeleton width="100%" height="80px" radius="8px" />
+             </div>
+             <AppSkeleton width="100%" height="150px" radius="8px" style="margin-top:1.5rem"/>
+           </div>
+         </div>
+       </div>
+    </template>
+
+    <template v-else>
+      <!-- Contenedor Principal (Con Turno Abierto) -->
+      <div class="shifts-container" v-if="shiftsStore.hasOpenShift">
+        <div class="header">
         <h1 class="page-title">Corte de Caja (Turno Actual)</h1>
         <p class="subtitle">Gestiona tu turno. Aquí registrarás tu corte sólo cuando termines tu jornada.</p>
       </div>
@@ -88,6 +111,7 @@
       </div>
     </div>
   </div>
+  </template>
 
   <!-- Historial de Turnos -->
   <div class="shifts-container pt-8">
@@ -109,28 +133,42 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="shift in completedShifts" :key="shift.id">
-              <td>#{{ shift.id }}</td>
-              <td>{{ formatDate(shift.opened_at) }}</td>
-              <td>{{ shift.closed_at ? formatDate(shift.closed_at) : 'N/A' }}</td>
-              <td>${{ shift.starting_cash }}</td>
-              <td>{{ shift.expected_cash ? '$'+shift.expected_cash : '-' }}</td>
-              <td>{{ shift.actual_cash ? '$'+shift.actual_cash : '-' }}</td>
-              <td>
-                <span v-if="shift.difference" :class="Number(shift.difference) < 0 ? 'text-danger' : (Number(shift.difference) > 0 ? 'text-success' : 'text-muted')">
-                  ${{ shift.difference }}
-                </span>
-                <span v-else>-</span>
-              </td>
-              <td>
-                <span class="badge" :class="shift.closed_at === null ? 'badge-success' : 'badge-neutral'">
-                  {{ shift.closed_at === null ? 'Abierto' : 'Cerrado' }}
-                </span>
-              </td>
-            </tr>
-            <tr v-if="completedShifts.length === 0 && !shiftsStore.isLoading">
-              <td colspan="8" class="text-center text-muted py-4">No hay turnos registrados</td>
-            </tr>
+            <template v-if="shiftsStore.isLoading">
+              <tr v-for="i in 5" :key="'sk-shft-'+i">
+                <td><AppSkeleton width="40px" height="1rem" /></td>
+                <td><AppSkeleton width="100px" height="1rem" /></td>
+                <td><AppSkeleton width="100px" height="1rem" /></td>
+                <td><AppSkeleton width="70px" height="1rem" /></td>
+                <td><AppSkeleton width="70px" height="1rem" /></td>
+                <td><AppSkeleton width="70px" height="1rem" /></td>
+                <td><AppSkeleton width="70px" height="1rem" /></td>
+                <td><AppSkeleton width="60px" height="1.5rem" radius="99px" /></td>
+              </tr>
+            </template>
+            <template v-else>
+              <tr v-for="shift in completedShifts" :key="shift.id">
+                <td>#{{ shift.id }}</td>
+                <td>{{ formatDate(shift.opened_at) }}</td>
+                <td>{{ shift.closed_at ? formatDate(shift.closed_at) : 'N/A' }}</td>
+                <td>${{ shift.starting_cash }}</td>
+                <td>{{ shift.expected_cash ? '$'+shift.expected_cash : '-' }}</td>
+                <td>{{ shift.actual_cash ? '$'+shift.actual_cash : '-' }}</td>
+                <td>
+                  <span v-if="shift.difference" :class="Number(shift.difference) < 0 ? 'text-danger' : (Number(shift.difference) > 0 ? 'text-success' : 'text-muted')">
+                    ${{ shift.difference }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
+                <td>
+                  <span class="badge" :class="shift.closed_at === null ? 'badge-success' : 'badge-neutral'">
+                    {{ shift.closed_at === null ? 'Abierto' : 'Cerrado' }}
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="completedShifts.length === 0">
+                <td colspan="8" class="text-center text-muted py-4">No hay turnos registrados</td>
+              </tr>
+            </template>
           </tbody>
        </table>
     </div>
@@ -142,6 +180,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
