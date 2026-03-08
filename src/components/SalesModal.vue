@@ -252,6 +252,21 @@ const searchQuery = ref('');
 const cart = ref<CartItem[]>([]);
 const showSuccessModal = ref(false);
 
+const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+let isRemoteUpdate = false;
+
+const syncCartToBackend = async () => {
+  if (isRemoteUpdate) return;
+  try {
+    await apiClient.post('/products/sync-cart/', {
+      cart: cart.value,
+      device_id: localDeviceId
+    });
+  } catch (error) {
+    console.error("Error transmitiendo carrito:", error);
+  }
+};
+
 // Snapshot de la última venta (para poder revertirla)
 const lastSaleId = ref<string | number>('');
 const lastCartSnapshot = ref<CartItem[]>([]);
@@ -403,14 +418,18 @@ const addToCart = (product: Product) => {
       duration: 1500
     });
   }
+  
+  syncCartToBackend();
 };
 
 const removeFromCart = (id: string | number) => {
   cart.value = cart.value.filter(item => item.id !== id);
+  syncCartToBackend();
 };
 
 const clearCart = () => {
   cart.value = [];
+  syncCartToBackend();
 };
 
 const updateQuantity = (id: string | number, delta: number) => {
@@ -423,6 +442,7 @@ const updateQuantity = (id: string | number, delta: number) => {
     removeFromCart(id);
   } else if (newQuantity <= item.stock) {
     item.quantity = newQuantity;
+    syncCartToBackend();
   }
 };
 
@@ -489,13 +509,14 @@ const handleCheckout = async () => {
 
 const handleCloseSuccess = () => {
   showSuccessModal.value = false;
-  cart.value = []; // Clear cart
+  clearCart(); // Usamos clearCart para detonar el sync vacío al servidor
   emit('close'); // Close sales modal
 };
 
 const handleRevert = (saleId: string | number, cartItems: { id: string | number; name: string; price: string | number; quantity: number }[]) => {
   showSuccessModal.value = false;
-  cart.value = [];
+  cart.value = cartItems as CartItem[]; // Cargamos los datos reverted
+  syncCartToBackend(); // Sincronizamos al backend para reflejarlo en todos frentes
   emit('sale-reverted', saleId, cartItems);
   emit('close');
 };
@@ -506,6 +527,15 @@ let channelName = '';
 let isLocalScan = false;
 
 onMounted(() => {
+  // 1. Cargar el carrito guardado en la Base de Datos (si existe)
+  apiClient.get<any>('/products/my-cart/').then((res) => {
+    if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
+      isRemoteUpdate = true;
+      cart.value = res.data.cart;
+      isRemoteUpdate = false;
+    }
+  }).catch(e => console.error("Error cargando carrito guardado:", e));
+
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
@@ -536,6 +566,29 @@ onMounted(() => {
           audio.play().catch(e => console.error(e));
        }
     }
+  });
+
+  // -------------------------------------------------------------
+  // B. Escuchar cambios de Carrito de otro dispositivo
+  // -------------------------------------------------------------
+  channel.bind('CART_UPDATED', (data: any) => {
+    const nuevoCarrito = data.cart;
+    const fromDeviceId = data.device_id;
+    
+    // Si the device_id no es igual a nuestro localDeviceId
+    if (fromDeviceId !== localDeviceId && nuevoCarrito) {
+      isRemoteUpdate = true;
+      cart.value = nuevoCarrito;
+      isRemoteUpdate = false; // Restablecer bandera tras actualización síncrona
+      console.log("Carrito sincronizado por actualización remota de otro dispositivo.");
+    }
+  });
+
+  // -------------------------------------------------------------
+  // C. Escuchar venta consolidada o cambios de stock en red
+  // -------------------------------------------------------------
+  channel.bind('INVENTORY_UPDATED', (data: any) => {
+     // Aquí en el futuro puedes decidir lanzar el fetchProducts() del store
   });
 });
 
