@@ -457,7 +457,7 @@ const handleCheckout = async () => {
   // Register sale in store via API
   const result = await salesStore.addSale({
     transaction_id: trxId,
-    user: 1, // Se debe cambiar más adelante según auth actual
+    user: currentUser.value?.id || 1, // Se extrae del auth store
     status: 'completed',
     total: lastTotal.value.toString(),
     items: cart.value.map(item => ({ 
