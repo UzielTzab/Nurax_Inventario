@@ -587,7 +587,7 @@ onMounted(() => {
   // -------------------------------------------------------------
   // C. Escuchar venta consolidada o cambios de stock en red
   // -------------------------------------------------------------
-  channel.bind('INVENTORY_UPDATED', (data: any) => {
+  channel.bind('INVENTORY_UPDATED', () => {
      // Aquí en el futuro puedes decidir lanzar el fetchProducts() del store
   });
 });
