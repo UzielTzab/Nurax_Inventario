@@ -30,7 +30,27 @@
       </div>
 
       <!-- Suppliers Grid -->
-      <div class="suppliers-grid">
+      <div v-if="isLoading" class="suppliers-grid">
+        <div v-for="i in 6" :key="'sk-supp-'+i" class="supplier-card skeleton-card">
+          <div class="card-header">
+            <AppSkeleton width="48px" height="48px" radius="24px" />
+            <div class="supplier-info-header">
+              <AppSkeleton width="120px" height="1rem" style="margin-bottom:0.3rem" />
+              <AppSkeleton width="80px" height="0.75rem" />
+            </div>
+          </div>
+          <div class="card-body">
+             <AppSkeleton width="150px" height="0.875rem" style="margin-bottom:1rem" />
+             <AppSkeleton width="130px" height="0.875rem" />
+          </div>
+          <div class="card-footer" style="padding:1rem 1.5rem;">
+             <AppSkeleton width="36px" height="36px" radius="6px" />
+             <AppSkeleton width="100px" height="36px" radius="6px" />
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="suppliers-grid">
         <div v-for="supplier in filteredSuppliers" :key="supplier.id" class="supplier-card" @click="viewSupplierDetails(supplier)">
           <div class="card-header">
             <div class="supplier-avatar">
@@ -73,7 +93,7 @@
       </div>
       
       <!-- Empty State -->
-      <div v-if="filteredSuppliers.length === 0" class="empty-state">
+      <div v-if="!isLoading && filteredSuppliers.length === 0" class="empty-state">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
         </svg>
@@ -179,6 +199,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -186,7 +207,7 @@ import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
 import { useProductStore } from '@/stores/product.store';
 
 const { enqueueSnackbar } = useSnackbar();
-const { suppliers, deleteSupplier, fetchSuppliers } = useSuppliers();
+const { suppliers, isLoading, deleteSupplier, fetchSuppliers } = useSuppliers();
 const productStore = useProductStore();
 
 onMounted(() => {

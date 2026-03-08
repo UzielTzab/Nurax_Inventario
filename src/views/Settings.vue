@@ -20,7 +20,35 @@
           
           <!-- LEFT COLUMN: FORMS -->
           <div class="settings-forms">
-            
+            <template v-if="isLoading">
+              <!-- Skeleton S1 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <AppSkeleton width="38px" height="38px" radius="8px" />
+                  <AppSkeleton width="180px" height="1.2rem" />
+                </div>
+                <div class="form-grid">
+                  <div class="input-group"><AppSkeleton width="100%" height="48px" radius="30px" /></div>
+                  <div class="input-group"><AppSkeleton width="100%" height="48px" radius="30px" /></div>
+                  <div class="input-group full-width"><AppSkeleton width="100%" height="48px" radius="30px" /></div>
+                  <div class="input-group full-width"><AppSkeleton width="100%" height="48px" radius="30px" /></div>
+                </div>
+              </div>
+              <!-- Skeleton S2 -->
+              <div class="settings-card">
+                <div class="card-header">
+                  <AppSkeleton width="38px" height="38px" radius="8px" />
+                  <AppSkeleton width="220px" height="1.2rem" />
+                </div>
+                <div class="form-grid">
+                  <div class="input-group"><AppSkeleton width="100%" height="120px" radius="16px" /></div>
+                  <div class="input-group"><AppSkeleton width="100%" height="120px" radius="16px" /></div>
+                  <div class="input-group full-width"><AppSkeleton width="100%" height="80px" radius="12px" /></div>
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
             <!-- SECTION 1: Información General -->
             <div class="settings-card">
               <div class="card-header">
@@ -176,6 +204,7 @@
                 </div>
               </div>
             </div>
+            </template>
 
           </div>
 
@@ -293,6 +322,7 @@ import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { HomeModernIcon } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
@@ -329,16 +359,25 @@ const onPaperWidthChange = () => {
 };
 
 // ── Load store settings from backend ─────────────────────────────────────────
+const isLoading = ref(true);
+
 onMounted(async () => {
-  const res = await apiClient.get<any>('/store/');
-  if (res.success && res.data) {
-    const d = res.data;
-    settings.value.storeName      = d.store_name      ?? '';
-    settings.value.currency       = d.currency_symbol ?? '$ MXN';
-    settings.value.address        = d.address         ?? '';
-    settings.value.phone          = d.phone           ?? '';
-    settings.value.thankYouMessage = d.ticket_message ?? '';
-    settings.value.logoUrl        = d.logo_url        ?? '';
+  isLoading.value = true;
+  try {
+    const res = await apiClient.get<any>('/store/');
+    if (res.success && res.data) {
+      const d = res.data;
+      settings.value.storeName      = d.store_name      ?? '';
+      settings.value.currency       = d.currency_symbol ?? '$ MXN';
+      settings.value.address        = d.address         ?? '';
+      settings.value.phone          = d.phone           ?? '';
+      settings.value.thankYouMessage = d.ticket_message ?? '';
+      settings.value.logoUrl        = d.logo_url        ?? '';
+    }
+  } catch (err) {
+    console.error('Error loading settings', err);
+  } finally {
+    isLoading.value = false;
   }
 });
 
