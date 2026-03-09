@@ -30,6 +30,11 @@
           <QrCodeIcon class="w-5 h-5" />
         </button>
 
+        <!-- Escaneo Fijo (Continuo) -->
+        <button class="icon-btn scan-btn-premium" title="Escaneo Fijo - Lecturas continuas" @click="salesStore.openContinuousScanner()" style="color: var(--color-brand-secondary);">
+          <ComputerDesktopIcon class="w-5 h-5" />
+        </button>
+
         <!-- Área derecha topbar -->
         <div class="topbar-right">
           <!-- Botón Vender (Acceso Global) -->
@@ -446,6 +451,7 @@ import {
   ArrowRightOnRectangleIcon,
   XMarkIcon,
   QrCodeIcon,
+  ComputerDesktopIcon,
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   InformationCircleIcon,

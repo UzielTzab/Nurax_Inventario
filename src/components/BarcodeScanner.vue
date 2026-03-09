@@ -10,7 +10,10 @@
             <div class="flex justify-between items-start mb-6">
               <div class="flex items-center">
                 <QrCodeIcon class="h-8 w-8 text-brand-primary mr-3" />
-                <h2 class="text-2xl font-bold text-white tracking-tight">Escanear Producto</h2>
+                <div class="flex flex-col">
+                  <h2 class="text-2xl font-bold text-white tracking-tight">{{ isContinuousMode ? 'Escaneo Fijo' : 'Escanear Producto' }}</h2>
+                  <p v-if="isContinuousMode" class="text-xs text-gray-400 mt-1">Lecturas continuas sin cerrar</p>
+                </div>
               </div>
               <button @click="$emit('close')" class="p-2 text-gray-500 hover:bg-white/10 rounded-full transition-all">
                 <XMarkIcon class="h-6 w-6" />
@@ -46,10 +49,14 @@
                   Activar Cámara
                 </button>
               </div>
-              <div v-else class="absolute bottom-4 left-0 right-0 z-10 flex justify-center">
-                <button @click="stopCamera" class="inline-flex items-center justify-center text-xs px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-bold uppercase tracking-widest shadow-lg backdrop-blur-sm border border-red-400/50">
+              <div v-else class="absolute bottom-4 left-0 right-0 z-10 flex justify-center gap-2">
+                <button v-if="!isContinuousMode" @click="stopCamera" class="inline-flex items-center justify-center text-xs px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-bold uppercase tracking-widest shadow-lg backdrop-blur-sm border border-red-400/50">
                   <VideoCameraSlashIcon class="h-4 w-4 mr-2" />
                   Detener Cámara
+                </button>
+                <button v-else @click="$emit('close')" class="inline-flex items-center justify-center text-xs px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-bold uppercase tracking-widest shadow-lg backdrop-blur-sm border border-red-400/50">
+                  <XMarkIcon class="h-4 w-4 mr-2" />
+                  Desbloquear Escaneo
                 </button>
               </div>
             </div>
@@ -184,6 +191,7 @@
             <!-- Action Buttons -->
             <div class="flex gap-4">
               <button 
+                v-if="!isContinuousMode"
                 @click="scanProduct" 
                 :disabled="!barcode || isScanning"
                 class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-white py-4 px-4 rounded-xl font-bold transition-all flex items-center justify-center uppercase tracking-widest text-xs"
@@ -192,13 +200,16 @@
                 {{ isScanning ? 'Buscando...' : 'Buscar' }}
               </button>
               <button 
-                v-if="scannedProduct"
+                v-if="!isContinuousMode && scannedProduct"
                 @click="processTransaction" 
                 class="flex-1 bg-brand-secondary hover:bg-brand-secondary/90 text-white py-4 px-4 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-brand-secondary/20 uppercase tracking-widest text-xs"
               >
                 <ShoppingCartIcon class="h-5 w-5 mr-2" />
                 Vender
               </button>
+              <div v-if="isContinuousMode && scannedProduct" class="flex-1 bg-brand-secondary/20 border border-brand-secondary/30 text-brand-secondary py-4 px-4 rounded-xl font-bold flex items-center justify-center uppercase tracking-widest text-xs">
+                ✓ Producto agregado - Continúa escaneando
+              </div>
             </div>
           </div>
         </div>
@@ -238,6 +249,7 @@ interface Product {
 const props = defineProps<{
   isOpen: boolean;
   products: Product[];
+  scanMode?: 'single' | 'continuous';  // Nuevo: modo de escaneo
 }>();
 
 const emit = defineEmits(['close', 'productSold']);
@@ -250,10 +262,12 @@ const quantityToSell = ref(1);
 const errorMessage = ref('');
 
 const useCamera = ref(false);
+const isContinuousMode = ref(false);  // Nuevo: rastrear si estamos en modo continuo
 
 const startCamera = () => {
   useCamera.value = true;
   errorMessage.value = '';
+  isContinuousMode.value = props.scanMode === 'continuous';
 };
 
 const stopCamera = () => {
@@ -269,8 +283,16 @@ const onDetect = (detectedCodes: any[]) => {
     const audio = new Audio('/sounds/Fx_Scanning.wav');
     audio.play().catch(e => console.log('Audio play failed:', e));
     
-    stopCamera(); 
-    scanProduct();
+    // En modo single: detener cámara y procesar
+    // En modo continuous: seguir escaneando
+    if (isContinuousMode.value) {
+      // Modo continuo: procesar automáticamente y mantener cámara abierta
+      setTimeout(() => scanProduct(), 100);
+    } else {
+      // Modo single: detener cámara y procesar
+      stopCamera(); 
+      scanProduct();
+    }
   }
 };
 
@@ -348,6 +370,16 @@ const scanProduct = () => {
           if (available) {
             selectedSerialItem.value = available;
           }
+        }
+        
+        // En modo continuo: limpiar barcode después de 2s para siguiente escaneo
+        if (isContinuousMode.value) {
+          setTimeout(() => {
+            barcode.value = '';
+            scannedProduct.value = null;
+            selectedSerialItem.value = null;
+            quantityToSell.value = 1;
+          }, 2000);
         }
       } else {
         errorMessage.value = 'Este producto está agotado. No hay unidades disponibles para vender.';
