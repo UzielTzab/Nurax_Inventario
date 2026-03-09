@@ -375,20 +375,23 @@ const processScan = async (sku: string) => {
       const audio = new Audio('/sounds/Fx_Scanning.wav');
       audio.play().catch(e => console.error(e));
       
-      // Bloquear pusheo local rebotado por 3 segundos antes de agregar
+      // Bloquear pusheo local rebotado para evitar duplicación entre dispositivos
       isLocalScan = true;
       addToCart(productFound);
       
-      // En modo continuo: mantener searchQuery para evitar la búsqueda manual
-      // En modo single: limpiar searchQuery
+      // En modo continuo: timeout más largo (5s) | En modo single: timeout normal (3s)
+      const timeoutDuration = scannerMode.value === 'continuous' ? 5000 : 3000;
       if (scannerMode.value !== 'continuous') {
         searchQuery.value = '';
       }
       
-      setTimeout(() => isLocalScan = false, 3000);
+      setTimeout(() => isLocalScan = false, timeoutDuration);
 
-      // Opcional: avisar a otras pestañas (notificación silenciosa)
-      apiClient.post<any>('/products/scan/', { sku: productFound.sku }).catch(() => {});
+      // Avisar a otras pestañas con device_id para evitar duplicación
+      apiClient.post<any>('/products/scan/', { 
+        sku: productFound.sku,
+        device_id: localDeviceId 
+      }).catch(() => {});
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -568,6 +571,7 @@ let pusher: Pusher | null = null;
 let channel: any = null;
 let channelName = '';
 let isLocalScan = false;
+let lastScannedSku = ''; // Prevenir procesar el mismo SKU 2 veces
 
 onMounted(async () => {
   isInitializing.value = true;
@@ -604,7 +608,17 @@ onMounted(async () => {
   channel = pusher.subscribe(channelName);
   
   channel.bind('PRODUCT_SCANNED', (data: any) => {
-    if (isLocalScan) return; // Evita loop o duplicación en el dispositivo maestro
+    // Verificar si el escaneo vino de este dispositivo - si es así, ignora
+    if (isLocalScan || data.device_id === localDeviceId) {
+      return; // Evita duplicación en el dispositivo que envió el escaneo
+    }
+    
+    // Evitar procesar el mismo SKU dos veces en rápida sucesión desde otro dispositivo
+    if (data && data.sku === lastScannedSku) {
+      return;
+    }
+    
+    lastScannedSku = data?.sku || '';
     console.log("[Pusher] ¡Recibido escáner mágico desde otro dispositivo!", data);
     
     if (data && data.product) {
@@ -1400,7 +1414,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    height: 100%;
+    height: 80%;
     overflow: hidden; /* Prevent full-page scroll */
   }
   
@@ -1413,9 +1427,7 @@ onUnmounted(() => {
   }
 
   .right-panel {
-    height: 35%; /* Reserve a portion of the screen for the cart */
-    min-height: 250px;
-    flex-shrink: 0;
+    flex: 1; /* Ocupar el espacio disponible */
     overflow: hidden;
   }
 
@@ -1516,6 +1528,7 @@ onUnmounted(() => {
 
   .sale-totals {
     padding: 1rem;
+    margin-top: auto;
   }
 
   .btn-checkout {

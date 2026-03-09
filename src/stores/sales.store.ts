@@ -23,23 +23,38 @@ export const useSalesStore = defineStore('sales', () => {
   const sales = ref<Sale[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  
+  // Paginación
+  const totalSales = ref(0);
+  const currentPage = ref(1);
+  const pageSize = ref(10);
+  const nextPageUrl = ref<string | null>(null);
+  const previousPageUrl = ref<string | null>(null);
 
   /**
-   * Obtiene el listado de todas las ventas
+   * Obtiene el listado de ventas con paginación
+   * @param page - Número de página (por defecto 1)
+   * @param size - Registros por página (por defecto 10)
    */
-  const fetchSales = async () => {
+  const fetchSales = async (page: number = 1, size: number = 10) => {
     isLoading.value = true;
     error.value = null;
+    currentPage.value = page;
+    pageSize.value = size;
 
     try {
-      const response = await salesService.getSales();
+      const response = await salesService.getSales(page, size);
 
-      if (response.success && response.data) {
-        // Asegurar que siempre es un array
+      if (response.success) {
+        // response.data ahora es el array de results
         sales.value = Array.isArray(response.data) ? response.data : [];
+        totalSales.value = response.count || 0;
+        nextPageUrl.value = response.next || null;
+        previousPageUrl.value = response.previous || null;
       } else {
         error.value = response.error || 'No se pudieron cargar las ventas';
         sales.value = [];
+        totalSales.value = 0;
       }
     } catch (err: any) {
       error.value = err.message || 'Error de conexión';
@@ -227,6 +242,11 @@ export const useSalesStore = defineStore('sales', () => {
     sales,
     isLoading,
     error,
+    totalSales,
+    currentPage,
+    pageSize,
+    nextPageUrl,
+    previousPageUrl,
     isModalOpen,
     isScannerOpen,
     scannerMode,  // Nuevo: exportar modo de escaneo

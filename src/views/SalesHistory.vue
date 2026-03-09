@@ -276,7 +276,7 @@
           <Pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
-            :total="filteredSales.length"
+            :total="storeTotalSales"
           />
         </div>
       </div>
@@ -341,8 +341,8 @@ const selectedPeriod = ref('today');
 const customStartDate = ref('');
 const customEndDate = ref('');
 
-onMounted(() => {
-  salesStore.fetchSales();
+onMounted(async () => {
+  await salesStore.fetchSales(1, 10); // Cargar primera página con 10 registros
   loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
 });
 
@@ -353,6 +353,17 @@ const minAmount = ref(0);
 // ── Paginación ──
 const currentPage = ref(1);
 const pageSize = ref(10);
+
+// Watcher para cambios de página - refetchear desde el backend
+watch(currentPage, (newPage) => {
+  salesStore.fetchSales(newPage, pageSize.value);
+});
+
+// Watcher para cambios de pageSize - refetchear desde el backend
+watch(pageSize, (newSize) => {
+  currentPage.value = 1; // Resetear a página 1
+  salesStore.fetchSales(1, newSize);
+});
 
 // Control de filas expandidas
 const expandedRows = ref(new Set<number>());
@@ -367,7 +378,7 @@ const toggleDetail = (id: number) => {
 };
 
 // Access store state via getters or computed using storeToRefs for guaranteed reactivity
-const { sales, weeklyData } = storeToRefs(salesStore);
+const { sales, weeklyData, totalSales: storeTotalSales } = storeToRefs(salesStore);
 
 // Format Helpers
 const formatMoney = (amount: number | string) => {
@@ -438,7 +449,8 @@ const executeCancel = async () => {
         message: 'La venta ha sido cancelada y el stock restaurado exitosamente.',
         duration: 3000
       });
-      await salesStore.fetchSales();
+      // Refetchear la página actual
+      await salesStore.fetchSales(currentPage.value, pageSize.value);
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -498,30 +510,23 @@ const filteredSales = computed(() => {
     if (minAmount.value > 0 && Number(sale.total) < minAmount.value) return false;
 
     return true;
-  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  });
 });
 
-// Reiniciar a la página 1 cuando cambien los filtros
-watch([searchQuery, selectedPeriod, customStartDate, customEndDate, minAmount], () => {
-  currentPage.value = 1;
-});
-
-// ── Paginated Sales Logic ──
-const paginatedSales = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return filteredSales.value.slice(start, end);
-});
+// Ya no necesitamos paginación local porque el backend la maneja
+// paginatedSales es lo que se muestra en la tabla
+const paginatedSales = computed(() => filteredSales.value);
 
 // Stats
 const todayIncome = computed(() => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return sales.value
+  return filteredSales.value
       .filter(s => new Date(s.created_at) >= startOfDay)
       .reduce((sum, s) => sum + Number(s.total), 0);
 });
 
+// salesCount es el número de ventas después de aplicar filtros locales
 const salesCount = computed(() => filteredSales.value.length);
 
 // Chart Configuration
