@@ -207,8 +207,17 @@
              :track="paintOutline"
            ></qrcode-stream>
            <div class="scanner-laser"></div>
+           
+           <!-- Cooldown Overlay para Continuous Mode -->
+           <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 12px; backdrop-filter: blur(3px); z-index: 10;">
+             <div style="text-align: center; color: white;">
+               <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
+               <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
+               <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el próximo producto</p>
+             </div>
+           </div>
          </div>
-         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">Apunta usando la cámara de tu dispositivo</p>
+         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
          <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
            <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
            {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
@@ -306,6 +315,8 @@ const isScanning = computed({
 
 const scannerMode = computed(() => salesStore.scannerMode);
 
+const scanCooldownActive = ref(false); // Cooldown visual para continuous mode
+
 const barcodeFormats = ref<any[]>([
   'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
 ]);
@@ -345,20 +356,31 @@ const handleScanSubmit = () => {
 };
 
 const onDecodeSku = (detectedCodes: any[]) => {
+  // Si está en cooldown y es continuous mode, no procesar
+  if (scanCooldownActive.value && scannerMode.value === 'continuous') {
+    return;
+  }
+
   if (detectedCodes.length > 0) {
     const sku = detectedCodes[0].rawValue;
     
     // En modo single: detener cámara
-    // En modo continuous: seguir escaneando
+    // En modo continuous: seguir escaneando pero activar cooldown
     if (scannerMode.value === 'single') {
       isScanning.value = false;
+    } else if (scannerMode.value === 'continuous') {
+      // Activar cooldown de 2 segundos en continuous mode
+      scanCooldownActive.value = true;
+      setTimeout(() => {
+        scanCooldownActive.value = false;
+      }, 2000);
     }
     
     processScan(sku);
   }
 };
 
-const processScan = async (sku: string) => {
+const processScan = async (sku: string, isRemoteScan: boolean = false) => {
   try {
     // 1. Intento de búsqueda local (rápido y a prueba de fallos con códigos de barra largos)
     let productFound = apiProducts.value?.find((p: any) => p.sku === sku || p.name.toLowerCase() === sku.toLowerCase() || String(p.barcode) === sku);
@@ -375,23 +397,27 @@ const processScan = async (sku: string) => {
       const audio = new Audio('/sounds/Fx_Scanning.wav');
       audio.play().catch(e => console.error(e));
       
-      // Bloquear pusheo local rebotado para evitar duplicación entre dispositivos
-      isLocalScan = true;
+      // Agregar al carrito
       addToCart(productFound);
       
-      // En modo continuo: timeout más largo (5s) | En modo single: timeout normal (3s)
-      const timeoutDuration = scannerMode.value === 'continuous' ? 5000 : 3000;
-      if (scannerMode.value !== 'continuous') {
-        searchQuery.value = '';
-      }
-      
-      setTimeout(() => isLocalScan = false, timeoutDuration);
+      // SOLO hacer POST si es un escaneo local (no remoto vía websocket)
+      // Esto previene duplicados cuando el backend dispara el evento Pusher
+      if (!isRemoteScan) {
+        // En modo continuo: timeout más largo (5s) | En modo single: timeout normal (3s)
+        const timeoutDuration = scannerMode.value === 'continuous' ? 5000 : 3000;
+        if (scannerMode.value !== 'continuous') {
+          searchQuery.value = '';
+        }
+        
+        scanState.isLocal = true;
+        setTimeout(() => scanState.isLocal = false, timeoutDuration);
 
-      // Avisar a otras pestañas con device_id para evitar duplicación
-      apiClient.post<any>('/products/scan/', { 
-        sku: productFound.sku,
-        device_id: localDeviceId 
-      }).catch(() => {});
+        // Avisar a otras pestañas con device_id para evitar duplicación
+        apiClient.post<any>('/products/scan/', { 
+          sku: productFound.sku,
+          device_id: localDeviceId 
+        }).catch(() => {});
+      }
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -570,7 +596,8 @@ const handleRevert = (saleId: string | number, cartItems: { id: string | number;
 let pusher: Pusher | null = null;
 let channel: any = null;
 let channelName = '';
-let isLocalScan = false;
+// Bandera para evitar duplicados - se usa dentro de closures en los handlers de Pusher
+const scanState = { isLocal: false };
 let lastScannedSku = ''; // Prevenir procesar el mismo SKU 2 veces
 
 onMounted(async () => {
@@ -608,9 +635,9 @@ onMounted(async () => {
   channel = pusher.subscribe(channelName);
   
   channel.bind('PRODUCT_SCANNED', (data: any) => {
-    // Verificar si el escaneo vino de este dispositivo - si es así, ignora
-    if (isLocalScan || data.device_id === localDeviceId) {
-      return; // Evita duplicación en el dispositivo que envió el escaneo
+    // Si el escaneo vino de este dispositivo, ignora completamente
+    if (data.device_id === localDeviceId) {
+      return; // El isLocalScan ya maneja esto, pero double-check
     }
     
     // Evitar procesar el mismo SKU dos veces en rápida sucesión desde otro dispositivo
@@ -619,14 +646,16 @@ onMounted(async () => {
     }
     
     lastScannedSku = data?.sku || '';
-    console.log("[Pusher] ¡Recibido escáner mágico desde otro dispositivo!", data);
+    console.log("[Pusher] Producto escaneado remotamente desde otro dispositivo:", data);
     
+    // IMPORTANTE: Solo agregar el producto del evento de Pusher
+    // No intentar hacer otro POST ni procesamiento local simultáneo
     if (data && data.product) {
        addToCart(data.product);
        const audio = new Audio('/sounds/Fx_Scanning.wav');
        audio.play().catch(e => console.error(e));
     } else if (data && data.sku) {
-       // Buscar local o silenciosamente en fallback, pero sin emitir otro POST
+       // Buscar local en fallback, pero sin emitir otro POST
        const skuToFind = data.sku;
        const localProduct = apiProducts.value?.find((p: any) => p.sku === skuToFind || p.name.toLowerCase() === skuToFind.toLowerCase() || String(p.barcode) === skuToFind);
        if (localProduct) {
