@@ -423,10 +423,15 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
-    // Consumir /api/users/?role=cliente — aquí están TODOS los usuarios registrados
-    const response = await apiClient.get<any[]>('/users/?role=cliente');
+    // Consumir /api/users/?role=cliente — devuelve respuesta paginada DRF
+    const response = await apiClient.get<any>('/users/?role=cliente');
     if (response.success && response.data) {
-      clients.value = response.data.map((u, index) => ({
+      // Manejar formato paginado DRF: {count, next, previous, results}
+      const usersList = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data.results || []);
+      
+      clients.value = usersList.map((u: any, index: number) => ({
         id: u.id,
         name: u.name || u.username || 'Sin nombre',
         email: u.email,

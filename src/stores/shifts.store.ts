@@ -1,18 +1,20 @@
+/**
+ * shifts.store.ts
+ * Store Pinia para gestionar turnos
+ * Utiliza shiftsService para las peticiones a la API
+ *
+ * Métodos:
+ * - fetchShifts(): Obtiene listado de turnos
+ * - openShift(): Abre un nuevo turno
+ * - closeShift(): Cierra un turno abierto
+ */
+
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import apiClient from '@/services/api';
+import { shiftsService, type Shift } from '@/services/shifts.service';
 
-export interface Shift {
-  id: number;
-  user: number;
-  starting_cash: number | string;
-  expected_cash: number | string | null;
-  actual_cash: number | string | null;
-  difference: number | string | null;
-  status?: 'open' | 'closed';
-  opened_at: string;
-  closed_at: string | null;
-}
+// Re-exportar tipos para conveniencia
+export type { Shift };
 
 export const useShiftsStore = defineStore('shifts', () => {
   const shifts = ref<Shift[]>([]);
@@ -20,15 +22,21 @@ export const useShiftsStore = defineStore('shifts', () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
+  /**
+   * Obtiene el listado de todos los turnos
+   */
   const fetchShifts = async () => {
     isLoading.value = true;
     error.value = null;
+
     try {
-      const response = await apiClient.get<Shift[]>('/shifts/');
+      const response = await shiftsService.getShifts();
+
       if (response.success && response.data) {
         const dataArr: Shift[] = Array.isArray(response.data) ? response.data : (response.data as any).results || [];
         shifts.value = dataArr;
-        // The backend determines open shifts by closed_at being null
+
+        // Determinar el turno abierto (closed_at === null)
         const open = dataArr.find(s => s.closed_at === null);
         currentShift.value = open || null;
       } else {
@@ -36,16 +44,22 @@ export const useShiftsStore = defineStore('shifts', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'Error de conexión al cargar turnos';
+      console.error('Error fetching shifts:', err);
     } finally {
       isLoading.value = false;
     }
   };
 
+  /**
+   * Abre un nuevo turno con efectivo inicial
+   */
   const openShift = async (starting_cash: number) => {
     isLoading.value = true;
     error.value = null;
+
     try {
-      const response = await apiClient.post<Shift>('/shifts/open/', { starting_cash });
+      const response = await shiftsService.openShift(starting_cash);
+
       if (response.success && response.data) {
         shifts.value.unshift(response.data);
         currentShift.value = response.data;
@@ -57,20 +71,23 @@ export const useShiftsStore = defineStore('shifts', () => {
     } catch (err: any) {
       const msg = err.message || 'Error al abrir el turno';
       error.value = msg;
+      console.error('Error opening shift:', err);
       return { success: false, error: msg };
     } finally {
       isLoading.value = false;
     }
   };
 
+  /**
+   * Cierra un turno abierto
+   */
   const closeShift = async (id: number, expected_cash: number, actual_cash: number) => {
     isLoading.value = true;
     error.value = null;
+
     try {
-      const response = await apiClient.post<Shift>(`/shifts/${id}/close/`, {
-        expected_cash,
-        actual_cash
-      });
+      const response = await shiftsService.closeShift(id, expected_cash, actual_cash);
+
       if (response.success && response.data) {
         const index = shifts.value.findIndex(s => s.id === id);
         if (index !== -1) {
@@ -85,22 +102,31 @@ export const useShiftsStore = defineStore('shifts', () => {
     } catch (err: any) {
       const msg = err.message || 'Error de conexión al cerrar turno';
       error.value = msg;
+      console.error('Error closing shift:', err);
       return { success: false, error: msg };
     } finally {
       isLoading.value = false;
     }
   };
 
+  /**
+   * Indica si hay un turno abierto actualmente
+   */
   const hasOpenShift = computed(() => currentShift.value !== null);
 
   return {
+    // State
     shifts,
     currentShift,
     isLoading,
     error,
-    hasOpenShift,
+
+    // Methods
     fetchShifts,
     openShift,
-    closeShift
+    closeShift,
+
+    // Computed
+    hasOpenShift,
   };
 });

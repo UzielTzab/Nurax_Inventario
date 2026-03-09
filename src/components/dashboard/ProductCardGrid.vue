@@ -137,7 +137,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 <style scoped>
 .card-grid-inner {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
   padding: 1.25rem 1.5rem;
 }
@@ -156,7 +156,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   transform: translateY(-4px);
   box-shadow: 0 12px 28px -6px rgba(0,0,0,0.1), 0 4px 10px -4px rgba(0,0,0,0.06);
 }
-.card-out-of-stock { border-color: #fecaca; background: #fffbfb; }
+.card-out-of-stock { border-color: var(--color-card-border); background: #fef5f5; }
 
 /* ── Image area ── */
 .card-image-wrap {
