@@ -40,26 +40,61 @@ export interface Sale {
   payments?: Payment[];
 }
 
+export interface PaginatedSalesResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Sale[];
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // SERVICIO DE VENTAS
 // ════════════════════════════════════════════════════════════════════════════
 
 class SalesService {
   /**
-   * Obtiene el listado de todas las ventas
+   * Obtiene el listado paginado de ventas
+   * @param page - Número de página (por defecto 1)
+   * @param pageSize - Número de registros por página (por defecto 10)
+   * @param search - Búsqueda opcional por transaction_id
+   * @returns Objeto con count, next, previous y results
    */
-  async getSales() {
+  async getSales(page: number = 1, pageSize: number = 10, search?: string) {
     try {
-      const response = await apiClient.get<Sale[]>('/sales/');
+      let url = `/sales/?page=${page}&page_size=${pageSize}`;
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      
+      const response = await apiClient.get<PaginatedSalesResponse>(url);
+      
+      if (response.success && response.data) {
+        // response.data ahora es: { count, next, previous, results: [...] }
+        return {
+          success: true,
+          data: response.data.results || [],
+          count: response.data.count || 0,
+          next: response.data.next,
+          previous: response.data.previous,
+          error: null
+        };
+      }
+      
       return {
-        success: response.success,
-        data: response.data || [],
-        error: response.error
+        success: false,
+        data: [],
+        count: 0,
+        next: null,
+        previous: null,
+        error: response.error || 'Error al obtener ventas'
       };
     } catch (err: any) {
       return {
         success: false,
         data: [],
+        count: 0,
+        next: null,
+        previous: null,
         error: err.message || 'Error al obtener ventas'
       };
     }

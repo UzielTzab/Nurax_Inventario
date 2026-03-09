@@ -113,6 +113,7 @@ import { reactive, watch, ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import { useSuppliers } from '@/composables/useSuppliers'
+import { useSnackbar } from '@/composables/useSnackbar'
 
 const props = defineProps<{ isOpen: boolean }>()
 const emit = defineEmits<{
@@ -121,6 +122,7 @@ const emit = defineEmits<{
 }>()
 
 const { addSupplier } = useSuppliers()
+const { enqueueSnackbar } = useSnackbar()
 const isSubmitting = ref(false)
 
 const form = reactive({
@@ -160,11 +162,30 @@ async function handleSubmit() {
     
     // We only proceed and emit if it was successfully created on the backend
     if (result.success && result.data) {
+       enqueueSnackbar({
+         type: 'success',
+         title: 'Proveedor Creado',
+         message: `${result.data.name} ha sido agregado exitosamente.`,
+         duration: 3000
+       });
        emit('supplierCreated', String(result.data.id), result.data.name);
        emit('close');
+    } else {
+       enqueueSnackbar({
+         type: 'error',
+         title: 'Error al Crear',
+         message: result.error || 'No se pudo crear el proveedor.',
+         duration: 4000
+       });
     }
   } catch(e) {
     console.error("Error creating supplier from modal", e);
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Error',
+      message: 'Ocurrió un error al crear el proveedor.',
+      duration: 4000
+    });
   } finally {
     isSubmitting.value = false;
   }

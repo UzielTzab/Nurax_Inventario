@@ -181,7 +181,7 @@
     <AddSupplierModal
       :is-open="showAddModal"
       @close="showAddModal = false"
-      @supplier-created="showAddModal = false"
+      @supplier-created="handleSupplierCreated"
     />
     <!-- Modal: Confirmar Borrado -->
     <ConfirmationModal
@@ -231,6 +231,12 @@ const confirmationState = ref({
 });
 
 const handleConfirmation = () => confirmationState.value.onConfirm();
+
+const handleSupplierCreated = async (supplierId: string, supplierName: string) => {
+  showAddModal.value = false;
+  // Refrescar la lista de proveedores
+  await fetchSuppliers();
+};
 
 const handleDeleteSupplier = (supplier: Supplier) => {
   confirmationState.value = {
