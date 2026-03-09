@@ -4,6 +4,16 @@
     <div class="table-section-header">
       <span class="table-section-title">Listado de Productos</span>
       <div class="table-header-right">
+        <!-- Desktop Search -->
+        <div class="search-container-header">
+          <input
+            type="text"
+            class="search-input-header"
+            placeholder="Buscar..."
+            :value="localFilters.search"
+            @input="onFilterChange('search', ($event.target as HTMLInputElement).value)"
+          />
+        </div>
         <!-- View Toggle -->
         <div class="view-toggle-group">
           <button class="view-toggle-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'" title="Vista de tabla">
@@ -26,6 +36,17 @@
     <Transition name="filter-slide">
       <div v-if="filterPanelOpen" class="filter-panel">
         <div class="filter-panel-inner">
+          <!-- Search filter (mobile only) -->
+          <div class="filter-group filter-group-search">
+            <label class="filter-label">Buscar producto</label>
+            <input
+              type="text"
+              class="filter-input"
+              placeholder="Nombre o SKU..."
+              :value="localFilters.search"
+              @input="onFilterChange('search', ($event.target as HTMLInputElement).value)"
+            />
+          </div>
           <!-- Stock status filter -->
           <div class="filter-group">
             <label class="filter-label">Estado de stock</label>
@@ -225,10 +246,16 @@ export interface Product {
 }
 
 export interface Filters {
-  category: string;
-  supplier: string;
-  priceRange: string;
-  stockFilter: string;
+  search?: string;
+  category?: string | number;
+  supplier?: string | number;
+  priceRange?: string;
+  stockFilter?: string;
+  sku?: string;
+  stock_status?: string;
+  min_price?: string | number;
+  max_price?: string | number;
+  ordering?: string;
 }
 
 interface Props {
@@ -239,7 +266,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  filters: () => ({ category: '', supplier: '', priceRange: '', stockFilter: 'all' }),
+  filters: () => ({ search: '', category: '', supplier: '', priceRange: '', stockFilter: 'all' } as Filters),
   lowStockCount: 0,
   outOfStockCount: 0
 });
@@ -277,7 +304,7 @@ const onFilterChange = (key: keyof Filters, value: string) => {
 };
 
 const clearFilters = () => {
-  localFilters.value = { category: '', supplier: '', priceRange: '', stockFilter: 'all' };
+  localFilters.value = { search: '', category: '', supplier: '', priceRange: '', stockFilter: 'all' };
   emit('update:filters', { ...localFilters.value });
 };
 
@@ -420,6 +447,36 @@ const getStatusText = (stock: number) => {
 }
 
 /* =====================
+   Desktop Search Input
+   ===================== */
+.search-container-header {
+  display: none;
+}
+
+.search-input-header {
+  appearance: none;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #111827;
+  cursor: text;
+  transition: border-color 0.15s;
+  min-width: 200px;
+}
+
+.search-input-header::placeholder {
+  color: #d1d5db;
+}
+
+.search-input-header:focus {
+  outline: none;
+  border-color: var(--color-brand-secondary);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+/* =====================
    View Toggle
    ===================== */
 .view-toggle-group {
@@ -543,6 +600,29 @@ const getStatusText = (stock: number) => {
 }
 
 .filter-select:focus {
+  outline: none;
+  border-color: var(--color-brand-secondary);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+.filter-input {
+  appearance: none;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #111827;
+  cursor: text;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.filter-input::placeholder {
+  color: #d1d5db;
+}
+
+.filter-input:focus {
   outline: none;
   border-color: var(--color-brand-secondary);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
@@ -978,6 +1058,16 @@ td {
 /* =====================
    Responsive
    ===================== */
+@media (min-width: 769px) {
+  .search-container-header {
+    display: block;
+  }
+
+  .filter-group-search {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .product-table {
     min-width: 720px;
@@ -990,6 +1080,14 @@ td {
 
   .filter-group {
     width: 100%;
+  }
+
+  .search-container-header {
+    display: none;
+  }
+
+  .filter-group-search {
+    display: flex;
   }
 }
 </style>

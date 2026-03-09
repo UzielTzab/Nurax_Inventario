@@ -94,6 +94,15 @@
                </div>
              </div>
           </div>
+
+          <!-- Pagination -->
+          <Pagination
+            :current-page="pagination.currentPage"
+            :page-size="pagination.pageSize"
+            :total="pagination.count"
+            @update:current-page="goToPage"
+            @update:page-size="setPageSize"
+          />
         </div>
 
         <!-- Right Panel: Current Sale / Cart -->
@@ -220,11 +229,13 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Pusher from 'pusher-js';
 import { useAuth } from '@/composables/useAuth';
+import { useProducts } from '@/composables/useProducts';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useRouter } from 'vue-router';
+import Pagination from '@/components/ui/Pagination.vue';
 import {
   MagnifyingGlassIcon,
   QrCodeIcon,
@@ -239,21 +250,23 @@ import {
 } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import type { Product } from '@/composables/useProducts';
 
 const { enqueueSnackbar } = useSnackbar();
 const { currentUser } = useAuth();
 const salesStore = useSalesStore();
 const shiftsStore = useShiftsStore();
 const router = useRouter();
-import type { Product } from '@/stores/product.store';
+
+// Usar mismo composable que Inventario para sincronizar stock con paginación
+const { products: apiProducts, fetchProducts, pagination, goToPage, setPageSize } = useProducts();
 
 interface CartItem extends Product {
   quantity: number;
 }
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
-  products?: Product[];
 }>();
 
 const emit = defineEmits(['close', 'sale-completed', 'sale-reverted']);
@@ -284,7 +297,10 @@ const lastCartSnapshot = ref<CartItem[]>([]);
 const lastTotal = ref(0);
 const isSubmitting = ref(false);
 
-const isScanning = ref(false);
+const isScanning = computed({
+  get: () => salesStore.isScannerOpen,
+  set: (val) => { salesStore.isScannerOpen = val; }
+});
 
 const barcodeFormats = ref<any[]>([
   'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
@@ -335,13 +351,13 @@ const onDecodeSku = (detectedCodes: any[]) => {
 const processScan = async (sku: string) => {
   try {
     // 1. Intento de búsqueda local (rápido y a prueba de fallos con códigos de barra largos)
-    let productFound = props.products?.find((p: any) => p.sku === sku || p.name.toLowerCase() === sku.toLowerCase() || String(p.barcode) === sku);
+    let productFound = apiProducts.value?.find((p: any) => p.sku === sku || p.name.toLowerCase() === sku.toLowerCase() || String(p.barcode) === sku);
 
     // 2. Si no está en memoria local, buscarlo en el backend vía GET
     if (!productFound) {
       const res = await apiClient.get<any>(`/products/?search=${sku}`);
-      if (res.success && res.data && res.data.length > 0) {
-        productFound = res.data[0] as Product;
+      if (res.success && res.data && res.data.results && res.data.results.length > 0) {
+        productFound = res.data.results[0] as Product;
       }
     }
 
@@ -376,13 +392,13 @@ const goToShifts = () => {
 };
 
 const filteredProducts = computed(() => {
-  if (!props.products) return [];
+  if (!apiProducts.value || apiProducts.value.length === 0) return [];
   
   const query = searchQuery.value.toLowerCase().trim();
   
-  if (!query) return props.products;
+  if (!query) return apiProducts.value;
   
-  return props.products.filter(product => {
+  return apiProducts.value.filter(product => {
     const nameStr = product.name ? String(product.name).toLowerCase() : '';
     const skuStr = product.sku ? String(product.sku).toLowerCase() : '';
     return nameStr.includes(query) || skuStr.includes(query);
@@ -490,11 +506,11 @@ const handleCheckout = async () => {
     transaction_id: trxId,
     user: currentUser.value?.id || 1, // Se extrae del auth store
     status: 'completed',
-    total: lastTotal.value.toString(),
+    total: lastTotal.value,
     items: cart.value.map(item => ({ 
         product: Number(item.id),
         quantity: item.quantity,
-        unit_price: Number(item.price).toString()
+        unit_price: Number(item.price)
     }))
   });
   
@@ -543,7 +559,10 @@ onMounted(async () => {
     // 1. Verificar estado de caja obligatoriamente para evitar falsos "Caja Cerrada"
     await shiftsStore.fetchShifts();
 
-    // 2. Cargar el carrito guardado en la Base de Datos (si existe)
+    // 2. Cargar productos desde API sin paginación
+    await fetchProducts();
+
+    // 3. Cargar el carrito guardado en la Base de Datos (si existe)
     const res = await apiClient.get<any>('/products/my-cart/');
     if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
       isRemoteUpdate = true;
@@ -579,7 +598,7 @@ onMounted(async () => {
     } else if (data && data.sku) {
        // Buscar local o silenciosamente en fallback, pero sin emitir otro POST
        const skuToFind = data.sku;
-       const localProduct = props.products?.find((p: any) => p.sku === skuToFind || p.name.toLowerCase() === skuToFind.toLowerCase() || String(p.barcode) === skuToFind);
+       const localProduct = apiProducts.value?.find((p: any) => p.sku === skuToFind || p.name.toLowerCase() === skuToFind.toLowerCase() || String(p.barcode) === skuToFind);
        if (localProduct) {
           addToCart(localProduct);
           const audio = new Audio('/sounds/Fx_Scanning.wav');
@@ -604,11 +623,47 @@ onMounted(async () => {
     }
   });
 
-  // -------------------------------------------------------------
-  // C. Escuchar venta consolidada o cambios de stock en red
-  // -------------------------------------------------------------
-  channel.bind('INVENTORY_UPDATED', () => {
-     // Aquí en el futuro puedes decidir lanzar el fetchProducts() del store
+  // Evento: INVENTORY_UPDATED
+  // Enviado por backend cuando se vende, devuelve o modifica un producto
+  // Dispara automáticamente cuando se completa una venta en otro dispositivo
+  channel.bind('INVENTORY_UPDATED', async (data: any) => {
+    console.log("[SalesModal] Evento INVENTORY_UPDATED recibido:", data);
+    // Refrescar listado de productos para actualizar stock
+    try {
+      // Refrescar la página actual de productos
+      await fetchProducts();
+      console.log("[SalesModal] Productos refrescados tras evento de inventario");
+    } catch (err) {
+      console.error("[SalesModal] Error refrescando productos:", err);
+    }
+  });
+
+  // Evento: SALES_COMPLETED
+  // Enviado por backend cuando otra sesión completa una venta
+  // Contenido: transaction_id, total, items_count, timestamp
+  channel.bind('SALES_COMPLETED', (data: any) => {
+    console.log("[SalesModal] Venta completada en otro dispositivo:", data);
+    // Actualizar la página de historial de ventas si está abierta
+    // Aquí podrías emitir un evento para actualizar SalesHistory
+    enqueueSnackbar({
+      type: 'info',
+      title: 'Venta Completada en Otro Dispositivo',
+      message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
+      duration: 4000
+    });
+  });
+
+  // Evento: SALES_CANCELLED
+  // Enviado por backend cuando una venta se cancela
+  // Contenido: transaction_id, items_count, timestamp
+  channel.bind('SALES_CANCELLED', (data: any) => {
+    console.log("[SalesModal] Venta cancelada en otro dispositivo:", data);
+    enqueueSnackbar({
+      type: 'warning',
+      title: 'Venta Cancelada en Otro Dispositivo',
+      message: `Transacción: ${data.transaction_id}`,
+      duration: 4000
+    });
   });
 });
 

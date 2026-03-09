@@ -149,7 +149,7 @@ async function handleSubmit() {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
   try {
-    const created = await addSupplier({
+    const result = await addSupplier({
       name: form.name,
       contactPerson: form.contactPerson,
       phone: form.phone,
@@ -159,8 +159,8 @@ async function handleSubmit() {
     });
     
     // We only proceed and emit if it was successfully created on the backend
-    if (created && created.id) {
-       emit('supplierCreated', String(created.id), created.name);
+    if (result.success && result.data) {
+       emit('supplierCreated', String(result.data.id), result.data.name);
        emit('close');
     }
   } catch(e) {

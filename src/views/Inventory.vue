@@ -58,7 +58,7 @@
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-          <template v-if="productStore.isLoading">
+          <template v-if="isLoading">
             <div v-for="i in 3" :key="'sk-stat-'+i" class="skeleton-stat-card">
               <AppSkeleton width="44px" height="44px" radius="10px" />
               <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
@@ -70,7 +70,7 @@
           <template v-else>
           <StatsCard
             label="Productos totales"
-            :value="totalProducts"
+            :value="pagination.count"
             :icon="CubeIcon"
             icon-type="brand"
             variant="brand"
@@ -93,7 +93,7 @@
         </div>
 
         <!-- Skeleton: Product Table -->
-        <template v-if="productStore.isLoading">
+        <template v-if="isLoading">
           <div class="skeleton-table-wrap">
             <div class="skeleton-table-header">
               <AppSkeleton width="160px" height="1rem" />
@@ -119,8 +119,8 @@
         <!-- Product Table (with integrated filter panel) -->
         <template v-else>
           <ProductTable
-            :products="pagedProducts"
-            :filters="filters"
+            :products="products"
+            :filters="apiFilters"
             :low-stock-count="lowStockProducts.length"
             :out-of-stock-count="outOfStockProducts.length"
             @edit="handleEditProduct"
@@ -132,9 +132,11 @@
 
           <!-- Pagination -->
           <Pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :total="filteredProducts.length"
+            v-model:current-page="pagination.currentPage"
+            v-model:page-size="pagination.pageSize"
+            :total="pagination.count"
+            @update:current-page="goToPage"
+            @update:page-size="setPageSize"
           />
         </template>
 
@@ -166,7 +168,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import Pusher from 'pusher-js';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
@@ -184,30 +187,105 @@ import AddProductModal from '@/components/AddProductModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useAuth } from '@/composables/useAuth';
+import { useProducts } from '@/composables/useProducts';
 import { useProductStore } from '@/stores/product.store';
 import { useSalesStore } from '@/stores/sales.store';
-import { storeToRefs } from 'pinia';
 
 // Snackbar
 const { enqueueSnackbar } = useSnackbar();
+const { currentUser } = useAuth();
 
-// Stores
-const productStore = useProductStore();
-const salesStore = useSalesStore();
-
-onMounted(async () => {
-  await productStore.fetchProducts();
-  await salesStore.fetchSales();
-});
-
-const { 
-  products: allProducts,
-  totalProducts,
+// Composables para paginación y filtros
+const {
+  products,
+  isLoading,
+  pagination,
+  filters: apiFilters,
+  fetchProducts,
+  applyFilters,
+  setPageSize,
+  goToPage,
   lowStockProducts,
   outOfStockProducts,
   inventoryValue,
-  allSkus
-} = storeToRefs(productStore);
+  allSkus,
+} = useProducts();
+
+// Store para operaciones CRUD
+const productStore = useProductStore();
+
+// Stores
+const salesStore = useSalesStore();
+
+// Pusher setup
+let pusher: Pusher | null = null;
+let channel: any = null;
+
+onMounted(async () => {
+  await fetchProducts();
+  await salesStore.fetchSales();
+  
+  // Inicializar Pusher para escuchar cambios de inventario en tiempo real
+  const userId = currentUser.value?.id || 1;
+  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
+
+  pusher = new Pusher(pusherKey, {
+    cluster: pusherCluster,
+    forceTLS: true
+  });
+
+  const channelName = `pos-user-${userId}`;
+  channel = pusher.subscribe(channelName);
+
+  // Escuchar evento INVENTORY_UPDATED y refrescar productos automáticamente
+  channel.bind('INVENTORY_UPDATED', async (data: any) => {
+    console.log("[Inventory] 📦 Evento INVENTORY_UPDATED recibido:", data);
+    console.log("[Inventory] 🔄 Reseteando a página 1 y limpiando filtros...");
+    
+    try {
+      // Resetear a página 1 para asegurar que el nuevo producto sea visible
+      pagination.value.currentPage = 1;
+      
+      // Limpiar filtros activos para mostrar TODOS los productos nuevos
+      apiFilters.value.search = '';
+      apiFilters.value.category = '';
+      apiFilters.value.sku = '';
+      apiFilters.value.stock_status = '';
+      apiFilters.value.min_price = '';
+      apiFilters.value.max_price = '';
+      // Mantener el ordering por última creación
+      apiFilters.value.ordering = '-created_at';
+      
+      console.log("[Inventory] ⏳ Refrescando tabla con: GET /api/products/?page=1&page_size=10&ordering=-created_at");
+      await fetchProducts();
+      
+      console.log("[Inventory] ✅ Tabla actualizada exitosamente");
+      console.log("[Inventory] 📊 Total de productos:", pagination.value.count);
+      console.log("[Inventory] 👀 Productos en vista (página 1):", products.value.length);
+      
+      enqueueSnackbar({
+        type: 'info',
+        title: 'Inventario Actualizado',
+        message: 'Los productos se han refrescado automáticamente',
+        duration: 2000
+      });
+    } catch (err) {
+      console.error("[Inventory] ❌ Error refrescando productos:", err);
+    }
+  });
+
+  console.log(`[Inventory] 🎧 Listening para cambios en canal: ${channelName}`);
+});
+
+onUnmounted(() => {
+  if (channel && pusher) {
+    console.log("[Inventory] 🔌 Desconectando Pusher");
+    pusher.unsubscribe(`pos-user-${currentUser.value?.id || 1}`);
+    pusher.disconnect();
+  }
+});
 
 const showAddProductModal = ref(false);
 const selectedProduct = ref<Product | null>(null);
@@ -221,81 +299,6 @@ const confirmationState = ref({
   confirmText: 'Confirmar',
   onConfirm: () => {}
 });
-
-
-
-// Filters type definition
-interface Filters {
-  category: string;
-  supplier: string;
-  priceRange: string;
-  stockFilter: string; // 'all' | 'low-stock' | 'out-of-stock'
-}
-
-// Filters
-const filters = ref<Filters>({
-  category: '',
-  supplier: '',
-  priceRange: '',
-  stockFilter: 'all'
-});
-
-// Pagination
-const currentPage = ref(1);
-const pageSize = ref(10);
-
-const filteredProducts = computed(() => {
-  // Invertir el array para mostrar los más nuevos primero
-  let products = [...allProducts.value].reverse();
-
-  // Filter by stock status
-  if (filters.value.stockFilter === 'low-stock') {
-    products = products.filter(p => p.stock > 0 && p.stock <= 10);
-  } else if (filters.value.stockFilter === 'out-of-stock') {
-    products = products.filter(p => p.stock === 0);
-  }
-
-  // Filter by category
-  if (filters.value.category) {
-    products = products.filter(p => {
-      const matchName = (p.category_name || String(p.category)).toLowerCase();
-      return matchName === filters.value.category.toLowerCase();
-    });
-  }
-
-  // Filter by price range
-  if (filters.value.priceRange) {
-    const parts = filters.value.priceRange.split('-');
-    const min = parts[0] ? parseFloat(parts[0]) : 0;
-    const max = parts[1] && parts[1].replace('+', '') !== parts[1]
-      ? Infinity
-      : parts[1] ? parseFloat(parts[1]) : Infinity;
-
-    products = products.filter(p => {
-      const pPrice = Number(p.price);
-      if (max === Infinity) return pPrice >= min;
-      return pPrice >= min && pPrice <= max;
-    });
-  }
-
-  return products;
-});
-
-// Slice for current page — this is what the table actually renders
-const pagedProducts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredProducts.value.slice(start, start + pageSize.value);
-});
-
-// Reset to page 1 whenever filters change so the user never lands on an empty page
-watch(filters, () => { currentPage.value = 1; }, { deep: true });
-
-// Also reset when pageSize changes (already done inside Pagination, but belt-and-suspenders)
-watch(pageSize, () => { currentPage.value = 1; });
-
-function onFiltersUpdate(newFilters: Filters) {
-  filters.value = newFilters;
-}
 
 
 const formatCurrency = (value: number) => {
@@ -324,6 +327,8 @@ const handleSaveNewProduct = async (newProduct: Product) => {
         duration: 3000
       });
       showAddProductModal.value = false;
+      // Refrescar lista de productos
+      fetchProducts();
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -354,6 +359,8 @@ const handleUpdateProduct = async (updatedProduct: Product) => {
         duration: 3000
       });
       showAddProductModal.value = false;
+      // Refrescar lista de productos
+      fetchProducts();
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -385,6 +392,7 @@ const handleDeleteProduct = (product: Product) => {
           actionLabel: 'Deshacer',
           onAction: () => {
             productStore.addProduct(product);
+            fetchProducts();
             enqueueSnackbar({
               type: 'info',
               title: 'Acción deshecha',
@@ -393,6 +401,8 @@ const handleDeleteProduct = (product: Product) => {
             });
           }
         });
+        // Refrescar lista de productos
+        fetchProducts();
       } else {
         enqueueSnackbar({
           type: 'error',
@@ -415,7 +425,7 @@ const handleBulkDelete = (ids: string[]) => {
     confirmText: `Sí, eliminar ${ids.length} productos`,
     onConfirm: async () => {
       // Store products to restore before deleting
-      const productsToRestore = allProducts.value.filter(p => ids.includes(String(p.id)));
+      const productsToRestore = products.value.filter(p => ids.includes(String(p.id)));
       
       const result = await productStore.bulkDeleteProducts(ids);
       if (result.success) {
@@ -427,6 +437,7 @@ const handleBulkDelete = (ids: string[]) => {
           actionLabel: 'Deshacer',
           onAction: () => {
             productsToRestore.forEach(p => productStore.addProduct(p));
+            fetchProducts();
             enqueueSnackbar({
               type: 'info',
               title: 'Acción deshecha',
@@ -435,6 +446,8 @@ const handleBulkDelete = (ids: string[]) => {
             });
           }
         });
+        // Refrescar lista de productos
+        fetchProducts();
       } else {
         enqueueSnackbar({
           type: 'error',
@@ -462,6 +475,11 @@ const handleRestock = (product: Product) => {
 const handleConfirmation = () => {
   confirmationState.value.onConfirm();
 };
+
+// Actualizar filtros y llamar API
+function onFiltersUpdate(newFilters: any) {
+  applyFilters(newFilters);
+}
 </script>
 
 <style scoped>

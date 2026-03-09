@@ -25,12 +25,10 @@
           <Bars3Icon class="w-6 h-6" />
         </button>
 
-        <!-- Búsqueda -->
-        <div class="search-bar">
-          <MagnifyingGlassIcon class="search-icon" />
-          <input type="text" placeholder="Buscar producto..." class="search-input" />
-          <span class="search-kbd">⌘ K</span>
-        </div>
+        <!-- Escáner Rápido -->
+        <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="salesStore.openScanner()">
+          <QrCodeIcon class="w-5 h-5" />
+        </button>
 
         <!-- Área derecha topbar -->
         <div class="topbar-right">
@@ -168,7 +166,6 @@
     <SalesModal
         v-if="salesStore.isModalOpen"
         :is-open="salesStore.isModalOpen"
-        :products="productStore.products"
         @close="salesStore.closeModal()"
         @sale-completed="handleSaleCompleted"
         @sale-reverted="handleSaleReverted"
@@ -445,10 +442,10 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import {
   Bars3Icon,
-  MagnifyingGlassIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
+  QrCodeIcon,
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   InformationCircleIcon,
@@ -1046,54 +1043,16 @@ defineEmits(['quickSell']);
 .mobile-menu-btn:hover { background: #f3f4f6; color: #374151; }
 
 /* Search */
-.search-bar {
-  border-radius: 24px;
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  max-width: 380px;
+.scan-btn-premium {
+  background: var(--color-brand-main, #06402b);
+  color: white;
+  box-shadow: 0 4px 10px rgba(6, 64, 43, 0.2);
 }
 
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  width: 24px;
-  height: 24px;
-  color: var(--color-brand-main);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  height: 50px;
-  padding: 0.5rem 3.5rem 0.5rem 2.25rem;
-  border-radius: 24px;
-  font-size: 0.875rem;
-  color: #374151;
-  background: var(--color-background);
-  outline: none;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-}
-
-.search-input::placeholder { color: #9ca3af; padding-left: 1rem; }
-.search-input:focus {
-  border-color: var(--color-brand-main);
-  background: white;
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
-}
-
-.search-kbd {
-  position: absolute;
-  right: 0.75rem;
-  font-size: 0.7rem;
-  color: var(--color-brand-main);
-  background: var(--color-c);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-family: 'Inter', sans-serif;
+.scan-btn-premium:hover {
+  background: #043020;
+  color: white;
+  transform: scale(1.05);
 }
 
 /* Topbar right */

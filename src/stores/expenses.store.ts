@@ -1,27 +1,35 @@
+/**
+ * expenses.store.ts
+ * Store Pinia para gestionar gastos
+ * Utiliza expensesService para las peticiones a la API
+ *
+ * Métodos:
+ * - fetchExpenses(): Obtiene listado de gastos
+ * - addExpense(): Crea un nuevo gasto
+ */
+
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import apiClient from '@/services/api';
+import { expensesService, type Expense } from '@/services/expenses.service';
 
-export interface Expense {
-  id: number;
-  user: number;
-  amount: number | string;
-  category: 'servicios' | 'nomina' | 'proveedores' | 'varios';
-  description: string;
-  receipt_url: string | null;
-  created_at: string;
-}
+// Re-exportar tipos para conveniencia
+export type { Expense };
 
 export const useExpensesStore = defineStore('expenses', () => {
   const expenses = ref<Expense[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
+  /**
+   * Obtiene el listado de gastos
+   */
   const fetchExpenses = async () => {
     isLoading.value = true;
     error.value = null;
+
     try {
-      const response = await apiClient.get<Expense[]>('/expenses/');
+      const response = await expensesService.getExpenses();
+
       if (response.success && response.data) {
         expenses.value = Array.isArray(response.data) ? response.data : (response.data as any).results || [];
       } else {
@@ -29,25 +37,27 @@ export const useExpensesStore = defineStore('expenses', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'Error de conexión al cargar gastos';
+      console.error('Error fetching expenses:', err);
     } finally {
       isLoading.value = false;
     }
   };
 
-  const addExpense = async (expenseData: { amount: number, category: string, description: string, receipt_file?: File | null }) => {
+  /**
+   * Crea un nuevo gasto con receipts opcionales
+   */
+  const addExpense = async (expenseData: {
+    amount: number;
+    category: string;
+    description: string;
+    receipt_file?: File | null;
+  }) => {
     isLoading.value = true;
     error.value = null;
-    try {
-      const fd = new FormData();
-      fd.append('amount', String(expenseData.amount));
-      fd.append('category', expenseData.category);
-      fd.append('description', expenseData.description);
-      
-      if (expenseData.receipt_file) {
-        fd.append('receipt_file', expenseData.receipt_file);
-      }
 
-      const response = await apiClient.post<Expense>('/expenses/', fd);
+    try {
+      const response = await expensesService.createExpense(expenseData);
+
       if (response.success && response.data) {
         expenses.value.unshift(response.data);
         return { success: true, data: response.data };
@@ -58,6 +68,7 @@ export const useExpensesStore = defineStore('expenses', () => {
     } catch (err: any) {
       const msg = err.message || 'Error de conexión al guardar gasto';
       error.value = msg;
+      console.error('Error adding expense:', err);
       return { success: false, error: msg };
     } finally {
       isLoading.value = false;
@@ -65,10 +76,13 @@ export const useExpensesStore = defineStore('expenses', () => {
   };
 
   return {
+    // State
     expenses,
     isLoading,
     error,
+
+    // Methods
     fetchExpenses,
-    addExpense
+    addExpense,
   };
 });
