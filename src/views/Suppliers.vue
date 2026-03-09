@@ -232,7 +232,7 @@ const confirmationState = ref({
 
 const handleConfirmation = () => confirmationState.value.onConfirm();
 
-const handleSupplierCreated = async (supplierId: string, supplierName: string) => {
+const handleSupplierCreated = async (_supplierId: string, _supplierName: string) => {
   showAddModal.value = false;
   // Refrescar la lista de proveedores
   await fetchSuppliers();
