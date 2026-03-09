@@ -1,5 +1,6 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay">
+  <!-- Desktop: Modal clásico -->
+  <div v-if="isOpen && !isMobileOrTablet" class="modal-overlay">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
@@ -193,14 +194,284 @@
   </div>
   </div>
 
-  <!-- Scanner Overlay para SalesModal -->
-  <Transition name="fade">
+  <!-- Mobile/Tablet: Fullscreen view -->
+  <div v-else-if="isOpen && isMobileOrTablet" style="position: fixed; inset: 0; background: var(--color-background); z-index: 999;">
+    <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+      <!-- Modal Header -->
+      <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+        <h2 class="modal-title">Punto de Venta</h2>
+        <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div v-if="isInitializing" class="empty-state" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+         <div class="flex justify-center items-center">
+            <svg class="animate-spin h-12 w-12" style="color: var(--color-brand-main)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+         </div>
+         <h2 class="text-xl font-bold mt-4" style="color: #374151;">Cargando Terminal...</h2>
+         <p class="text-gray-500 max-w-sm mt-2">Sincronizando caja, inventario y ventas recientes.</p>
+      </div>
+
+      <div v-else-if="shiftsStore.hasOpenShift" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+        <!-- Mobile doesn't have grid layout - show products vertically -->
+        <div style="flex: 1; overflow-y: auto;">
+          <!-- Premium Search Section -->
+          <div class="search-section" style="margin: 1rem;">
+            <div class="search-input-wrapper">
+              <MagnifyingGlassIcon class="search-icon" />
+              <input 
+                v-model="searchQuery"
+                @keyup.enter="handleScanSubmit"
+                type="text" 
+                placeholder="Escanea o busca por producto/SKU..." 
+                class="search-input"
+              />
+            </div>
+            <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
+              <QrCodeIcon class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Products List -->
+          <div class="products-list" style="padding: 0 1rem 1rem 1rem;">
+             <div v-if="filteredProducts.length === 0" class="empty-state">
+               <p v-if="!searchQuery">Empieza a escribir para buscar productos</p>
+               <p v-else>No se encontraron productos con "{{ searchQuery }}"</p>
+             </div>
+
+             <div v-else class="products-grid">
+                <div 
+                 v-for="product in filteredProducts" 
+                 :key="product.id" 
+                 class="product-card"
+                 @click="addToCart(product)"
+               >
+                 <div class="product-image">
+                   <img v-if="product.image_url" :src="product.image_url" :alt="product.name">
+                   <div v-else class="empty-image">
+                     <PhotoIcon class="empty-icon-lg" />
+                   </div>
+                   <span 
+                     class="stock-badge"
+                     :class="{ 'badge-low': getAvailableStock(product) <= 10, 'badge-out': getAvailableStock(product) === 0 }"
+                   >
+                     {{ getAvailableStock(product) }} EN STOCK
+                   </span>
+                 </div>
+
+                 <div class="product-info">
+                   <div class="product-header">
+                     <h4 class="product-name">{{ product.name }}</h4>
+                     <span class="product-sku">SKU-{{ product.sku }}</span>
+                   </div>
+                   <div class="product-footer">
+                     <span class="product-price">${{ Number(product.price).toFixed(2) }}</span>
+                     <button class="add-btn" @click.stop="addToCart(product)">
+                       <PlusIcon class="w-4 h-4" />
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+          </div>
+
+          <!-- Pagination -->
+          <Pagination
+            :current-page="pagination.currentPage"
+            :page-size="pagination.pageSize"
+            :total="pagination.count"
+            @update:current-page="goToPage"
+            @update:page-size="setPageSize"
+          />
+        </div>
+
+        <!-- Cart Summary - Collapsible Drawer at bottom -->
+        <div style="background: var(--color-card-stats-fill); border-top: 1px solid #e5e7eb; max-height: 85vh; display: flex; flex-direction: column;">
+          <!-- Collapsed/Header State -->
+          <div 
+            @click="isCartExpanded = !isCartExpanded"
+            style="padding: 1rem; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s;"
+            :style="{ backgroundColor: isCartExpanded ? '#f3f4f6' : 'transparent' }"
+          >
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+              <ShoppingCartIcon style="width: 24px; height: 24px;" />
+              <span style="font-weight: 600; color: #1f2937;">{{ cart.length }} productos</span>
+            </div>
+            <span style="font-weight: 700; font-size: 1.25rem; color: var(--color-brand-main);">${{ total.toFixed(2) }}</span>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke-width="2" 
+              stroke="currentColor" 
+              style="width: 20px; height: 20px; margin-left: 0.5rem; flex-shrink: 0; transition: transform 0.3s;"
+              :style="{ transform: isCartExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
+
+          <!-- Expanded State - Cart Items -->
+          <div 
+            v-if="isCartExpanded"
+            style="flex: 1; overflow-y: auto; padding: 0 1rem;"
+          >
+            <div v-if="cart.length === 0" style="padding: 1rem 0; text-align: center; color: #6b7280;">
+              <p>Agrega productos a la venta</p>
+            </div>
+
+            <div v-else style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem 0;">
+              <div 
+                v-for="item in cart" 
+                :key="item.id" 
+                style="display: flex; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; align-items: start;"
+              >
+                <!-- Product Image -->
+                <div style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #f3f4f6;">
+                  <img 
+                    v-if="item.image_url" 
+                    :src="item.image_url" 
+                    :alt="item.name"
+                    style="width: 100%; height: 100%; object-fit: cover;"
+                  >
+                  <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <PhotoIcon style="width: 24px; height: 24px; color: #9ca3af;" />
+                  </div>
+                </div>
+
+                <!-- Product Info -->
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-weight: 600; color: #1f2937; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</p>
+                  <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">${{ Number(item.price).toFixed(2) }} c/u</p>
+                </div>
+
+                <!-- Quantity Controls -->
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; border-radius: 6px; padding: 0.25rem;">
+                  <button 
+                    @click="updateQuantity(item.id, -1)"
+                    style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                  >
+                    −
+                  </button>
+                  <span style="width: 32px; text-align: center; font-weight: 600; color: #1f2937;">{{ item.quantity }}</span>
+                  <button 
+                    @click="updateQuantity(item.id, 1)"
+                    style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <!-- Subtotal -->
+                <div style="text-align: right; flex-shrink: 0;">
+                  <p style="font-weight: 700; color: var(--color-brand-main); margin: 0;">${{ (Number(item.price) * item.quantity).toFixed(2) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Checkout Button - Always Visible -->
+          <div v-if="isCartExpanded" style="padding: 1rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;">
+            <AppButton
+              class="btn-checkout"
+              variant="fill"
+              fullWidth
+              :disabled="cart.length === 0"
+              :loading="isSubmitting"
+              @click="handleCheckout"
+            >
+              FINALIZAR VENTA
+            </AppButton>
+          </div>
+          <div v-else style="padding: 0.75rem 1rem; flex-shrink: 0;">
+            <AppButton
+              class="btn-checkout"
+              variant="fill"
+              fullWidth
+              :disabled="cart.length === 0"
+              :loading="isSubmitting"
+              @click="handleCheckout"
+              style="font-size: 0.875rem; padding: 0.625rem;"
+            >
+              FINALIZAR VENTA
+            </AppButton>
+          </div>
+        </div>
+      </div>
+
+      <div v-else style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+         <div class="warning-icon-bg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-orange-500">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+         </div>
+         <h2 class="text-2xl font-bold mt-4">Caja Cerrada</h2>
+         <p class="text-gray-500 max-w-sm mt-2">Para poder realizar ventas, primero debes abrir tu turno y registrar tu fondo de caja inicial.</p>
+         <button class="btn-checkout mt-6" style="padding: 1rem 2rem; border-radius: 8px; background: var(--color-brand-main); color: white; cursor: pointer; border: none; font-weight: bold;" @click="goToShifts">
+            Ir a Abrir Turno
+         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner Overlay para SalesModal - FULLSCREEN en móvil/tablet -->
+  <Transition v-if="isMobileOrTablet" name="fade">
+    <div v-if="isScanning" style="position: fixed; inset: 0; background: white; z-index: 1050; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch;">
+      <!-- Header -->
+      <div style="padding: 1rem; background: #f3f4f6; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
+        <h3 style="font-weight: 600; font-size: 1.25rem; margin: 0;">{{ scannerMode === 'continuous' ? 'Escaneo Fijo' : 'Escanear' }}</h3>
+        <button @click="isScanning = false" style="background: none; border: none; padding: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+          <XMarkIcon class="icon" style="width:24px; height:24px;" />
+        </button>
+      </div>
+
+      <!-- Camera Area (fullscreen) -->
+      <div style="flex: 1; overflow: hidden; position: relative; background: #000;">
+        <qrcode-stream 
+          :key="scannerResetKey"
+          @detect="onDecodeSku"
+          @error="onError"
+          :formats="barcodeFormats"
+          :track="paintOutline"
+        ></qrcode-stream>
+        <div class="scanner-laser"></div>
+        
+        <!-- Cooldown Overlay para Continuous Mode -->
+        <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 12px; backdrop-filter: blur(3px); z-index: 10;">
+          <div style="text-align: center; color: white;">
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
+            <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
+            <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el próximo producto</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding: 1.5rem; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0 0 1rem 0;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
+        <button @click="isScanning = false" style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
+          {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
+        </button>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Scanner Modal para SalesModal - MODAL en desktop -->
+  <Transition v-else name="fade">
     <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
        <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
          <h3 style="font-weight: 600; font-size: 1.25rem;">{{ scannerMode === 'continuous' ? 'Escaneo Fijo' : 'Escanear Producto' }}</h3>
          <p v-if="scannerMode === 'continuous'" style="font-size: 0.875rem; color: #6b7280; text-align: center;">Lecturas continuas sin cerrar</p>
          <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000; position: relative;">
            <qrcode-stream 
+             :key="scannerResetKey"
              @detect="onDecodeSku"
              @error="onError"
              :formats="barcodeFormats"
@@ -316,6 +587,16 @@ const isScanning = computed({
 const scannerMode = computed(() => salesStore.scannerMode);
 
 const scanCooldownActive = ref(false); // Cooldown visual para continuous mode
+const scannerResetKey = ref(0); // Key para remount del escáner
+
+// Detectar si es móvil o tablet (viewport menor a 1024px)
+const isMobileOrTablet = ref(false);
+const checkDeviceSize = () => {
+  isMobileOrTablet.value = window.innerWidth < 1024;
+};
+
+// Carrito colapsable en móvil/tablet
+const isCartExpanded = ref(false);
 
 const barcodeFormats = ref<any[]>([
   'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
@@ -373,6 +654,8 @@ const onDecodeSku = (detectedCodes: any[]) => {
       scanCooldownActive.value = true;
       setTimeout(() => {
         scanCooldownActive.value = false;
+        // Reiniciar el componente del escáner cuando termina el cooldown
+        scannerResetKey.value++;
       }, 2000);
     }
     
@@ -622,6 +905,10 @@ onMounted(async () => {
     isInitializing.value = false;
   }
 
+  // Detectar tamaño del dispositivo
+  checkDeviceSize();
+  window.addEventListener('resize', checkDeviceSize);
+
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
@@ -731,6 +1018,7 @@ onUnmounted(() => {
     pusher.unsubscribe(channelName);
     pusher.disconnect();
   }
+  window.removeEventListener('resize', checkDeviceSize);
 });
 </script>
 
