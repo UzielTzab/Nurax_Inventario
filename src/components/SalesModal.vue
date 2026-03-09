@@ -197,7 +197,8 @@
   <Transition name="fade">
     <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
        <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-         <h3 style="font-weight: 600; font-size: 1.25rem;">Escanear Producto</h3>
+         <h3 style="font-weight: 600; font-size: 1.25rem;">{{ scannerMode === 'continuous' ? 'Escaneo Fijo' : 'Escanear Producto' }}</h3>
+         <p v-if="scannerMode === 'continuous'" style="font-size: 0.875rem; color: #6b7280; text-align: center;">Lecturas continuas sin cerrar</p>
          <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000; position: relative;">
            <qrcode-stream 
              @detect="onDecodeSku"
@@ -209,7 +210,8 @@
          </div>
          <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">Apunta usando la cámara de tu dispositivo</p>
          <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-           <XMarkIcon class="icon" style="width:20px; height:20px;" /> Cancelar
+           <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
+           {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
          </button>
        </div>
     </div>
@@ -302,6 +304,8 @@ const isScanning = computed({
   set: (val) => { salesStore.isScannerOpen = val; }
 });
 
+const scannerMode = computed(() => salesStore.scannerMode);
+
 const barcodeFormats = ref<any[]>([
   'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
 ]);
@@ -343,7 +347,13 @@ const handleScanSubmit = () => {
 const onDecodeSku = (detectedCodes: any[]) => {
   if (detectedCodes.length > 0) {
     const sku = detectedCodes[0].rawValue;
-    isScanning.value = false;
+    
+    // En modo single: detener cámara
+    // En modo continuous: seguir escaneando
+    if (scannerMode.value === 'single') {
+      isScanning.value = false;
+    }
+    
     processScan(sku);
   }
 };
@@ -364,12 +374,18 @@ const processScan = async (sku: string) => {
     if (productFound) {
       const audio = new Audio('/sounds/Fx_Scanning.wav');
       audio.play().catch(e => console.error(e));
-      addToCart(productFound);
-      searchQuery.value = '';
       
-      // Bloquear pusheo local rebotado por 1 segundo
+      // Bloquear pusheo local rebotado por 3 segundos antes de agregar
       isLocalScan = true;
-      setTimeout(() => isLocalScan = false, 1000);
+      addToCart(productFound);
+      
+      // En modo continuo: mantener searchQuery para evitar la búsqueda manual
+      // En modo single: limpiar searchQuery
+      if (scannerMode.value !== 'continuous') {
+        searchQuery.value = '';
+      }
+      
+      setTimeout(() => isLocalScan = false, 3000);
 
       // Opcional: avisar a otras pestañas (notificación silenciosa)
       apiClient.post<any>('/products/scan/', { sku: productFound.sku }).catch(() => {});

@@ -198,6 +198,7 @@ export const useSalesStore = defineStore('sales', () => {
 
   const isModalOpen = ref(false);
   const isScannerOpen = ref(false);
+  const scannerMode = ref<'single' | 'continuous'>('single');  // Nuevo: rastrear el modo de escaneo
 
   const openModal = () => {
     isModalOpen.value = true;
@@ -206,11 +207,19 @@ export const useSalesStore = defineStore('sales', () => {
   const openScanner = () => {
     isModalOpen.value = true;
     isScannerOpen.value = true;
+    scannerMode.value = 'single';
+  };
+
+  const openContinuousScanner = () => {
+    isModalOpen.value = true;
+    isScannerOpen.value = true;
+    scannerMode.value = 'continuous';
   };
 
   const closeModal = () => {
     isModalOpen.value = false;
     isScannerOpen.value = false;
+    scannerMode.value = 'single';
   };
 
   return {
@@ -220,6 +229,7 @@ export const useSalesStore = defineStore('sales', () => {
     error,
     isModalOpen,
     isScannerOpen,
+    scannerMode,  // Nuevo: exportar modo de escaneo
 
     // Methods
     fetchSales,
@@ -229,6 +239,7 @@ export const useSalesStore = defineStore('sales', () => {
     addPayment,
     openModal,
     openScanner,
+    openContinuousScanner,  // Nuevo: abrir escaneo en modo continuo
     closeModal,
 
     // Computed
