@@ -51,16 +51,16 @@
 
           <div class="card-meta">
             <div class="meta-item">
-              <span class="meta-label">SKU</span>
-              <span class="meta-value">{{ product.sku }}</span>
-            </div>
-            <div class="meta-item">
               <span class="meta-label">Precio</span>
               <span class="meta-value price-val">${{ formatPrice(product.price) }}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Stock</span>
               <span class="meta-value" :class="{ 'stock-zero': product.stock === 0, 'stock-low': product.stock > 0 && product.stock <= 10 }">{{ product.stock }}</span>
+            </div>
+            <div class="meta-item meta-sku">
+              <span class="meta-label">SKU</span>
+              <span class="meta-value">{{ product.sku }}</span>
             </div>
           </div>
 
@@ -138,23 +138,31 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .card-grid-inner {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
+  gap: 0.5rem;
+  padding: 1.5rem;
 }
 
 /* ── Card ── */
 .product-card {
-  background: var(--color-card-fill);
-  border: 1px solid var(--color-card-border);
-  border-radius: 18px;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 22px;
   overflow: hidden;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 16px -5px rgba(34, 125, 82, 0.06), 0 2px 6px -2px rgba(0,0,0,0.04);
+  min-height: 380px;
+  width: 80%;
 }
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px -6px rgba(0,0,0,0.1), 0 4px 10px -4px rgba(0,0,0,0.06);
+  box-shadow: 0 24px 48px -12px rgba(34, 125, 82, 0.12), 0 8px 20px -8px rgba(0,0,0,0.08);
+  transform: translateY(-8px);
+  border-color: #16a34a;
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.12), 0 8px 16px -6px rgba(0,0,0,0.08);
 }
 .card-out-of-stock { border-color: var(--color-card-border); background: #fef5f5; }
 
@@ -162,43 +170,45 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .card-image-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/10;
-  background: #f3f4f6;
+  aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   overflow: hidden;
+  border-bottom: 2px solid #227d52;
 }
 .card-image { width: 100%; height: 100%; object-fit: cover; }
 .card-image-empty {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
-.card-empty-icon { width: 40px; height: 40px; color: #c7ccd4; }
+.card-empty-icon { width: 44px; height: 44px; color: #16a34a; }
 .card-status-badge { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.7rem; }
 
 /* ── Body ── */
-.card-body { padding: 1rem 1.125rem 1.125rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+.card-body { padding: 1.25rem 1.25rem 1.375rem; flex: 1; display: flex; flex-direction: column; gap: 0.875rem; }
 .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
 .card-titles { min-width: 0; }
-.card-name { font-size: 0.9375rem; font-weight: 700; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-category { font-size: 0.8rem; color: #9ca3af; }
+.card-name { font-size: 0.95rem; font-weight: 800; color: #06402B; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.5px 1px rgba(6, 64, 43, 0.08); }
+.card-category { font-size: 0.75rem; color: var(--color-text-secondary); font-weight: 500; }
 
 /* ── Meta grid ── */
-.card-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #f3f4f6; }
-.meta-item { display: flex; flex-direction: column; gap: 0.15rem; }
-.meta-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #9ca3af; }
-.meta-value { font-size: 0.875rem; font-weight: 600; color: #111827; }
-.price-val { color: var(--color-brand-main); }
-.stock-zero { color: #ef4444; }
-.stock-low { color: #f97316; }
+.card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; padding-top: 0.625rem; border-top: 1.5px solid #f0fdf4; }
+.meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+.meta-sku { grid-column: 1 / -1; padding-top: 0.375rem; border-top: 1.5px solid #f0fdf4; margin-top: 0.375rem; }
+.meta-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.45px; color: #06402B; }
+.meta-value { font-size: 0.875rem; font-weight: 700; color: var(--color-text-main); }
+.price-val { color: #227d52; font-size: 0.95rem; font-weight: 800; }
+.stock-zero { color: #dc2626; }
+.stock-low { color: #ea580c; }
 
 /* ── Restock button ── */
 .btn-restock-card {
   display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-  padding: 0.5rem; border-radius: 10px;
-  background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a;
-  font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.18s;
+  padding: 0.55rem 0.65rem; border-radius: 11px;
+  background: #f0fdf4; border: 1.5px solid #16a34a; color: #16a34a;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
 }
-.btn-restock-card:hover { background: #dcfce7; border-color: #16a34a; }
+.btn-restock-card:hover { background: #dcfce7; border-color: #15803d; color: #15803d; }
 .restock-icon { width: 15px; height: 15px; }
 
 /* ── Dots menu ── */
@@ -241,18 +251,29 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 
 @media (max-width: 768px) {
   .card-grid-inner { 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 0.75rem; 
-    padding: 0.75rem; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 0.9rem; 
+    padding: 1.2rem; 
   }
+  .product-card { min-height: 360px; }
+  .card-name { font-size: 0.85rem; }
+  .card-category { font-size: 0.7rem; }
+  .card-body { padding: 1rem 1rem 1.15rem; gap: 0.65rem; }
+  .card-meta { gap: 0.4rem; }
+  .meta-label { font-size: 0.6rem; }
+  .meta-value { font-size: 0.8rem; }
+  .restock-icon { width: 13px; height: 13px; }
+  .btn-restock-card { font-size: 0.75rem; padding: 0.4rem 0.5rem; }
+  .card-status-badge { font-size: 0.6rem; padding: 0.15rem 0.35rem; }
+}
+
+@media (max-width: 640px) {
+  .card-grid-inner { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 0.8rem; 
+    padding: 1rem; 
+  }
+  .product-card { min-height: 340px; }
   .card-name { font-size: 0.8rem; }
-  .card-category { font-size: 0.65rem; }
-  .card-body { padding: 0.75rem; gap: 0.5rem; }
-  .card-meta { gap: 0.25rem; }
-  .meta-label { font-size: 0.55rem; letter-spacing: 0; }
-  .meta-value { font-size: 0.75rem; }
-  .restock-icon { width: 12px; height: 12px; }
-  .btn-restock-card { font-size: 0.7rem; padding: 0.35rem; }
-  .card-status-badge { font-size: 0.55rem; padding: 0.1rem 0.3rem; }
 }
 </style>

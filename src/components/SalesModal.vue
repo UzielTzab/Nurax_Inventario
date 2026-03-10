@@ -835,6 +835,7 @@ const handleCheckout = async () => {
     user: currentUser.value?.id || 1, // Se extrae del auth store
     status: 'completed',
     total: lastTotal.value,
+    device_id: localDeviceId, // Incluir device_id para identificar quién hizo la venta
     items: cart.value.map(item => ({ 
         product: Number(item.id),
         quantity: item.quantity,
@@ -986,30 +987,47 @@ onMounted(async () => {
 
   // Evento: SALES_COMPLETED
   // Enviado por backend cuando otra sesión completa una venta
-  // Contenido: transaction_id, total, items_count, timestamp
+  // Contenido: transaction_id, total, items_count, timestamp, device_id
   channel.bind('SALES_COMPLETED', (data: any) => {
-    console.log("[SalesModal] Venta completada en otro dispositivo:", data);
-    // Actualizar la página de historial de ventas si está abierta
-    // Aquí podrías emitir un evento para actualizar SalesHistory
-    enqueueSnackbar({
-      type: 'info',
-      title: 'Venta Completada en Otro Dispositivo',
-      message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
-      duration: 4000
-    });
+    console.log("[SalesModal] Venta completada:", data);
+    
+    // Solo mostrar snackbar si la venta fue de OTRA sesión (diferente device_id)
+    if (data.device_id && data.device_id !== localDeviceId && data.device_id !== 'server-action') {
+      //"device_id es diferente, significa que es de otra sesión
+      enqueueSnackbar({
+        type: 'info',
+        title: 'Venta Completada desde Otra Sesión',
+        message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
+        duration: 4000
+      });
+    } else if (data.device_id === 'server-action') {
+      // Acción desde el servidor (adminitrador completando venta)
+      enqueueSnackbar({
+        type: 'info',
+        title: 'Venta Completada desde Servidor',
+        message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
+        duration: 4000
+      });
+    }
+    // Si device_id === localDeviceId, NO mostrar (fue esta sesión la que la hizo)
   });
 
   // Evento: SALES_CANCELLED
   // Enviado por backend cuando una venta se cancela
-  // Contenido: transaction_id, items_count, timestamp
+  // Contenido: transaction_id, timestamp, device_id
   channel.bind('SALES_CANCELLED', (data: any) => {
-    console.log("[SalesModal] Venta cancelada en otro dispositivo:", data);
-    enqueueSnackbar({
-      type: 'warning',
-      title: 'Venta Cancelada en Otro Dispositivo',
-      message: `Transacción: ${data.transaction_id}`,
-      duration: 4000
-    });
+    console.log("[SalesModal] Venta cancelada:", data);
+    
+    // Solo mostrar snackbar si la cancelación fue de OTRA sesión
+    if (data.device_id && data.device_id !== localDeviceId) {
+      enqueueSnackbar({
+        type: 'warning',
+        title: 'Venta Cancelada desde Otra Sesión',
+        message: `Transacción: ${data.transaction_id}`,
+        duration: 4000
+      });
+    }
+    // Si device_id === localDeviceId, NO mostrar (fue esta sesión la que la canceló)
   });
 });
 

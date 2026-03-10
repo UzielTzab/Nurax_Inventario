@@ -251,10 +251,89 @@
                   placeholder="correo@empresa.com"
                 />
               </div>
+
+              <!-- Divider for password section -->
+              <div style="margin: 1.5rem 0; border-top: 1px solid #e5e7eb;"></div>
+              
+              <!-- Change Password Section -->
+              <div class="pm-password-section">
+                <button 
+                  class="pm-password-header"
+                  @click="showPasswordSection = !showPasswordSection"
+                  type="button"
+                >
+                  <div class="pm-password-header-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="pm-password-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <span class="pm-password-label">Cambiar contraseña</span>
+                  </div>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke-width="2" 
+                    stroke="currentColor"
+                    class="pm-password-chevron"
+                    :class="{ 'pm-password-chevron-open': showPasswordSection }"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+
+                <div v-if="showPasswordSection" class="pm-password-fields">
+                  <div class="pm-field">
+                    <AppInput
+                      v-model="passwordForm.current"
+                      type="password"
+                      label="Contraseña actual"
+                      placeholder="Ingresa tu contraseña actual"
+                    />
+                  </div>
+                  <div class="pm-field">
+                    <AppInput
+                      v-model="passwordForm.new"
+                      type="password"
+                      label="Nueva contraseña"
+                      placeholder="Mínimo 8 caracteres, incluye mayúscula y número"
+                    />
+                    <p v-if="passwordValidationError" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
+                      {{ passwordValidationError }}
+                    </p>
+                  </div>
+                  <div class="pm-field">
+                    <AppInput
+                      v-model="passwordForm.confirm"
+                      type="password"
+                      label="Confirmar nueva contraseña"
+                      placeholder="Repite tu nueva contraseña"
+                    />
+                    <p v-if="passwordForm.confirm && passwordForm.new !== passwordForm.confirm" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
+                      Las contraseñas no coinciden
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="pm-footer">
-              <AppButton variant="outline" @click="showProfileEdit = false" :disabled="isSavingProfile">Cancelar</AppButton>
-              <AppButton variant="fill" @click="saveProfile" :loading="isSavingProfile">Guardar cambios</AppButton>
+              <AppButton variant="outline" @click="showProfileEdit = false" :disabled="isSavingProfile || isChangingPassword">Cancelar</AppButton>
+              <AppButton 
+                v-if="showPasswordSection" 
+                variant="fill" 
+                @click="changePassword" 
+                :loading="isChangingPassword"
+                :disabled="!passwordForm.current || !passwordForm.new || passwordForm.new !== passwordForm.confirm"
+              >
+                Cambiar contraseña
+              </AppButton>
+              <AppButton 
+                v-else
+                variant="fill" 
+                @click="saveProfile" 
+                :loading="isSavingProfile"
+              >
+                Guardar cambios
+              </AppButton>
             </div>
           </div>
         </div>
@@ -441,6 +520,7 @@ import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
 import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
+import apiClient from '@/services/api';
 import Pusher from 'pusher-js';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
@@ -677,10 +757,48 @@ const saveProfile = async () => {
       pendingRemovePhoto.value = false;
     }
 
-    // 3. Save name & email
-    if (currentUser.value) {
-      currentUser.value.name  = profileForm.name;
-      currentUser.value.email = profileForm.email;
+    // 3. Save name & email to backend
+    if (currentUser.value && (profileForm.name !== currentUser.value.name || profileForm.email !== currentUser.value.email)) {
+      try {
+        const response = await apiClient.patch<{ detail: string; success: boolean; user: any }>(
+          '/users/me/profile/',
+          {
+            name: profileForm.name,
+            email: profileForm.email
+          }
+        );
+        
+        if (response.success && response.data?.user) {
+          // Actualizar el usuario en el store con los datos del backend
+          if (currentUser.value) {
+            currentUser.value.name = response.data.user.name;
+            currentUser.value.email = response.data.user.email;
+          }
+          enqueueSnackbar({
+            type: 'success',
+            title: 'Perfil actualizado',
+            message: 'Tu nombre y email se guardaron correctamente.',
+            duration: 3000
+          });
+        } else {
+          enqueueSnackbar({
+            type: 'error',
+            title: 'Error al actualizar perfil',
+            message: response.error || 'No se pudo guardar los cambios.',
+            duration: 3500
+          });
+          return;
+        }
+      } catch (error: any) {
+        console.error('Error updating profile:', error);
+        enqueueSnackbar({
+          type: 'error',
+          title: 'Error de conexión',
+          message: 'No se pudo conectar al servidor para actualizar el perfil.',
+          duration: 3500
+        });
+        return;
+      }
     }
 
     showProfileEdit.value = false;
@@ -980,6 +1098,92 @@ const handleSaleReverted = async (saleId: string | number, items: { id: string |
 
 const handleSidebarQuickSell = () => {
   salesStore.openModal();
+};
+
+// ===== PASSWORD CHANGE =====
+const showPasswordSection = ref(false);
+const passwordForm = reactive({
+  current: '',
+  new: '',
+  confirm: ''
+});
+const isChangingPassword = ref(false);
+const passwordValidationError = ref('');
+
+const changePassword = async () => {
+  // Validar que no esté vacío
+  if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Campos requeridos',
+      message: 'Todos los campos de contraseña son obligatorios.',
+      duration: 3000
+    });
+    return;
+  }
+
+  // Validar que coincidan
+  if (passwordForm.new !== passwordForm.confirm) {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Contraseñas no coinciden',
+      message: 'Las contraseñas nuevas no coinciden.',
+      duration: 3000
+    });
+    return;
+  }
+
+  isChangingPassword.value = true;
+  try {
+    // Usar el apiClient que automáticamente maneja la URL base, JWT token, y errores
+    const response = await apiClient.patch<{ detail: string; success: boolean }>(
+      '/users/me/change-password/',
+      {
+        current_password: passwordForm.current,
+        new_password: passwordForm.new,
+        confirm_password: passwordForm.confirm
+      }
+    );
+
+    if (!response.success) {
+      const errorMessage = response.error || 'Error al cambiar la contraseña';
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage,
+        duration: 4000
+      });
+      return;
+    }
+
+    // Éxito
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Contraseña actualizada',
+      message: 'Tu contraseña fue cambiada exitosamente.',
+      duration: 3000
+    });
+
+    // Limpiar formulario
+    passwordForm.current = '';
+    passwordForm.new = '';
+    passwordForm.confirm = '';
+    passwordValidationError.value = '';
+    showPasswordSection.value = false;
+
+    // Cerrar modal
+    showProfileEdit.value = false;
+  } catch (error: any) {
+    console.error('Error changing password:', error);
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Error de conexión',
+      message: 'No se pudo conectar con el servidor para cambiar la contraseña.',
+      duration: 4000
+    });
+  } finally {
+    isChangingPassword.value = false;
+  }
 };
 
 defineEmits(['quickSell']);
@@ -1505,6 +1709,95 @@ defineEmits(['quickSell']);
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid #f3f4f6;
+}
+
+/* ===== PASSWORD CHANGE SECTION ===== */
+.pm-password-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pm-password-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #374151;
+  text-align: left;
+}
+
+.pm-password-header:hover {
+  border-color: #d1d5db;
+  background: #fafbfc;
+}
+
+.pm-password-header:focus {
+  outline: none;
+  border-color: var(--color-brand-main, #06402B);
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
+}
+
+.pm-password-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+}
+
+.pm-password-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #6b7280;
+  stroke-width: 2;
+}
+
+.pm-password-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.pm-password-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #9ca3af;
+  stroke-width: 2;
+  transition: transform 0.3s ease;
+}
+
+.pm-password-chevron-open {
+  transform: rotate(180deg);
+}
+
+.pm-password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .pm-btn-cancel {

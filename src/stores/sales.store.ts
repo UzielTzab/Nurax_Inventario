@@ -74,6 +74,7 @@ export const useSalesStore = defineStore('sales', () => {
     total: number | string;
     user: number;
     status: string;
+    device_id?: string;
   }) => {
     isLoading.value = true;
     error.value = null;
