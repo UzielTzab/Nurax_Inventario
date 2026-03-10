@@ -136,24 +136,25 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 
 <style scoped>
 .card-grid-inner {
+  background: var(--color-background-secondary);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0rem;
   padding: 1.5rem;
 }
 
 /* ── Card ── */
 .product-card {
-  background: white;
+  background: var(--color-card-stats-fill);
   border: 1.5px solid #e5e7eb;
-  border-radius: 22px;
+  border-radius: 24px;
   overflow: hidden;
   transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 16px -5px rgba(34, 125, 82, 0.06), 0 2px 6px -2px rgba(0,0,0,0.04);
   min-height: 380px;
-  width: 80%;
+  width: 90%;
 }
 .product-card:hover {
   box-shadow: 0 24px 48px -12px rgba(34, 125, 82, 0.12), 0 8px 20px -8px rgba(0,0,0,0.08);
@@ -170,10 +171,9 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .card-image-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 12/12;
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   overflow: hidden;
-  border-bottom: 2px solid #227d52;
 }
 .card-image { width: 100%; height: 100%; object-fit: cover; }
 .card-image-empty {
@@ -255,13 +255,14 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
     gap: 0.9rem; 
     padding: 1.2rem; 
   }
-  .product-card { min-height: 360px; }
+  .product-card { min-height: auto; width: 100%; }
   .card-name { font-size: 0.85rem; }
   .card-category { font-size: 0.7rem; }
-  .card-body { padding: 1rem 1rem 1.15rem; gap: 0.65rem; }
+  .card-body { padding: 1rem 1rem 0.875rem; gap: 0.65rem; }
   .card-meta { gap: 0.4rem; }
   .meta-label { font-size: 0.6rem; }
   .meta-value { font-size: 0.8rem; }
+  .meta-sku { margin-top: 0.25rem; padding-top: 0.25rem; }
   .restock-icon { width: 13px; height: 13px; }
   .btn-restock-card { font-size: 0.75rem; padding: 0.4rem 0.5rem; }
   .card-status-badge { font-size: 0.6rem; padding: 0.15rem 0.35rem; }
@@ -273,7 +274,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
     gap: 0.8rem; 
     padding: 1rem; 
   }
-  .product-card { min-height: 340px; }
+  .product-card { min-height: auto; width: 100%; }
   .card-name { font-size: 0.8rem; }
 }
 </style>
