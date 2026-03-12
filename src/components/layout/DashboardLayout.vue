@@ -180,11 +180,11 @@
     <!-- Profile Edit Modal -->
     <Teleport to="body">
       <transition name="modal-fade">
-        <div v-if="showProfileEdit" class="profile-modal-backdrop" @click.self="showProfileEdit = false">
+        <div v-if="showProfileEdit" class="profile-modal-backdrop" @click.self="closeProfileEdit">
           <div class="profile-modal">
             <div class="pm-header">
               <h3 class="pm-title">Editar perfil</h3>
-              <button class="pm-close" @click="showProfileEdit = false">
+              <button class="pm-close" @click="closeProfileEdit">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
@@ -259,7 +259,7 @@
               <div class="pm-password-section">
                 <button 
                   class="pm-password-header"
-                  @click="showPasswordSection = !showPasswordSection"
+                  @click="togglePasswordSection"
                   type="button"
                 >
                   <div class="pm-password-header-content">
@@ -288,18 +288,19 @@
                       type="password"
                       label="Contraseña actual"
                       placeholder="Ingresa tu contraseña actual"
+                      @input="passwordErrors.current = ''"
                     />
+                    <p v-if="passwordErrors.current" class="pm-field-error">{{ passwordErrors.current }}</p>
                   </div>
                   <div class="pm-field">
                     <AppInput
                       v-model="passwordForm.new"
                       type="password"
                       label="Nueva contraseña"
-                      placeholder="Mínimo 8 caracteres, incluye mayúscula y número"
+                      placeholder="Mín. 8 caracteres · 1 mayúscula · 1 número"
+                      @input="passwordErrors.new = ''"
                     />
-                    <p v-if="passwordValidationError" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
-                      {{ passwordValidationError }}
-                    </p>
+                    <p v-if="passwordErrors.new" class="pm-field-error">{{ passwordErrors.new }}</p>
                   </div>
                   <div class="pm-field">
                     <AppInput
@@ -307,10 +308,9 @@
                       type="password"
                       label="Confirmar nueva contraseña"
                       placeholder="Repite tu nueva contraseña"
+                      @input="passwordErrors.confirm = ''"
                     />
-                    <p v-if="passwordForm.confirm && passwordForm.new !== passwordForm.confirm" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
-                      Las contraseñas no coinciden
-                    </p>
+                    <p v-if="passwordErrors.confirm" class="pm-field-error">{{ passwordErrors.confirm }}</p>
                   </div>
                 </div>
               </div>
@@ -508,6 +508,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
+import { z } from 'zod';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import OpenShiftModal from '@/components/OpenShiftModal.vue';
@@ -588,6 +589,32 @@ const openProfileEdit = () => {
   pendingRemovePhoto.value  = false;
   showProfileMenu.value = false;
   showProfileEdit.value = true;
+};
+
+/** Cierra el modal y resetea el formulario + errores de contraseña */
+const closeProfileEdit = () => {
+  showProfileEdit.value = false;
+  showPasswordSection.value = false;
+  passwordForm.current = '';
+  passwordForm.new     = '';
+  passwordForm.confirm = '';
+  passwordErrors.current = '';
+  passwordErrors.new     = '';
+  passwordErrors.confirm = '';
+};
+
+/** Toggle de la sección de contraseña limpiando errores al plegar */
+const togglePasswordSection = () => {
+  showPasswordSection.value = !showPasswordSection.value;
+  if (!showPasswordSection.value) {
+    // Al cerrar, limpiar campos y errores
+    passwordForm.current = '';
+    passwordForm.new     = '';
+    passwordForm.confirm = '';
+    passwordErrors.current = '';
+    passwordErrors.new     = '';
+    passwordErrors.confirm = '';
+  }
 };
 
 // ── Profile photo ──────────────────────────────────────────
@@ -1108,76 +1135,116 @@ const passwordForm = reactive({
   confirm: ''
 });
 const isChangingPassword = ref(false);
-const passwordValidationError = ref('');
+
+/** Errores Zod por campo — se muestran en el template */
+const passwordErrors = reactive({
+  current: '',
+  new: '',
+  confirm: ''
+});
+
+/** Schema Zod para validar el formulario de contraseña antes de llamar al backend */
+const passwordSchema = z
+  .object({
+    current: z.string().min(1, 'La contraseña actual es obligatoria'),
+    new: z
+      .string()
+      .min(8, 'Debe tener al menos 8 caracteres')
+      .regex(/[A-Z]/, 'Debe incluir al menos una letra mayúscula')
+      .regex(/[0-9]/, 'Debe incluir al menos un número'),
+    confirm: z.string().min(1, 'Confirma tu nueva contraseña'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.new && data.current && data.new === data.current) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['new'],
+        message: 'La nueva contraseña no puede ser igual a la actual',
+      });
+    }
+    if (data.confirm && data.new !== data.confirm) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirm'],
+        message: 'Las contraseñas no coinciden',
+      });
+    }
+  });
+
+/**
+ * Valida el formulario con Zod y rellena passwordErrors.
+ * Devuelve true si todo es válido.
+ */
+const validatePasswordFields = (): boolean => {
+  // Limpiar errores previos
+  passwordErrors.current = '';
+  passwordErrors.new     = '';
+  passwordErrors.confirm = '';
+
+  const result = passwordSchema.safeParse({
+    current: passwordForm.current,
+    new    : passwordForm.new,
+    confirm: passwordForm.confirm,
+  });
+
+  if (!result.success) {
+    result.error.issues.forEach(issue => {
+      const field = issue.path[0] as 'current' | 'new' | 'confirm';
+      if (field in passwordErrors && !passwordErrors[field]) {
+        passwordErrors[field] = issue.message;
+      }
+    });
+    return false;
+  }
+
+  return true;
+};
 
 const changePassword = async () => {
-  // Validar que no esté vacío
-  if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
-    enqueueSnackbar({
-      type: 'error',
-      title: 'Campos requeridos',
-      message: 'Todos los campos de contraseña son obligatorios.',
-      duration: 3000
-    });
-    return;
-  }
-
-  // Validar que coincidan
-  if (passwordForm.new !== passwordForm.confirm) {
-    enqueueSnackbar({
-      type: 'error',
-      title: 'Contraseñas no coinciden',
-      message: 'Las contraseñas nuevas no coinciden.',
-      duration: 3000
-    });
-    return;
-  }
+  // Validar con Zod — si hay errores se muestran en el template y NO se llama al backend
+  if (!validatePasswordFields()) return;
 
   isChangingPassword.value = true;
   try {
-    // Usar el apiClient que automáticamente maneja la URL base, JWT token, y errores
     const response = await apiClient.patch<{ detail: string; success: boolean }>(
       '/users/me/change-password/',
       {
         current_password: passwordForm.current,
-        new_password: passwordForm.new,
+        new_password    : passwordForm.new,
         confirm_password: passwordForm.confirm
       }
     );
 
     if (!response.success) {
+      // El backend rechazó (ej. contraseña actual incorrecta); mostrarlo en el campo correcto
       const errorMessage = response.error || 'Error al cambiar la contraseña';
-      enqueueSnackbar({
-        type: 'error',
-        title: 'Error',
-        message: errorMessage,
-        duration: 4000
-      });
+      passwordErrors.current = errorMessage;
       return;
     }
 
     // Éxito
     enqueueSnackbar({
-      type: 'success',
-      title: 'Contraseña actualizada',
+      type   : 'success',
+      title  : 'Contraseña actualizada',
       message: 'Tu contraseña fue cambiada exitosamente.',
       duration: 3000
     });
 
     // Limpiar formulario
     passwordForm.current = '';
-    passwordForm.new = '';
+    passwordForm.new     = '';
     passwordForm.confirm = '';
-    passwordValidationError.value = '';
+    passwordErrors.current = '';
+    passwordErrors.new     = '';
+    passwordErrors.confirm = '';
     showPasswordSection.value = false;
 
-    // Cerrar modal
     showProfileEdit.value = false;
   } catch (error: any) {
     console.error('Error changing password:', error);
     enqueueSnackbar({
-      type: 'error',
-      title: 'Error de conexión',
+      type   : 'error',
+      title  : 'Error de conexión',
       message: 'No se pudo conectar con el servidor para cambiar la contraseña.',
       duration: 4000
     });
@@ -1787,6 +1854,22 @@ defineEmits(['quickSell']);
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   animation: slideDown 0.2s ease;
+}
+
+/* Error message shown below each password field */
+.pm-field-error {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #dc2626;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.pm-field-error::before {
+  content: '⚠';
+  font-size: 0.7rem;
 }
 
 @keyframes slideDown {

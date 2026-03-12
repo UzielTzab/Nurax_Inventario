@@ -10,7 +10,29 @@
       { 'app-button--icon-only': iconOnly }
     ]"
     @click="handleClick"
+    @mousedown="createRipple"
+    @touchstart.passive="createRipple"
+    @mouseup="endRipple"
+    @mouseleave="endRipple"
+    @touchend="endRipple"
+    @touchcancel="endRipple"
   >
+    <!-- Contenedor del Efecto Ripple (Ondas) -->
+    <span class="app-btn-ripple-container">
+      <span 
+        v-for="ripple in ripples" 
+        :key="ripple.id"
+        class="app-btn-ripple"
+        :class="{ 'app-btn-ripple--ending': ripple.ending }"
+        :style="{
+          left: ripple.x + 'px',
+          top: ripple.y + 'px',
+          width: ripple.size + 'px',
+          height: ripple.size + 'px'
+        }"
+      ></span>
+    </span>
+
     <!-- Spinner (visible only when loading) -->
     <span v-if="loading" class="app-btn-spinner" aria-hidden="true"></span>
 
@@ -24,7 +46,9 @@
         aria-hidden="true"
       />
       <!-- Slot: texto o contenido personalizado -->
-      <slot />
+      <span class="app-btn-text-slot">
+        <slot />
+      </span>
       <!-- Ícono derecho (después del texto) -->
       <component
         v-if="icon && iconPosition === 'right'"
@@ -37,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { Component } from 'vue';
 
 interface Props {
@@ -45,11 +70,8 @@ interface Props {
   disabled?:      boolean;
   fullWidth?:     boolean;
   loading?:       boolean;
-  /** Componente Heroicon a renderizar dentro del botón */
   icon?:          Component;
-  /** Posición del ícono respecto al texto. Default: 'left' */
   iconPosition?:  'left' | 'right';
-  /** true cuando el botón sólo tiene ícono (sin texto) — ajusta el padding */
   iconOnly?:      boolean;
 }
 
@@ -68,6 +90,59 @@ const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void;
 }>();
 
+// --- Lógica del Efecto Ripple (Estilo Material UI) ---
+interface Ripple {
+  x: number;
+  y: number;
+  size: number;
+  id: number;
+  ending: boolean;
+}
+
+const ripples = ref<Ripple[]>([]);
+let rippleIdCounter = 0;
+
+const createRipple = (event: MouseEvent | TouchEvent) => {
+  if (props.disabled || props.loading) return;
+
+  const button = event.currentTarget as HTMLElement;
+  const rect = button.getBoundingClientRect();
+  
+  let clientX = 0, clientY = 0;
+  if (window.TouchEvent && event instanceof TouchEvent) {
+    clientX = event.touches?.[0]?.clientX ?? 0;
+    clientY = event.touches?.[0]?.clientY ?? 0;
+  } else {
+    clientX = (event as MouseEvent).clientX;
+    clientY = (event as MouseEvent).clientY;
+  }
+
+  // Coordenadas relativas al botón
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  
+  // El tamaño se calcula basado en la diagonal más grande para que cubra todo el botón
+  const size = Math.max(rect.width, rect.height) * 2.5;
+  const id = rippleIdCounter++;
+  
+  // Se agrega el ripple con estado "ending: false" (creciendo y mantenido)
+  ripples.value.push({ x, y, size, id, ending: false });
+};
+
+const endRipple = () => {
+  if (ripples.value.length === 0) return;
+  
+  // Al soltar el click o salir del botón, marcamos el ripple para que inicie su fade-out (ending: true)
+  ripples.value.forEach(r => {
+    if (!r.ending) r.ending = true;
+  });
+
+  // Limpiamos la memoria después de que la animación CSS (500ms) se haya completado
+  setTimeout(() => {
+    ripples.value = ripples.value.filter(r => !r.ending);
+  }, 500);
+};
+
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event);
@@ -76,83 +151,163 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <style scoped>
-/* 
-  Botón Base - Configura aquí los valores compartidos
-*/
+/* Botón Base - Especificaciones Material Design + Estilo Nurax */
 .app-button {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  gap: 0.5rem;
+  
+  /* Tipografía Original */
   font-weight: 500;
-  font-size: 0.9375rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 30px;
-  outline: none;
-  white-space: nowrap;
-  transition: all 0.2s ease;
+  font-size: 0.9375rem; 
+  
+  /* Dimensiones & Forma */
+  padding: 0.5rem 1.375rem;
+  min-width: 64px;
+  border-radius: 30px; /* Mantenemos tu redondez actual de diseño */
+  border: 0;
+  outline: 0;
+  margin: 0;
   cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  appearance: none;
+  text-decoration: none;
   font-family: inherit;
-}
-
-/* Modificador: sólo ícono — padding cuadrado */
-.app-button--icon-only {
-  padding: 0.625rem;
+  overflow: hidden; /* Muy importante: esto esconde la honda para que no sobresalga del botón */
+  
+  /* Transiciones Material (Elevaciones y pseudo-estados) */
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, 
+              box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, 
+              border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, 
+              color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 }
 
 .app-button:disabled {
-  cursor: not-allowed;
+  cursor: default;
+  pointer-events: none;
 }
 
-/* Modificador: Ancho completo */
 .app-button--full-width {
   width: 100%;
 }
 
-/* 
-  Variante: Fill (Relleno sólido)
-*/
-.app-button--fill {
-  background: var(--color-brand-main-gradient, #06402B);
-  color: #ffffff;
-  border: 1px solid transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.app-button--icon-only {
+  padding: 0.5rem;
+  border-radius: 50%; /* Los icon-buttons en material son redondos */
+  min-width: unset;
 }
 
-.app-button--fill:hover:not(:disabled) {
-  background-color: #0a5c3a;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* Variante: Fill (MUI Contained Button adaptado) */
+.app-button--fill {
+  color: #fff;
+  background: var(--color-brand-main-gradient, #06402B);
+  /* MUI Elevation 2 (En reposo) */
+  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 
+              0px 2px 2px 0px rgba(0,0,0,0.14), 
+              0px 1px 5px 0px rgba(0,0,0,0.12);
+}
+
+/* Pseudo-overlay para estado Hover (porque no se transiciona bien un degradado css) */
+.app-button--fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.app-button--fill:hover::before {
+  /* Al hacer hover oscurecemos ligeramente todo simulando el brillo MUI */
+  background-color: rgba(0, 0, 0, 0.08); 
+}
+
+.app-button--fill:hover {
+  /* MUI Elevation 4 */
+  box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2), 
+              0px 4px 5px 0px rgba(0,0,0,0.14), 
+              0px 1px 10px 0px rgba(0,0,0,0.12);
+}
+
+.app-button--fill:active {
+  /* MUI Elevation 8 */
+  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 
+              0px 8px 10px 1px rgba(0,0,0,0.14), 
+              0px 3px 14px 2px rgba(0,0,0,0.12);
 }
 
 .app-button--fill:disabled {
-  background-color: #d1d5db;
-  color: #6b7280;
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
   box-shadow: none;
 }
 
-/* 
-  Variante: Outline (Solo contorno)
-*/
+/* Variante: Outline (MUI Outlined Button) */
 .app-button--outline {
-  background-color: transparent;
   color: var(--color-brand-main, #06402B);
-  border: 1px solid var(--color-brand-main);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background: transparent;
+  border: 1px solid rgba(6, 64, 43, 0.5);
 }
 
-.app-button--outline:hover:not(:disabled) {
+.app-button--outline:hover {
   border-color: var(--color-brand-main, #06402B);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: rgba(6, 64, 43, 0.04); /* Tinte verde súper ligero */
 }
 
 .app-button--outline:disabled {
-  background-color: #f9fafb;
-  color: #9ca3af;
-  border-color: #e5e7eb;
+  color: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: transparent;
 }
 
-/* ── Content span ── */
+
+/* ── Ondas (Ripple Effect) Animaciones ── */
+.app-btn-ripple-container {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0; /* Por debajo de textos e ínonos */
+}
+
+.app-btn-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor; /* Adopta blanco en Fill, verde en Outline */
+  opacity: 0.18; 
+  transform: translate(-50%, -50%) scale(0);
+  /* Animación inicial mientras dejas presionado */
+  animation: ripple-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.app-btn-ripple--ending {
+  /* Animación final cuando sueltas el click (se desvanece suave) */
+  animation: ripple-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, 
+             ripple-exit 0.5s ease-out forwards;
+}
+
+@keyframes ripple-enter {
+  to { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes ripple-exit {
+  to { opacity: 0; }
+}
+
+/* ── Content Elements (Sit above ripples and overlays) ── */
+.app-btn-content, .app-btn-spinner {
+  position: relative;
+  z-index: 2;
+}
+
 .app-btn-content {
   display: inline-flex;
   align-items: center;
@@ -161,24 +316,21 @@ const handleClick = (event: MouseEvent) => {
 
 .app-btn-content--hidden {
   visibility: hidden;
-  pointer-events: none;
 }
 
-/* ── Heroicon vía prop `icon` ── */
-.app-btn-icon {
-  width: 18px;
-  height: 18px;
+.app-btn-text-slot {
+  display: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+}
+
+.app-btn-icon, .app-button :deep(svg) {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
-/* SVGs pasados por slot (compatibilidad retroactiva con uso existente) */
-.app-button :deep(svg) {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-/* ── Loading state ── */
+/* ── Loading Spinner (MUI Circular Indeterminate adaptado) ── */
 .app-btn-spinner {
   position: absolute;
   inset: 0;
@@ -189,18 +341,13 @@ const handleClick = (event: MouseEvent) => {
 
 .app-btn-spinner::after {
   content: '';
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
   border-radius: 50%;
-  animation: btn-spin 0.6s linear infinite;
-}
-
-/* Outline variant spinner uses brand color */
-.app-button--outline .app-btn-spinner::after {
-  border-color: rgba(6, 64, 43, 0.25);
-  border-top-color: var(--color-brand-main, #06402B);
+  animation: btn-spin 0.75s linear infinite;
 }
 
 @keyframes btn-spin {
