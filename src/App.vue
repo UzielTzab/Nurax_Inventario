@@ -3,8 +3,7 @@ import SnackbarContainer from '@/components/common/SnackbarContainer.vue'
 import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import { useLoadingScreen } from '@/composables/useLoadingScreen'
 import { useAuth } from '@/composables/useAuth'
-import { RouterView } from 'vue-router'
-import { useRouter } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 
 const { isLoadingScreen, completeLoadingScreen } = useLoadingScreen()
 const { currentUser } = useAuth()
