@@ -296,88 +296,84 @@
           <!-- Collapsed/Header State -->
           <div 
             @click="isCartExpanded = !isCartExpanded"
-            style="padding: 1rem; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s;"
+            style="padding: 1.25rem 1rem 1rem; cursor: pointer; user-select: none; position: relative; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s;"
             :style="{ backgroundColor: isCartExpanded ? '#f3f4f6' : 'transparent' }"
           >
+            <!-- Modern Drag Handle -->
+            <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background-color: #d1d5db; border-radius: 99px;"></div>
+
             <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
               <ShoppingCartIcon style="width: 24px; height: 24px;" />
               <span style="font-weight: 600; color: #1f2937;">{{ cart.length }} productos</span>
             </div>
             <span style="font-weight: 700; font-size: 1.25rem; color: var(--color-brand-main);">${{ total.toFixed(2) }}</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke-width="2" 
-              stroke="currentColor" 
-              style="width: 20px; height: 20px; margin-left: 0.5rem; flex-shrink: 0; transition: transform 0.3s;"
-              :style="{ transform: isCartExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
           </div>
 
-          <!-- Expanded State - Cart Items -->
+          <!-- Expanded State - Cart Items & Checkout -->
           <div 
-            v-if="isCartExpanded"
-            style="flex: 1; overflow-y: auto; padding: 0 1rem;"
+            class="mobile-cart-drawer"
+            :class="{ 'is-expanded': isCartExpanded }"
           >
-            <div v-if="cart.length === 0" style="padding: 1rem 0; text-align: center; color: #6b7280;">
-              <p>Agrega productos a la venta</p>
-            </div>
+            <!-- Cart Items -->
+            <div style="flex: 1; overflow-y: auto; padding: 0 1rem;">
+              <div v-if="cart.length === 0" style="padding: 1rem 0; text-align: center; color: #6b7280;">
+                <p>Agrega productos a la venta</p>
+              </div>
 
-            <div v-else style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem 0;">
-              <div 
-                v-for="item in cart" 
-                :key="item.id" 
-                style="display: flex; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; align-items: start;"
-              >
-                <!-- Product Image -->
-                <div style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #f3f4f6;">
-                  <img 
-                    v-if="item.image_url" 
-                    :src="item.image_url" 
-                    :alt="item.name"
-                    style="width: 100%; height: 100%; object-fit: cover;"
-                  >
-                  <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <PhotoIcon style="width: 24px; height: 24px; color: #9ca3af;" />
+              <div v-else style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem 0;">
+                <div 
+                  v-for="item in cart" 
+                  :key="item.id" 
+                  style="display: flex; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; align-items: start;"
+                >
+                  <!-- Product Image -->
+                  <div style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #f3f4f6;">
+                    <img 
+                      v-if="item.image_url" 
+                      :src="item.image_url" 
+                      :alt="item.name"
+                      style="width: 100%; height: 100%; object-fit: cover;"
+                    >
+                    <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                      <PhotoIcon style="width: 24px; height: 24px; color: #9ca3af;" />
+                    </div>
                   </div>
-                </div>
 
-                <!-- Product Info -->
-                <div style="flex: 1; min-width: 0;">
-                  <p style="font-weight: 600; color: #1f2937; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</p>
-                  <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">${{ Number(item.price).toFixed(2) }} c/u</p>
-                </div>
+                  <!-- Product Info -->
+                  <div style="flex: 1; min-width: 0;">
+                    <p style="font-weight: 600; color: #1f2937; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</p>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">${{ Number(item.price).toFixed(2) }} c/u</p>
+                  </div>
 
-                <!-- Quantity Controls -->
-                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; border-radius: 6px; padding: 0.25rem;">
-                  <button 
-                    @click="updateQuantity(item.id, -1)"
-                    style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
-                  >
-                    −
-                  </button>
-                  <span style="width: 32px; text-align: center; font-weight: 600; color: #1f2937;">{{ item.quantity }}</span>
-                  <button 
-                    @click="updateQuantity(item.id, 1)"
-                    style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
-                  >
-                    +
-                  </button>
-                </div>
+                  <!-- Quantity Controls -->
+                  <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; border-radius: 6px; padding: 0.25rem;">
+                    <button 
+                      @click="updateQuantity(item.id, -1)"
+                      style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                    >
+                      −
+                    </button>
+                    <span style="width: 32px; text-align: center; font-weight: 600; color: #1f2937;">{{ item.quantity }}</span>
+                    <button 
+                      @click="updateQuantity(item.id, 1)"
+                      style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                    >
+                      +
+                    </button>
+                  </div>
 
-                <!-- Subtotal -->
-                <div style="text-align: right; flex-shrink: 0;">
-                  <p style="font-weight: 700; color: var(--color-brand-main); margin: 0;">${{ (Number(item.price) * item.quantity).toFixed(2) }}</p>
+                  <!-- Subtotal -->
+                  <div style="text-align: right; flex-shrink: 0;">
+                    <p style="font-weight: 700; color: var(--color-brand-main); margin: 0;">${{ (Number(item.price) * item.quantity).toFixed(2) }}</p>
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
 
           <!-- Checkout Button - Always Visible -->
-          <div v-if="isCartExpanded" style="padding: 1rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;">
+          <div style="padding: 1rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;">
             <AppButton
               class="btn-checkout"
               variant="fill"
@@ -385,19 +381,6 @@
               :disabled="cart.length === 0"
               :loading="isSubmitting"
               @click="handleCheckout"
-            >
-              FINALIZAR VENTA
-            </AppButton>
-          </div>
-          <div v-else style="padding: 0.75rem 1rem; flex-shrink: 0;">
-            <AppButton
-              class="btn-checkout"
-              variant="fill"
-              fullWidth
-              :disabled="cart.length === 0"
-              :loading="isSubmitting"
-              @click="handleCheckout"
-              style="font-size: 0.875rem; padding: 0.625rem;"
             >
               FINALIZAR VENTA
             </AppButton>
@@ -1892,5 +1875,17 @@ onUnmounted(() => {
   10% { opacity: 1; }
   90% { opacity: 1; }
   100% { top: 100%; opacity: 0; }
+}
+
+/* Drawer Animations */
+.mobile-cart-drawer {
+  display: flex;
+  flex-direction: column;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mobile-cart-drawer.is-expanded {
+  max-height: 70vh; /* max possible height */
 }
 </style>
