@@ -2,37 +2,121 @@
   <div class="login-container">
     <!-- Lado Izquierdo: Branding -->
     <div class="branding-section">
-      <!-- Decorative blobs -->
+      <!-- Blobs de fondo -->
       <div class="blob blob-top-left"></div>
+      <div class="blob blob-mid"></div>
       <div class="blob blob-bottom-right"></div>
 
-      <div class="branding-content" data-aos="fade-right" data-aos-delay="100">
-        <!-- Character illustration -->
-        <div class="character-wrapper" data-aos="fade-up" data-aos-delay="200">
-          <img
-            src="/images/feature_inventory.png"
-            alt="Personaje trabajando"
-            class="character-image"
-            @error="onImgError"
-          />
-          <!-- Fallback SVG si no carga la imagen -->
-          <div v-if="imgError" class="character-placeholder">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
-              <!-- Simplified desk+person SVG fallback -->
-              <rect x="40" y="130" width="120" height="8" rx="4" fill="#a5b4a0"/>
-              <rect x="55" y="100" width="90" height="65" rx="6" fill="#4a7c59"/>
-              <rect x="60" y="106" width="80" height="50" rx="3" fill="#6fb08b"/>
-              <ellipse cx="100" cy="88" rx="20" ry="20" fill="#f5c5a3"/>
-              <rect x="80" y="108" width="40" height="28" rx="4" fill="#e07b54"/>
-            </svg>
+      <!-- Grid de puntos decorativo -->
+      <div class="dot-grid"></div>
+
+      <!-- Forma geométrica decorativa -->
+      <div class="geo-ring geo-ring-1"></div>
+      <div class="geo-ring geo-ring-2"></div>
+
+      <div class="branding-content">
+
+        <!-- Badge superior -->
+        <div class="trust-badge" data-aos="fade-down" data-aos-delay="100">
+          <span class="trust-dot"></span>
+          <span>Plataforma certificada &amp; segura</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="badge-shield">
+            <path fill-rule="evenodd" d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.589 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.563 2 12.162 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.749Z" clip-rule="evenodd" />
+          </svg>
+        </div>
+
+        <!-- Imagen con glow y tarjetas flotantes -->
+        <div class="image-stage" data-aos="fade-up" data-aos-delay="180">
+          <!-- Glow de fondo de imagen -->
+          <div class="image-glow"></div>
+
+          <!-- Imagen principal -->
+          <div class="character-wrapper">
+            <img
+              src="/images/feature_inventory.png"
+              alt="Personaje trabajando"
+              class="character-image"
+              @error="onImgError"
+            />
+            <div v-if="imgError" class="character-placeholder">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+                <rect x="40" y="130" width="120" height="8" rx="4" fill="#a5b4a0"/>
+                <rect x="55" y="100" width="90" height="65" rx="6" fill="#4a7c59"/>
+                <rect x="60" y="106" width="80" height="50" rx="3" fill="#6fb08b"/>
+                <ellipse cx="100" cy="88" rx="20" ry="20" fill="#f5c5a3"/>
+                <rect x="80" y="108" width="40" height="28" rx="4" fill="#e07b54"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Tarjeta flotante: Ventas del día -->
+          <div class="stat-card stat-card-tl" data-aos="fade-right" data-aos-delay="400">
+            <div class="stat-icon-wrap stat-green">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12 2a1 1 0 0 1 .967.744L14.146 7H17a1 1 0 0 1 .917 1.4l-1.5 3.5a1 1 0 0 1-.917.6H9a1 1 0 0 1-.917-.6l-1.5-3.5A1 1 0 0 1 7.5 7H10.5l1.287-4.256A1 1 0 0 1 12 2ZM6.5 13.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm8.5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value">+248</span>
+              <span class="stat-label">Ventas hoy</span>
+            </div>
+            <span class="stat-trend">↑ 12%</span>
+          </div>
+
+          <!-- Tarjeta flotante: Stock actualizado -->
+          <div class="stat-card stat-card-br" data-aos="fade-left" data-aos-delay="500">
+            <div class="stat-icon-wrap stat-teal">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z" />
+                <path fill-rule="evenodd" d="M2 7.5h16l-.811 7.71a2 2 0 0 1-1.99 1.79H4.802a2 2 0 0 1-1.99-1.79L2 7.5ZM7 11a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value">1,840</span>
+              <span class="stat-label">Productos activos</span>
+            </div>
+          </div>
+
+          <!-- Pill de uptime -->
+          <div class="uptime-pill" data-aos="zoom-in" data-aos-delay="600">
+            <span class="uptime-dot"></span> 99.9% uptime
           </div>
         </div>
 
-        <!-- Textos -->
-        <div class="hero-text" data-aos="fade-up" data-aos-delay="350">
-          <h1 class="hero-title">Gestión Inteligente</h1>
+        <!-- Textos hero -->
+        <div class="hero-text" data-aos="fade-up" data-aos-delay="320">
+          <h1 class="hero-title">
+            Gestión
+            <span class="hero-title-highlight">Inteligente</span>
+          </h1>
           <p class="hero-description">Administra tu inventario y ventas con la potencia de Nurax.</p>
         </div>
+
+        <!-- Strip de features -->
+        <div class="features-strip" data-aos="fade-up" data-aos-delay="420">
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+            </svg>
+            <span>Control en tiempo real</span>
+          </div>
+          <div class="feature-divider"></div>
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+              <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+            </svg>
+            <span>Reportes visuales</span>
+          </div>
+          <div class="feature-divider"></div>
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
+            </svg>
+            <span>Multi-usuario seguro</span>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -295,66 +379,184 @@ const handleLogin = async () => {
    LADO IZQUIERDO - BRANDING
    ============================================= */
 .branding-section {
-  background: linear-gradient(160deg, #e8f5ef 0%, #c8e8d8 40%, #d4edd9 70%, #e0f0e5 100%);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-brand-secondary) 90%, #000) 0%, color-mix(in srgb, var(--color-brand-secondary) 80%, #000) 30%, color-mix(in srgb, var(--color-brand-main) 60%, var(--color-brand-secondary)) 60%, color-mix(in srgb, var(--color-brand-secondary) 85%, #000) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 2.5rem 2.5rem;
   position: relative;
   overflow: hidden;
+}
+
+/* Grid de puntos decorativo */
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--color-brand-main) 30%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Anillos geométricos decorativos */
+.geo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-brand-main) 15%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.geo-ring-1 {
+  width: 420px;
+  height: 420px;
+  top: -100px;
+  right: -100px;
+  border-color: color-mix(in srgb, var(--color-brand-main) 12%, transparent);
+  animation: ringPulse 8s ease-in-out infinite;
+}
+
+.geo-ring-2 {
+  width: 280px;
+  height: 280px;
+  bottom: -80px;
+  left: -60px;
+  border-color: color-mix(in srgb, var(--color-brand-main) 9%, transparent);
+  animation: ringPulse 11s ease-in-out infinite reverse;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.07); opacity: 1; }
 }
 
 /* Blobs decorativos */
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(70px);
   pointer-events: none;
+  z-index: 0;
 }
 
 .blob-top-left {
-  width: 280px;
-  height: 280px;
-  background: rgba(34, 197, 94, 0.25);
-  top: -80px;
-  left: -80px;
-  animation: blobPulse 6s ease-in-out infinite alternate;
+  width: 260px;
+  height: 260px;
+  background: color-mix(in srgb, var(--color-brand-main) 25%, transparent);
+  top: -60px;
+  left: -60px;
+  animation: blobPulse 7s ease-in-out infinite alternate;
+}
+
+.blob-mid {
+  width: 180px;
+  height: 180px;
+  background: color-mix(in srgb, var(--color-brand-main) 18%, transparent);
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%);
+  animation: blobPulse 9s ease-in-out infinite alternate-reverse;
 }
 
 .blob-bottom-right {
-  width: 220px;
-  height: 220px;
-  background: rgba(6, 64, 43, 0.12);
-  bottom: -60px;
+  width: 240px;
+  height: 240px;
+  background: color-mix(in srgb, var(--color-brand-secondary) 55%, transparent);
+  bottom: -80px;
   right: -60px;
-  animation: blobPulse 8s ease-in-out infinite alternate-reverse;
+  animation: blobPulse 10s ease-in-out infinite alternate;
 }
 
 @keyframes blobPulse {
   from { transform: scale(1) translate(0, 0); }
-  to   { transform: scale(1.15) translate(10px, -10px); }
+  to   { transform: scale(1.2) translate(12px, -12px); }
 }
 
 .branding-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.5rem;
+  gap: 1.75rem;
   z-index: 2;
   text-align: center;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── Badge superior ── */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  background: color-mix(in srgb, var(--color-brand-main) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-brand-main) 45%, transparent);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-brand-main) 80%, #fff);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.trust-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand-main);
+  box-shadow: 0 0 6px var(--color-brand-main);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.badge-shield {
+  width: 13px;
+  height: 13px;
+  color: color-mix(in srgb, var(--color-brand-main) 80%, #fff);
+}
+
+/* ── Escenario de imagen ── */
+.image-stage {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.image-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-brand-main) 35%, transparent) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: glowPulse 5s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
 
 /* Ilustración personaje */
 .character-wrapper {
   position: relative;
-  width: 340px;
-  max-width: 90%;
-  animation: floatY 4s ease-in-out infinite;
+  width: 380px;
+  max-width: 88%;
+  animation: floatY 5s ease-in-out infinite;
+  z-index: 2;
 }
 
 @keyframes floatY {
   0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-12px); }
+  50%       { transform: translateY(-14px); }
 }
 
 .character-image {
@@ -362,8 +564,8 @@ const handleLogin = async () => {
   height: auto;
   object-fit: contain;
   display: block;
-  mix-blend-mode: multiply;
-  filter: drop-shadow(0 20px 40px rgba(6, 64, 43, 0.15));
+  mix-blend-mode: luminosity;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.45)) brightness(1.05);
 }
 
 .character-placeholder {
@@ -379,26 +581,187 @@ const handleLogin = async () => {
   height: 100%;
 }
 
-/* Textos branding */
+/* ── Tarjetas de stats flotantes ── */
+.stat-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  min-width: 150px;
+  animation: floatY 5s ease-in-out infinite;
+}
+
+.stat-card-tl {
+  top: 10%;
+  left: -10px;
+  animation-delay: 0.5s;
+}
+
+.stat-card-br {
+  bottom: 8%;
+  right: -10px;
+  animation-delay: 1.25s;
+}
+
+.stat-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stat-green {
+  background: color-mix(in srgb, var(--color-brand-main) 28%, transparent);
+  color: color-mix(in srgb, var(--color-brand-main) 90%, #fff);
+}
+
+.stat-teal {
+  background: color-mix(in srgb, var(--color-brand-main) 22%, transparent);
+  color: color-mix(in srgb, var(--color-brand-main) 75%, #9effdc);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.stat-trend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-brand-main) 85%, #fff);
+  margin-left: auto;
+  padding-left: 0.25rem;
+}
+
+/* ── Pill uptime ── */
+.uptime-pill {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.uptime-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-brand-main);
+  box-shadow: 0 0 5px var(--color-brand-main);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+/* ── Textos branding ── */
 .hero-text {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .hero-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1a3d2b;
+  font-size: 2.75rem;
+  font-weight: 500;
+  color: #ffffff;
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  text-shadow: 0 2px 30px rgba(0,0,0,0.3);
+}
+
+.hero-title-highlight {
+  background: linear-gradient(90deg, var(--color-brand-main), color-mix(in srgb, var(--color-brand-main) 70%, #fff), color-mix(in srgb, var(--color-brand-main) 45%, #fff));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
 }
 
 .hero-description {
-  font-size: 1rem;
-  color: #4a7a5c;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+/* ── Strip de features ── */
+.features-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+}
+
+.feature-item svg {
+  width: 14px;
+  height: 14px;
+  color: color-mix(in srgb, var(--color-brand-main) 85%, #fff);
+  flex-shrink: 0;
+}
+
+.feature-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 /* =============================================
@@ -423,8 +786,8 @@ const handleLogin = async () => {
 }
 
 .logo-icon {
-  width: 34px;
-  height: 34px;
+  width: 54px;
+  height: 54px;
 }
 
 /* Logo badge */
@@ -437,12 +800,10 @@ const handleLogin = async () => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8f5ef, #c8e8d8);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(6, 64, 43, 0.1);
   overflow: hidden;
 }
 
@@ -837,13 +1198,19 @@ const handleLogin = async () => {
   }
 
   .branding-section {
-    padding: 2.5rem 2rem;
-    min-height: 280px;
+    padding: 2rem 1.5rem 2.5rem;
+    min-height: 320px;
   }
 
   .character-wrapper {
-    width: 220px;
+    width: 200px;
   }
+
+  .stat-card-tl { left: 0; top: 5%; }
+  .stat-card-br { right: 0; bottom: 5%; }
+
+  .hero-title { font-size: 2rem; }
+  .hero-description { font-size: 0.9rem; }
 
   .form-section {
     padding: 2.5rem 2rem 4rem;
@@ -860,16 +1227,26 @@ const handleLogin = async () => {
 
 @media (max-width: 640px) {
   .branding-section {
-    padding: 2rem 1.5rem 3rem;
+    padding: 1.75rem 1rem 2.5rem;
   }
 
   .character-wrapper {
-    width: 180px;
+    width: 160px;
   }
 
   .hero-title {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
+
+  .hero-description {
+    font-size: 0.85rem;
+  }
+
+  .stat-card { display: none; }
+  .uptime-pill { display: none; }
+  .features-strip { gap: 0.5rem; padding: 0.5rem 0.75rem; }
+  .feature-divider { display: none; }
+  .feature-item { font-size: 0.72rem; }
 
   .form-section {
     padding: 2rem 1.5rem 4rem;
@@ -887,7 +1264,5 @@ const handleLogin = async () => {
   .social-btn span {
     font-size: 0.8125rem;
   }
-
-
 }
 </style>

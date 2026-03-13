@@ -33,7 +33,7 @@
         </div>
         <AppButton variant="fill" @click="router.push('/dashboard/inventory')">
           <ArrowLeftIcon class="w-5 h-5 mr-1" />
-          Ir a Inventario
+          Ir al Inventario
         </AppButton>
       </div>
 
@@ -62,7 +62,7 @@
           </p>
           <div v-if="!intendeClose" class="mt-4">
              <AppButton @click="intendeClose = true" variant="fill">
-               Preparar cierre de turno
+               Terminar turno y cerrar caja
              </AppButton>
           </div>
           <form v-else @submit.prevent="handleCloseShift" class="form-grid border-t pt-4 mt-2">

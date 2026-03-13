@@ -96,7 +96,7 @@
                     </div>
                   </div>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
                   <AppInput
                     style="flex: 1;"
                     id="sku"
@@ -104,7 +104,7 @@
                     placeholder="Escriba o escanee..."
                     hint="Si dejas vacío, autogenerará"
                   />
-                  <button type="button" @click="isScanning = true" class="btn-scan" title="Escanear SKU" style="height: 44px; width: 44px; margin-bottom: 22px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #16a34a; cursor: pointer;">
+                  <button type="button" @click="isScanning = true" class="btn-scan" title="Escanear SKU" style="height: 44px; width: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #16a34a; cursor: pointer;">
                     <QrCodeIcon style="width: 20px; height: 20px;" />
                   </button>
                 </div>

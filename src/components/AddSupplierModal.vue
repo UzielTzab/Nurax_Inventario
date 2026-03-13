@@ -7,9 +7,7 @@
         <header class="modal-header">
           <div class="header-title">
             <div class="header-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8v-5a1 1 0 011-1h2a1 1 0 011 1v5" />
-              </svg>
+              <BuildingOfficeIcon class="icon-34" />
             </div>
             <div>
               <h2 class="modal-title">Nuevo Proveedor</h2>
@@ -17,9 +15,7 @@
             </div>
           </div>
           <button class="close-btn" @click="$emit('close')" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon class="icon-20" />
           </button>
         </header>
 
@@ -95,9 +91,7 @@
             <div class="form-actions">
               <AppButton variant="outline" type="button" @click="$emit('close')" :disabled="isSubmitting">Cancelar</AppButton>
               <AppButton variant="fill" type="submit" :loading="isSubmitting">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="btn-icon">
-                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
+                <PlusIcon class="btn-icon" />
                 Guardar Proveedor
               </AppButton>
             </div>
@@ -110,6 +104,7 @@
 
 <script setup lang="ts">
 import { reactive, watch, ref } from 'vue'
+import { BuildingOfficeIcon, XMarkIcon, PlusIcon } from '@heroicons/vue/24/solid'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import { useSuppliers } from '@/composables/useSuppliers'
@@ -233,9 +228,8 @@ async function handleSubmit() {
 }
 
 .header-icon {
-  width: 44px;
-  height: 44px;
-  background: rgba(6, 64, 43, 0.08);
+  width: 54px;
+  height: 54px;
   color: var(--color-brand-main, #06402B);
   border-radius: 12px;
   display: flex;
@@ -244,9 +238,14 @@ async function handleSubmit() {
   flex-shrink: 0;
 }
 
-.header-icon svg {
-  width: 22px;
-  height: 22px;
+.icon-34 {
+  width: 34px;
+  height: 34px;
+}
+
+.icon-20 {
+  width: 20px;
+  height: 20px;
 }
 
 .modal-title {
@@ -273,11 +272,6 @@ async function handleSubmit() {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-}
-
-.close-btn svg {
-  width: 20px;
-  height: 20px;
 }
 
 .close-btn:hover {

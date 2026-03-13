@@ -172,7 +172,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   position: relative;
   width: 100%;
   aspect-ratio: 12/12;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: white;
   overflow: hidden;
 }
 .card-image { width: 100%; height: 100%; object-fit: cover; }

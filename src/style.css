@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 @theme {
+
+  /* Paleta color amarillo */
+  /* --color-brand-main: #eddf64;
+  --color-brand-main-gradient:#eddf64;      */
+
   /* Marca - Nueva Paleta */
   --color-brand-main: #227d52;       
   --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     

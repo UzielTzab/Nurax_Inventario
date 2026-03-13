@@ -129,10 +129,8 @@
                   </button>                  
                 </div>
 
-                <div class="dropdown-divider"></div>
-
                 <!-- Excel Import/Export -->
-                <div class="dropdown-menu">
+                <!-- <div class="dropdown-menu"> -->
                   <!-- usar el botón appButton que es un componente, usar el varian fill -->
                   <!-- <AppButton
                     variant="outline"
@@ -143,9 +141,7 @@
                     <TableCellsIcon class="w-5 h-5" />
                     <span>Importar / Exportar Excel</span>
                   </AppButton> -->
-                </div>
-
-                <div class="dropdown-divider"></div>
+                <!-- </div> -->
 
                 <!-- Cerrar sesión -->
                 <div class="dropdown-menu">
@@ -1467,7 +1463,7 @@ defineEmits(['quickSell']);
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 350px;
+  width: 250px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -1539,8 +1535,8 @@ defineEmits(['quickSell']);
   gap: 0.625rem;
   width: 100%;
   padding: 0.5rem 0.625rem;
-  border: none;
-  background: transparent;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
@@ -1554,10 +1550,10 @@ defineEmits(['quickSell']);
 .dropdown-item:hover { background: #f9fafb; }
 .dropdown-item:hover svg { color: var(--color-brand-main); }
 
-.dropdown-item-danger { color: #dc2626; }
-.dropdown-item-danger svg { color: #dc2626; }
-.dropdown-item-danger:hover { background: #fef2f2; }
-.dropdown-item-danger:hover svg { color: #b91c1c; }
+.dropdown-item-danger { color: #fef2f2; border-color: #dc2626;background: #dc2626; border-width: 1px; }
+.dropdown-item-danger svg { color: #fef2f2; }
+.dropdown-item-danger:hover { background: #be2020; }
+.dropdown-item-danger:hover svg { color: #fef2f2; }
 
 /* Dropdown animation */
 .dropdown-enter-active {
@@ -1612,8 +1608,11 @@ defineEmits(['quickSell']);
   border-radius: 20px;
   width: 100%;
   max-width: 400px;
+  max-height: 90vh;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .pm-header {
@@ -1740,6 +1739,8 @@ defineEmits(['quickSell']);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .pm-field {
@@ -1810,8 +1811,8 @@ defineEmits(['quickSell']);
 
 .pm-password-header:focus {
   outline: none;
-  border-color: var(--color-brand-main, #06402B);
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
+
+
 }
 
 .pm-password-header-content {
