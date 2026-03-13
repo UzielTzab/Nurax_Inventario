@@ -59,10 +59,7 @@
             <div class="supplier-info-header">
               <h3>{{ supplier.name }}</h3>
               <span class="contact-person">{{ supplier.company || 'Sin empresa' }}</span>
-            </div>
-            <div class="supplier-status">
-               <span class="status-dot"></span> Active
-            </div>
+            </div>            
           </div>
           
           <div class="card-body">

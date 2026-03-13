@@ -96,9 +96,9 @@
                   <div class="phone-input-group">
                     <div class="select-wrapper country-code">
                       <select v-model="settings.countryCode">
-                        <option value="+52">+52</option>
-                        <option value="+1">+1</option>
-                        <option value="+34">+34</option>
+                        <option value="+52">🇲🇽 México (+52)</option>
+                        <option value="+1">🇺🇸 USA (+1)</option>
+                        <option value="+34">🇪🇸 España (+34)</option>
                       </select>
                       <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -308,8 +308,16 @@
                 </svg>
                 La vista previa es aproximada.
               </div>
+
+            </div> <!-- .preview-card -->
+
+            <!-- Button Under Preview -->
+            <div class="preview-actions">
+              <AppButton variant="fill" @click="saveSettings" :loading="isSaving" class="full-width-btn">
+                Guardar Cambios
+              </AppButton>
             </div>
-          </div>
+          </div> <!-- .settings-preview -->
         </div>
 
       </div>
@@ -371,6 +379,7 @@ onMounted(async () => {
       settings.value.currency       = d.currency_symbol ?? '$ MXN';
       settings.value.address        = d.address         ?? '';
       settings.value.phone          = d.phone           ?? '';
+      settings.value.countryCode    = d.country_code    ?? '+52';
       settings.value.thankYouMessage = d.ticket_message ?? '';
       settings.value.logoUrl        = d.logo_url        ?? '';
     }
@@ -426,6 +435,7 @@ const saveSettings = async () => {
     formData.append('currency_symbol', settings.value.currency);
     formData.append('address',         settings.value.address);
     formData.append('phone',           settings.value.phone);
+    formData.append('country_code',    settings.value.countryCode);
     formData.append('ticket_message',  settings.value.thankYouMessage);
 
     if (logoFile.value) {
@@ -853,6 +863,7 @@ textarea:focus {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  margin-bottom: 6rem;
 }
 
 .preview-header {
@@ -1107,4 +1118,11 @@ textarea:focus {
   line-height: 1.2;
 }
 
+.preview-actions {
+  margin-top: 1rem;
+}
+
+.full-width-btn {
+  width: 100%;
+}
 </style>
