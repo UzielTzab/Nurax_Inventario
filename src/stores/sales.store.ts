@@ -36,17 +36,16 @@ export const useSalesStore = defineStore('sales', () => {
    * @param page - Número de página (por defecto 1)
    * @param size - Registros por página (por defecto 10)
    */
-  const fetchSales = async (page: number = 1, size: number = 10) => {
+  const fetchSales = async (page: number = 1, size: number = 10, search?: string) => {
     isLoading.value = true;
     error.value = null;
     currentPage.value = page;
     pageSize.value = size;
 
     try {
-      const response = await salesService.getSales(page, size);
+      const response = await salesService.getSales(page, size, search);
 
       if (response.success) {
-        // response.data ahora es el array de results
         sales.value = Array.isArray(response.data) ? response.data : [];
         totalSales.value = response.count || 0;
         nextPageUrl.value = response.next || null;
@@ -66,6 +65,37 @@ export const useSalesStore = defineStore('sales', () => {
   };
 
   /**
+   * Obtiene el listado de cuentas por cobrar con paginación
+   */
+  const fetchReceivables = async (page: number = 1, size: number = 10, search?: string) => {
+    isLoading.value = true;
+    error.value = null;
+    currentPage.value = page;
+    pageSize.value = size;
+
+    try {
+      const response = await salesService.getAccountsReceivable(page, size, search);
+
+      if (response.success) {
+        sales.value = Array.isArray(response.data) ? response.data : [];
+        totalSales.value = response.count || 0;
+        nextPageUrl.value = response.next || null;
+        previousPageUrl.value = response.previous || null;
+      } else {
+        error.value = response.error || 'No se pudieron cargar las cuentas por cobrar';
+        sales.value = [];
+        totalSales.value = 0;
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error de conexión';
+      sales.value = [];
+      console.error('Error fetching receivables:', err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
    * Crea una nueva venta
    */
   const addSale = async (saleData: {
@@ -75,6 +105,9 @@ export const useSalesStore = defineStore('sales', () => {
     user: number;
     status: string;
     device_id?: string;
+    amount_paid?: number;
+    customer_name?: string;
+    customer_phone?: string;
   }) => {
     isLoading.value = true;
     error.value = null;
@@ -254,6 +287,7 @@ export const useSalesStore = defineStore('sales', () => {
 
     // Methods
     fetchSales,
+    fetchReceivables,
     addSale,
     cancelSale,
     removeSale,

@@ -5,6 +5,7 @@
     class="app-button"
     :class="[
       `app-button--${variant}`,
+      `app-button--${size}`,
       { 'app-button--full-width': fullWidth },
       { 'app-button--loading': loading },
       { 'app-button--icon-only': iconOnly }
@@ -67,6 +68,7 @@ import type { Component } from 'vue';
 interface Props {
   type?:          'button' | 'submit' | 'reset';
   variant?:       'fill' | 'outline';
+  size?:          'sm' | 'md' | 'lg';
   disabled?:      boolean;
   fullWidth?:     boolean;
   loading?:       boolean;
@@ -78,6 +80,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   type:           'button',
   variant:        'fill',
+  size:           'md',
   disabled:       false,
   fullWidth:      false,
   loading:        false,
@@ -85,6 +88,7 @@ const props = withDefaults(defineProps<Props>(), {
   iconPosition:   'left',
   iconOnly:       false,
 });
+
 
 const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void;
@@ -196,10 +200,29 @@ const handleClick = (event: MouseEvent) => {
   width: 100%;
 }
 
+.app-button--sm {
+  padding: 0.375rem 1rem;
+  font-size: 0.8125rem;
+  min-height: 32px;
+}
+
+.app-button--md {
+  padding: 0.5rem 1.375rem;
+  font-size: 0.9375rem;
+  min-height: 40px;
+}
+
+.app-button--lg {
+  padding: 0.75rem 2rem;
+  font-size: 1.0625rem;
+  min-height: 48px;
+}
+
 .app-button--icon-only {
   padding: 0.5rem;
   border-radius: 50%; /* Los icon-buttons en material son redondos */
   min-width: unset;
+  min-height: unset;
 }
 
 /* Variante: Fill (MUI Contained Button adaptado) */

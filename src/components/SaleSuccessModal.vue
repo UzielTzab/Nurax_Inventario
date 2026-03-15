@@ -69,6 +69,16 @@
               <span>TOTAL</span>
               <span>{{ settings.currency_symbol }} {{ total.toFixed(2) }}</span>
             </div>
+            <div v-if="(changeReturned || 0) > 0 || (amountPaid || 0) > 0" class="ticket-payment-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: #4b5563;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Efectivo:</span>
+                <span>{{ settings.currency_symbol }} {{ (amountPaid || 0).toFixed(2) }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Cambio:</span>
+                <span>{{ settings.currency_symbol }} {{ (changeReturned || 0).toFixed(2) }}</span>
+              </div>
+            </div>
             <div class="ticket-footer">
               <p>{{ settings.ticket_message || '¡Gracias por su compra!' }}</p>
             </div>
@@ -119,6 +129,8 @@ const props = defineProps<{
   cart: CartItem[];
   total: number;
   saleId: string | number;
+  amountPaid?: number;
+  changeReturned?: number;
 }>();
 
 const emit = defineEmits<{

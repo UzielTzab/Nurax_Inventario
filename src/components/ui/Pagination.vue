@@ -97,6 +97,8 @@ const onPageSizeChange = (e: Event) => {
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  border-radius: 24px;
   border-top: 1px solid var(--color-card-border, #e5e7eb);
   background: var(--color-card-fill, #fff);
 }

@@ -15,6 +15,7 @@ import AdminClients from '@/views/AdminClients.vue'
 import Settings from '@/views/Settings.vue'
 import Shifts from '@/views/Shifts.vue'
 import Expenses from '@/views/Expenses.vue'
+import AccountsReceivable from '@/views/AccountsReceivable.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -59,6 +60,11 @@ const routes: RouteRecordRaw[] = [
     path: '/dashboard/expenses',
     component: Expenses,
     meta: { title: 'Gastos', roles: ['cliente'] }
+  },
+  {
+    path: '/dashboard/receivables',
+    component: AccountsReceivable,
+    meta: { title: 'Cuentas por Cobrar', roles: ['cliente'] }
   },
   {
     path: '/dashboard/clients',
