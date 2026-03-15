@@ -162,7 +162,7 @@
               </tr>
             </template>
             <template v-else>
-              <tr v-for="shift in completedShifts" :key="shift.id">
+              <tr v-for="shift in paginatedShifts" :key="shift.id">
                 <td>#{{ shift.id }}</td>
                 <td>{{ formatDate(shift.opened_at) }}</td>
                 <td>{{ shift.closed_at ? formatDate(shift.closed_at) : 'N/A' }}</td>
@@ -187,6 +187,14 @@
             </template>
           </tbody>
        </table>
+       <!-- Paginación usando el componente reutilizable -->
+       <div class="px-6 pb-6">
+         <Pagination
+           v-model:current-page="currentPage"
+           v-model:page-size="pageSize"
+           :total="completedShifts.length"
+         />
+       </div>
     </div>
   </div>
   </div>
@@ -203,6 +211,7 @@ import { ArrowLeftIcon } from '@heroicons/vue/24/outline';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
+import Pagination from '@/components/ui/Pagination.vue';
 
 const router = useRouter();
 
@@ -212,6 +221,15 @@ const { enqueueSnackbar } = useSnackbar();
 
 const currentShift = computed(() => shiftsStore.currentShift);
 const completedShifts = computed(() => shiftsStore.shifts.filter(s => s.closed_at !== null));
+
+const currentPage = ref(1);
+const pageSize = ref(10);
+
+const paginatedShifts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return completedShifts.value.slice(start, end);
+});
 
 const intendeClose = ref(false);
 

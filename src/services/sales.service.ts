@@ -101,6 +101,49 @@ class SalesService {
   }
 
   /**
+   * Obtiene el listado paginado de cuentas por cobrar (Apartados/Créditos)
+   */
+  async getAccountsReceivable(page: number = 1, pageSize: number = 10, search?: string) {
+    try {
+      let url = `/sales/accounts_receivable/?page=${page}&page_size=${pageSize}`;
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      
+      const response = await apiClient.get<PaginatedSalesResponse>(url);
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data.results || [],
+          count: response.data.count || 0,
+          next: response.data.next,
+          previous: response.data.previous,
+          error: null
+        };
+      }
+      
+      return {
+        success: false,
+        data: [],
+        count: 0,
+        next: null,
+        previous: null,
+        error: response.error || 'Error al obtener cuentas por cobrar'
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        data: [],
+        count: 0,
+        next: null,
+        previous: null,
+        error: err.message || 'Error al obtener cuentas por cobrar'
+      };
+    }
+  }
+
+  /**
    * Obtiene una venta específica por ID
    */
   async getSale(id: number | string) {

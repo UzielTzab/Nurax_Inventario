@@ -172,7 +172,7 @@
               :loading="isSubmitting"
               @click="handleCheckout"
             >
-              FINALIZAR VENTA
+              IR AL COBRO
               <ArrowRightIcon class="w-5 h-5" />
             </AppButton>
          </div>
@@ -480,11 +480,115 @@
     </div>
   </Transition>
 
+  <!-- Payment / Layaway Modal -->
+  <Transition name="fade">
+    <div v-if="showPaymentModal" class="modal-overlay" style="z-index: 1060; align-items: center; justify-content: center;" @click.self="showPaymentModal = false">
+       <div class="modal-content" style="max-width: 500px; height: auto; max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: 20px;">
+         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+           <h2 class="text-2xl font-bold m-0" style="color: #1f2937;">Cobrar</h2>
+           <button @click="showPaymentModal = false" style="background:none; border:none; cursor:pointer;">
+             <XMarkIcon style="width: 24px; height: 24px; color: #6b7280;"/>
+           </button>
+         </div>
+
+         <!-- Tabs for Payment Type -->
+         <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 1.5rem;">
+           <button 
+             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
+             :style="{ background: paymentMethod === 'completed' ? 'white' : 'transparent', color: paymentMethod === 'completed' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
+             @click="paymentMethod = 'completed'"
+           >
+             Al Contado
+           </button>
+           <button 
+             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
+             :style="{ background: paymentMethod === 'layaway' ? 'white' : 'transparent', color: paymentMethod === 'layaway' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'layaway' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
+             @click="paymentMethod = 'layaway'"
+           >
+             Abonos/Apartado
+           </button>
+         </div>
+
+         <div style="margin-bottom: 1.5rem; background: var(--color-brand-main); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+           <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">TOTAL A COBRAR</div>
+           <div style="font-size: 2.5rem; font-weight: 800; line-height: 1;">${{ total.toFixed(2) }}</div>
+         </div>
+
+         <!-- Cash Flow -->
+         <div v-if="paymentMethod === 'completed'">
+           <div style="margin-bottom: 1rem;">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Pago Recibido</label>
+             <div style="position: relative;">
+               <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: #6b7280; font-size: 1.25rem;">$</span>
+               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 1rem 1rem 1rem 2.5rem; font-size: 1.25rem; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" min="0" step="0.01">
+             </div>
+             
+             <!-- Botones rápidos de dinero -->
+             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; overflow-x: auto; padding-bottom: 4px;">
+               <button v-for="amount in quickAmounts" :key="amount" @click="amountPaid = amount" style="padding: 0.5rem 1rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-weight: 600; color: #374151; cursor: pointer; white-space: nowrap;">
+                 ${{ amount }}
+               </button>
+               <button @click="amountPaid = total" style="padding: 0.5rem 1rem; background: #dcfce7; border: 1px solid #16a34a; border-radius: 99px; font-weight: 600; color: #16a34a; cursor: pointer; white-space: nowrap;">
+                 Exacto
+               </button>
+             </div>
+           </div>
+
+           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
+             <span style="font-weight: 600; color: #4b5563;">Cambio a devolver:</span>
+             <span style="font-size: 1.5rem; font-weight: 800; color: #16a34a;">${{ calculateChange.toFixed(2) }}</span>
+           </div>
+         </div>
+
+         <!-- Layaway Flow -->
+         <div v-if="paymentMethod === 'layaway'">
+           <div style="margin-bottom: 1rem;">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Nombre del Cliente</label>
+             <input type="text" v-model="customerName" placeholder="Ej. Juan Pérez" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;">
+           </div>
+           
+           <div style="margin-bottom: 1rem;">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Teléfono (Opcional)</label>
+             <input type="text" v-model="customerPhone" placeholder="Ej. 5512345678" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;">
+           </div>
+
+           <div style="margin-bottom: 1rem;">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Pago Inicial (Enganche)</label>
+             <div style="position: relative;">
+               <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: #6b7280; font-size: 1.125rem;">$</span>
+               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 1.125rem; font-weight: 600; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;" min="0" step="0.01">
+             </div>
+           </div>
+
+           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #fef7ec; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 1.5rem;">
+             <span style="font-weight: 600; color: #92400e;">Saldo Pendiente:</span>
+             <span style="font-size: 1.25rem; font-weight: 800; color: #b45309;">${{ Math.max(0, total - amountPaid).toFixed(2) }}</span>
+           </div>
+         </div>
+
+         <!-- Confirm Button -->
+         <AppButton 
+           variant="fill" 
+           fullWidth 
+           size="lg"
+           :loading="isSubmitting"
+           @click="confirmPayment"
+           style="padding: 1rem; font-size: 1.125rem; min-height: 56px;"
+         >
+           Confirmar Venta
+           <ArrowRightIcon class="w-5 h-5 ml-2" />
+         </AppButton>
+       </div>
+    </div>
+  </Transition>
+
   <SaleSuccessModal 
     :is-open="showSuccessModal"
     :cart="lastCartSnapshot"
     :total="lastTotal"
     :sale-id="lastSaleId"
+    :amount-paid="lastAmountPaid"
+    :change-returned="lastChangeReturned"
     @close="handleCloseSuccess"
     @revert="handleRevert"
   />
@@ -539,7 +643,29 @@ const emit = defineEmits(['close', 'sale-completed', 'sale-reverted']);
 const searchQuery = ref('');
 const cart = ref<CartItem[]>([]);
 const showSuccessModal = ref(false);
+const showPaymentModal = ref(false);
+const paymentMethod = ref('completed');
+const amountPaid = ref(0);
+const customerName = ref('');
+const customerPhone = ref('');
 const isInitializing = ref(true);
+
+const quickAmounts = computed(() => {
+  const t = total.value;
+  if(t === 0) return [50, 100, 200, 500];
+  const roundedUp10 = Math.ceil(t / 10) * 10;
+  const roundedUp50 = Math.ceil(t / 50) * 50;
+  const roundedUp100 = Math.ceil(t / 100) * 100;
+  const roundedUp500 = Math.ceil(t / 500) * 500;
+  return Array.from(new Set([roundedUp10, roundedUp50, roundedUp100, roundedUp500].filter(a => a >= t))).slice(0, 4);
+});
+
+const calculateChange = computed(() => {
+   if (paymentMethod.value === 'completed') {
+       return Math.max(0, amountPaid.value - total.value);
+   }
+   return 0; 
+});
 
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 let isRemoteUpdate = false;
@@ -560,6 +686,8 @@ const syncCartToBackend = async () => {
 const lastSaleId = ref<string | number>('');
 const lastCartSnapshot = ref<CartItem[]>([]);
 const lastTotal = ref(0);
+const lastAmountPaid = ref(0);
+const lastChangeReturned = ref(0);
 const isSubmitting = ref(false);
 
 const isScanning = computed({
@@ -797,50 +925,73 @@ const total = computed(() => {
   return subtotal.value + tax.value;
 });
 
-const handleCheckout = async () => {
+const handleCheckout = () => {
   if (cart.value.length === 0 || isSubmitting.value) return;
+  
+  // Set default values before opening modal
+  amountPaid.value = Number(total.value.toFixed(2));
+  paymentMethod.value = 'completed';
+  customerName.value = '';
+  customerPhone.value = '';
+  showPaymentModal.value = true;
+};
+
+const confirmPayment = async () => {
+  if (isSubmitting.value) return;
+  
+  if (paymentMethod.value === 'completed' && amountPaid.value < total.value) {
+      enqueueSnackbar({ type: 'warning', title: 'Pago insuficiente', message: 'El monto ingresado es menor al total.', duration: 3000 });
+      return;
+  }
+  
+  if (paymentMethod.value === 'layaway' && !customerName.value.trim()) {
+      enqueueSnackbar({ type: 'warning', title: 'Faltan Datos', message: 'Ingresa el nombre del cliente para el apartado.', duration: 3000 });
+      return;
+  }
+  
   isSubmitting.value = true;
   
   try {
-    // Play sound
     const audio = new Audio('/sounds/Fx_Sucess.wav');
     audio.play().catch(e => console.error('Error playing sound:', e));
 
-  // Guardar snapshot de la venta antes de registrarla
-  lastCartSnapshot.value = [...cart.value];
-  lastTotal.value = Number(total.value.toFixed(2));
-  
-  const trxId = `TRX-${Date.now()}`;
+    lastCartSnapshot.value = [...cart.value];
+    lastTotal.value = Number(total.value.toFixed(2));
+    const trxId = `TRX-${Date.now()}`;
 
-  // Register sale in store via API
-  const result = await salesStore.addSale({
-    transaction_id: trxId,
-    user: currentUser.value?.id || 1, // Se extrae del auth store
-    status: 'completed',
-    total: lastTotal.value,
-    device_id: localDeviceId, // Incluir device_id para identificar quién hizo la venta
-    items: cart.value.map(item => ({ 
-        product: Number(item.id),
-        quantity: item.quantity,
-        unit_price: Number(item.price)
-    }))
-  });
-  
-  if (result.success && result.transaction_id) {
-    lastSaleId.value = result.id as number | string;
-    // Emit sale completed event (descuenta stock visualmente)
-    emit('sale-completed', [...cart.value]);
-    
-    // Show success modal
-    showSuccessModal.value = true;
-  } else {
-    enqueueSnackbar({
-      type: 'error',
-      title: 'Venta Fallida',
-      message: result.error || 'Ocurrió un error al procesar la venta.',
-      duration: 5000
+    // Capturar datos del pago para pasarlos a SaleSuccessModal o backend
+    lastAmountPaid.value = Number(amountPaid.value.toFixed(2));
+    lastChangeReturned.value = Number(calculateChange.value.toFixed(2));
+
+    const result = await salesStore.addSale({
+      transaction_id: trxId,
+      user: currentUser.value?.id || 1,
+      status: paymentMethod.value,
+      amount_paid: amountPaid.value,
+      customer_name: customerName.value,
+      customer_phone: customerPhone.value,
+      total: lastTotal.value,
+      device_id: localDeviceId,
+      items: cart.value.map(item => ({ 
+          product: Number(item.id),
+          quantity: item.quantity,
+          unit_price: Number(item.price)
+      }))
     });
-  }
+    
+    if (result.success && result.transaction_id) {
+      lastSaleId.value = result.id as number | string;
+      emit('sale-completed', [...cart.value]);
+      showPaymentModal.value = false;
+      showSuccessModal.value = true;
+    } else {
+      enqueueSnackbar({
+        type: 'error',
+        title: 'Venta Fallida',
+        message: result.error || 'Ocurrió un error al procesar la venta.',
+        duration: 5000
+      });
+    }
   } finally {
     isSubmitting.value = false;
   }

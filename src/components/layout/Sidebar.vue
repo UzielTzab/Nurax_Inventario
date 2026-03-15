@@ -63,6 +63,7 @@ import {
   Cog6ToothIcon as Cog6ToothOutline,
   CurrencyDollarIcon as CurrencyDollarOutline,
   BanknotesIcon as BanknotesOutline,
+  WalletIcon as WalletOutline,
 } from '@heroicons/vue/24/outline';
 
 // Heroicons Solid (activo)
@@ -74,6 +75,7 @@ import {
   Cog6ToothIcon as Cog6ToothSolid,
   CurrencyDollarIcon as CurrencyDollarSolid,
   BanknotesIcon as BanknotesSolid,
+  WalletIcon as WalletSolid,
 } from '@heroicons/vue/24/solid';
 
 const router = useRouter();
@@ -113,6 +115,8 @@ watch(() => route.path, (path) => {
     activeItem.value = 'shifts';
   } else if (path.includes('/dashboard/expenses')) {
     activeItem.value = 'expenses';
+  } else if (path.includes('/dashboard/receivables')) {
+    activeItem.value = 'receivables';
   } else if (path.includes('/dashboard/clients')) {
     activeItem.value = 'clients';
   } else if (path.includes('/dashboard/settings')) {
@@ -165,6 +169,14 @@ const allMenuSections: MenuSection[] = [
         roles: ['cliente'],
         iconOutline: CurrencyDollarOutline,
         iconSolid: CurrencyDollarSolid,
+      },
+      {
+        id: 'receivables',
+        label: 'Abonos y Créditos',
+        route: '/dashboard/receivables',
+        roles: ['cliente'],
+        iconOutline: WalletOutline,
+        iconSolid: WalletSolid,
       },
       {
         id: 'settings',

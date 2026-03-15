@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/aos": "^3.0.7",
+    "@types/lodash": "^4.17.24",
     "@types/node": "^24.6.0",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/tsconfig": "^0.8.1",

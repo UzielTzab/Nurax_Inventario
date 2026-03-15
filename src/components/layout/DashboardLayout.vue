@@ -25,15 +25,6 @@
           <Bars3Icon class="w-6 h-6" />
         </button>
 
-        <!-- Escáner Rápido -->
-        <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="salesStore.openScanner()">
-          <QrCodeIcon class="w-5 h-5" />
-        </button>
-
-        <!-- Escaneo Fijo (Continuo) -->
-        <button class="icon-btn scan-btn-premium" title="Escaneo Fijo - Lecturas continuas" @click="salesStore.openContinuousScanner()" style="color: var(--color-brand-secondary);">
-          <ComputerDesktopIcon class="w-5 h-5" />
-        </button>
 
         <!-- Área derecha topbar -->
         <div class="topbar-right">
@@ -61,6 +52,11 @@
               </div>
             </transition>
           </div>
+
+          <!-- Escaneo Fijo (Continuo) -->
+          <button v-if="currentUser?.role !== 'admin'" class="icon-btn scan-btn-premium" title="Escaneo Fijo - Lecturas continuas" @click="salesStore.openContinuousScanner()" style="color: var(--color-brand-secondary);">
+            <QrCodeIcon class="w-5 h-5" />
+          </button>
 
           <!-- Divisor -->
           <div class="topbar-divider"></div>

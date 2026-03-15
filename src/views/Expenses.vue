@@ -60,6 +60,7 @@
     </div>
 
     <!-- Modal Agregar Gasto -->
+    <Teleport to="body">
     <div class="modal-backdrop" v-if="showAddModal" @click.self="showAddModal = false">
       <div class="modal-card">
         <div class="modal-header">
@@ -101,6 +102,7 @@
         </form>
       </div>
     </div>
+    </Teleport>
   </div>
   </DashboardLayout>
 </template>
@@ -213,7 +215,7 @@ const categoryBadge = (cat: string) => {
 .btn-secondary:hover { background: #d1d5db; }
 
 /* Modal */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1060; padding: 1rem; }
 .modal-card { background: white; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
 .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
