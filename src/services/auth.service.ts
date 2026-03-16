@@ -10,6 +10,20 @@ export interface LoginBackendResponse {
   refresh: string
 }
 
+export interface StoreProfileResponse {
+  id: number
+  store_name: string
+  currency_symbol: string
+  address: string
+  phone: string
+  ticket_message: string
+  logo_url?: string
+  company_name: string
+  ticket_name: string
+  is_first_setup_completed: boolean
+  updated_at: string
+}
+
 export interface UserProfileResponse {
   id: number
   username: string
@@ -17,6 +31,7 @@ export interface UserProfileResponse {
   email: string
   role: 'admin' | 'cliente'
   avatar_url?: string
+  store_profile?: StoreProfileResponse | null
 }
 
 export interface UnifiedAuthResponse {

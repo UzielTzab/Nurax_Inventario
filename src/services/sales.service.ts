@@ -102,10 +102,11 @@ class SalesService {
 
   /**
    * Obtiene el listado paginado de cuentas por cobrar (Apartados/Créditos)
+   * Incluye automáticamente ventas completadas para mostrar historial de pagos
    */
   async getAccountsReceivable(page: number = 1, pageSize: number = 10, search?: string) {
     try {
-      let url = `/sales/accounts_receivable/?page=${page}&page_size=${pageSize}`;
+      let url = `/sales/accounts_receivable/?page=${page}&page_size=${pageSize}&include_completed=true`;
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
       }
