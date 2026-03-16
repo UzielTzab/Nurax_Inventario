@@ -155,6 +155,14 @@
       @product-updated="handleUpdateProduct"
     />
 
+    <RestockModal
+      v-if="selectedProductForRestock"
+      :is-open="showRestockModal"
+      :product-id="selectedProductForRestock.id"
+      @cancel="showRestockModal = false"
+      @confirm="onRestockConfirm"
+    />
+
     <ConfirmationModal
       :is-open="confirmationState.isOpen"
       :title="confirmationState.title"
@@ -184,6 +192,7 @@ import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
+import RestockModal from '@/components/RestockModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -288,7 +297,9 @@ onUnmounted(() => {
 });
 
 const showAddProductModal = ref(false);
+const showRestockModal = ref(false);
 const selectedProduct = ref<Product | null>(null);
+const selectedProductForRestock = ref<Product | null>(null);
 const isSubmitting = ref(false);
 
 const confirmationState = ref({
@@ -462,13 +473,19 @@ const handleBulkDelete = (ids: string[]) => {
 };
 
 const handleRestock = (product: Product) => {
-  selectedProduct.value = product;
-  showAddProductModal.value = true;
+  selectedProductForRestock.value = product;
+  showRestockModal.value = true;
+};
+
+const onRestockConfirm = async () => {
+  showRestockModal.value = false;
+  // Refrescar lista de productos para mostrar nuevo stock
+  await fetchProducts();
   enqueueSnackbar({
-    type: 'info',
-    title: 'Reabastecer Producto',
-    message: 'Actualiza el campo de "Stock" para agregar inventario.',
-    duration: 5000
+    type: 'success',
+    title: 'Reabastecer Exitoso',
+    message: 'El stock ha sido actualizado.',
+    duration: 3000
   });
 };
 

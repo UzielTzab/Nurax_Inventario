@@ -202,7 +202,6 @@
               <select v-model="newClient.plan" class="modal-input">
                 <option value="básico">Básico</option>
                 <option value="pro">Pro</option>
-                <option value="enterprise">Enterprise</option>
               </select>
             </div>
             <div class="modal-footer">

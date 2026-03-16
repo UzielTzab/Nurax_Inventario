@@ -99,78 +99,80 @@
       </div>
       
       <!-- Supplier Details Modal -->
-      <div v-if="selectedSupplier" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <div class="modal-title-group">
-                <h2>{{ selectedSupplier.name }}</h2>
-                <span class="modal-subtitle">ID: {{ selectedSupplier.id }}</span>
+      <Teleport to="body">
+        <div v-if="selectedSupplier" class="modal-overlay" @click.self="closeModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="modal-title-group">
+                  <h2>{{ selectedSupplier.name }}</h2>
+                  <span class="modal-subtitle">ID: {{ selectedSupplier.id }}</span>
+              </div>
+              <button class="close-btn" @click="closeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
             </div>
-            <button class="close-btn" @click="closeModal">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clip-rule="evenodd" />
-              </svg>
-            </button>
-          </div>
-          
-          <div class="modal-body-layout">
-             <!-- Left: Contact Info -->
-             <div class="supplier-contact-panel">
-                <h3>Contacto</h3>
-                <div class="contact-details">
-                    <div class="contact-group">
-                        <label>Empresa</label>
-                        <p>{{ selectedSupplier.company || 'N/A' }}</p>
-                    </div>
-                    <div class="contact-group">
-                        <label>Correo Electrónico</label>
-                        <p>{{ selectedSupplier.email }}</p>
-                    </div>
-                    <div class="contact-group">
-                        <label>Teléfono</label>
-                        <p>{{ selectedSupplier.phone }}</p>
-                    </div>
-                </div>
-                <div class="contact-actions">
-                    <AppButton variant="fill">Enviar Mensaje</AppButton>
-                    <AppButton variant="outline">Editar Info</AppButton>
-                </div>
-             </div>
+            
+            <div class="modal-body-layout">
+               <!-- Left: Contact Info -->
+               <div class="supplier-contact-panel">
+                  <h3>Contacto</h3>
+                  <div class="contact-details">
+                      <div class="contact-group">
+                          <label>Empresa</label>
+                          <p>{{ selectedSupplier.company || 'N/A' }}</p>
+                      </div>
+                      <div class="contact-group">
+                          <label>Correo Electrónico</label>
+                          <p>{{ selectedSupplier.email }}</p>
+                      </div>
+                      <div class="contact-group">
+                          <label>Teléfono</label>
+                          <p>{{ selectedSupplier.phone }}</p>
+                      </div>
+                  </div>
+                  <div class="contact-actions">
+                      <AppButton variant="fill">Enviar Mensaje</AppButton>
+                      <AppButton variant="outline">Editar Info</AppButton>
+                  </div>
+               </div>
 
-             <!-- Right: Products List -->
-             <div class="supplier-products-panel">
-                <h3>Productos Suministrados</h3>
-                <div class="products-table-wrapper">
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>SKU</th>
-                                <th>Costo</th>
-                                <th>Stock</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="product in supplierProducts" :key="product.sku">
-                                <td class="font-medium">{{ product.name }}</td>
-                                <td class="text-sm text-gray">{{ product.sku }}</td>
-                                <td>${{ Number(product.price).toFixed(2) }}</td>
-                                <td>
-                                    <span :class="['stock-badge', product.stock > 10 ? 'success' : 'warning']">
-                                        {{ product.stock }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr v-if="supplierProducts.length === 0">
-                               <td colspan="4" style="text-align: center; color: #6b7280; padding: 2rem;">No hay productos asignados a este proveedor.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-             </div>
+               <!-- Right: Products List -->
+               <div class="supplier-products-panel">
+                  <h3>Productos Suministrados</h3>
+                  <div class="products-table-wrapper">
+                      <table class="products-table">
+                          <thead>
+                              <tr>
+                                  <th>Producto</th>
+                                  <th>SKU</th>
+                                  <th>Costo</th>
+                                  <th>Stock</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <tr v-for="product in supplierProducts" :key="product.sku">
+                                  <td class="font-medium">{{ product.name }}</td>
+                                  <td class="text-sm text-gray">{{ product.sku }}</td>
+                                  <td>${{ Number(product.price).toFixed(2) }}</td>
+                                  <td>
+                                      <span :class="['stock-badge', product.stock > 10 ? 'success' : 'warning']">
+                                          {{ product.stock }}
+                                      </span>
+                                  </td>
+                              </tr>
+                              <tr v-if="supplierProducts.length === 0">
+                                 <td colspan="4" style="text-align: center; color: #6b7280; padding: 2rem;">No hay productos asignados a este proveedor.</td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+               </div>
+            </div>
           </div>
         </div>
-      </div>
+      </Teleport>
 
     </div>
 

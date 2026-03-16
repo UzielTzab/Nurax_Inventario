@@ -86,11 +86,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="sale in sales" :key="sale.id">
+              <tr v-for="sale in sortedSales" :key="sale.id" :class="{ 'row-paid': isPaid(sale) }">
                 <td>
-                  <div class="customer-name">{{ sale.customer_name || 'Desconocido' }}</div>
-                  <div v-if="sale.customer_phone" class="customer-phone">
-                    {{ sale.customer_phone }}
+                  <div class="customer-info">
+                    <div class="customer-name">{{ sale.customer_name || 'Desconocido' }}</div>
+                    <div v-if="sale.customer_phone" class="customer-phone">
+                      {{ sale.customer_phone }}
+                    </div>
                   </div>
                 </td>
                 <td>
@@ -103,20 +105,28 @@
                     <span class="total-amount">${{ Number(sale.total).toFixed(2) }}</span>
                   </div>
                   <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" :style="{ width: getProgressPercentage(sale) + '%' }"></div>
+                    <div class="progress-bar-fill" :style="{ width: getProgressPercentage(sale) + '%', backgroundColor: isPaid(sale) ? '#10b981' : '#f59e0b' }"></div>
                   </div>
                 </td>
                 <td>
-                  <div class="balance-due">${{ Number(sale.balance_due || (Number(sale.total) - getTotalPaid(sale))).toFixed(2) }}</div>
+                  <div class="balance-due" :class="{ 'paid': isPaid(sale) }">
+                    <span v-if="!isPaid(sale)">${{ Number(sale.balance_due || (Number(sale.total) - getTotalPaid(sale))).toFixed(2) }}</span>
+                    <span v-else class="paid-badge">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="check-icon">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                      Pagado
+                    </span>
+                  </div>
                 </td>
                 <td style="text-align: right;">
                   <div class="actions">
-                    <button @click="openPaymentModal(sale)" class="btn-pay">
+                    <button v-if="!isPaid(sale)" @click="openPaymentModal(sale)" class="btn-pay">
                       <CurrencyDollarIcon class="w-4 h-4" />
                       Abonar
                     </button>
                     <a 
-                      v-if="sale.customer_phone"
+                      v-if="sale.customer_phone && !isPaid(sale)"
                       :href="'https://wa.me/' + cleanPhone(sale.customer_phone) + '?text=' + encodeURIComponent('Hola ' + (sale.customer_name || '') + ', te recordamos amablemente que tienes un saldo pendiente de $' + Number(sale.balance_due || (Number(sale.total) - getTotalPaid(sale))).toFixed(2) + ' por tu apartado ' + sale.transaction_id + '. ¡Gracias por tu preferencia!')"
                       target="_blank"
                       class="btn-whatsapp"
@@ -209,7 +219,7 @@ import {
   CurrencyDollarIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash';
 
 const salesStore = useSalesStore();
 const { enqueueSnackbar } = useSnackbar();
@@ -279,6 +289,26 @@ const cleanPhone = (phone: string) => {
   if(!phone) return '';
   return phone.replace(/\D/g, '');
 };
+
+// Función para determinar si un pago está completamente pagado
+const isPaid = (sale: any): boolean => {
+  const balance = Number(sale.balance_due || (Number(sale.total) - getTotalPaid(sale)));
+  return balance <= 0;
+};
+
+// Ordenar ventas: pendientes primero, luego pagadas
+const sortedSales = computed(() => {
+  return [...sales.value].sort((a, b) => {
+    const aPaid = isPaid(a);
+    const bPaid = isPaid(b);
+    // Los no pagados primero (false < true)
+    if (aPaid !== bPaid) {
+      return (aPaid ? 1 : 0) - (bPaid ? 1 : 0);
+    }
+    // Si ambos tienen el mismo estado de pago, ordenar por fecha (más recientes primero)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+});
 
 // Payment Modal State
 const paymentModalOpen = ref(false);
@@ -504,6 +534,33 @@ const submitPayment = async () => {
   font-size: 1.125rem;
   font-weight: 700;
   color: #dc2626;
+}
+
+.balance-due.paid {
+  color: #10b981;
+}
+
+.paid-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.check-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.row-paid {
+  background-color: rgba(16, 185, 129, 0.05);
+  opacity: 0.8;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .actions {

@@ -2116,8 +2116,8 @@ const plans = [
   opacity: 0;
   transform: translateY(32px);
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .lp-reveal.lp-revealed {
   opacity: 1;
@@ -2128,7 +2128,7 @@ const plans = [
 .lp-reveal--hero {
   opacity: 0;
   transform: translateY(24px);
-  animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: heroReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes heroReveal {
   to {

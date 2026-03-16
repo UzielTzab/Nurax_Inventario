@@ -518,13 +518,13 @@ import Pusher from 'pusher-js';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+
 import {
   Bars3Icon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
   QrCodeIcon,
-  ComputerDesktopIcon,
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   InformationCircleIcon,
@@ -693,7 +693,7 @@ const onProfilePhotoFile = async (e: Event) => {
     return;
   }
 
-  // Límite absoluto: 15 MB (imágenes claramente corruptas o no imagen)
+  // Límite absoluto: 15 MB
   if (file.size > 15 * 1024 * 1024) {
     enqueueSnackbar({ type: 'error', title: 'Archivo demasiado grande', message: 'El archivo supera 15 MB. Por favor elige una imagen más pequeña.', duration: 4000 });
     if (e.target) (e.target as HTMLInputElement).value = '';
@@ -706,7 +706,6 @@ const onProfilePhotoFile = async (e: Event) => {
   if (file.size > 500 * 1024) {
     try {
       finalFile = await compressImage(file);
-      // Solo informar si la compresión fue significativa
       const ratio = Math.round((1 - finalFile.size / file.size) * 100);
       if (ratio > 10) {
         enqueueSnackbar({
@@ -717,7 +716,6 @@ const onProfilePhotoFile = async (e: Event) => {
         });
       }
     } catch {
-      // Si la compresión falla, usar el archivo original y advertir solo si supera el límite del backend
       if (file.size > 2 * 1024 * 1024) {
         enqueueSnackbar({ type: 'warning', title: 'No se pudo optimizar', message: 'La imagen es muy pesada. Intenta con otra imagen.', duration: 4000 });
         if (e.target) (e.target as HTMLInputElement).value = '';
@@ -727,13 +725,13 @@ const onProfilePhotoFile = async (e: Event) => {
   }
 
   // Mostrar preview local
-  const reader = new FileReader();
-  reader.onload = () => { profilePhotoPreview.value = reader.result as string; };
-  reader.readAsDataURL(finalFile);
+  const previewReader = new FileReader();
+  previewReader.onload = () => { profilePhotoPreview.value = previewReader.result as string; };
+  previewReader.readAsDataURL(finalFile);
 
-  // Guardar archivo comprimido para el upload en "Guardar cambios"
-  profilePendingFile.value  = finalFile;
-  pendingRemovePhoto.value  = false;
+  // Guardar archivo para el upload en "Guardar cambios"
+  profilePendingFile.value = finalFile;
+  pendingRemovePhoto.value = false;
 
   if (e.target) (e.target as HTMLInputElement).value = '';
 };
