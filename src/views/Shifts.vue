@@ -210,6 +210,7 @@ import AppButton from '@/components/ui/AppButton.vue';
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useSalesStore } from '@/stores/sales.store';
+import { useExpensesStore } from '@/stores/expenses.store';
 import { useSnackbar } from '@/composables/useSnackbar';
 import Pagination from '@/components/ui/Pagination.vue';
 
@@ -217,6 +218,7 @@ const router = useRouter();
 
 const shiftsStore = useShiftsStore();
 const salesStore = useSalesStore();
+const expensesStore = useExpensesStore();
 const { enqueueSnackbar } = useSnackbar();
 
 const currentShift = computed(() => shiftsStore.currentShift);
@@ -245,6 +247,7 @@ const closeForm = ref({
 onMounted(() => {
   shiftsStore.fetchShifts();
   salesStore.fetchSales();
+  expensesStore.fetchExpenses();
 });
 
 const computedExpectedCash = computed(() => {
@@ -253,10 +256,20 @@ const computedExpectedCash = computed(() => {
   
   if (shiftsStore.currentShift.opened_at) {
     const openedAt = new Date(shiftsStore.currentShift.opened_at).getTime();
+    
+    // Sumar ventas completadas desde que se abrió el turno
     salesStore.sales.forEach(sale => {
       const saleTime = new Date(sale.created_at).getTime();
       if (sale.status === 'completed' && saleTime >= openedAt) {
         total += Number(sale.total);
+      }
+    });
+    
+    // Restar gastos del turno
+    expensesStore.expenses.forEach(expense => {
+      const expenseTime = new Date(expense.created_at).getTime();
+      if (expenseTime >= openedAt) {
+        total -= Number(expense.amount);
       }
     });
   }
