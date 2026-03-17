@@ -218,12 +218,6 @@
               <span>{{ loginError }}</span>
             </div>
           </transition>
-
-          <!-- Separador -->
-          <div class="divider" data-aos="fade-up" data-aos-delay="400">
-            <span class="divider-text">O continúa con</span>
-          </div>
-
           <!-- Social Buttons -->
           <div class="social-buttons" data-aos="fade-up" data-aos-delay="450">
             <!-- <button type="button" class="social-btn">
@@ -251,7 +245,7 @@
 
         <!-- Registro -->
         <div class="register-link" data-aos="fade-up" data-aos-delay="500">
-          <p>¿No tienes una cuenta? <a href="#" class="contact-link">Contactar Soporte</a></p>
+          <p>¿No tienes una cuenta? <a href="/#contact" class="contact-link">Contactar Soporte</a></p>
         </div>
       </div>
 
@@ -831,7 +825,7 @@ const handleLogin = async () => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 0rem;
 }
 
 .form-group {

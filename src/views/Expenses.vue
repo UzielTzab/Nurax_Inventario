@@ -6,9 +6,9 @@
         <h1 class="page-title">Control de Gastos</h1>
         <p class="subtitle">Registra egresos como servicios, nómina y pago a proveedores.</p>
       </div>
-      <button @click="showAddModal = true" class="btn btn-primary">
+      <AppButton variant="fill" @click="showAddModal = true">
          + Nuevo Gasto
-      </button>
+      </AppButton>
     </div>
 
     <!-- Lista de Gastos -->
@@ -94,10 +94,12 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showAddModal = false">Cancelar</button>
-            <button type="submit" class="btn btn-primary" :disabled="expensesStore.isLoading">
-               {{ expensesStore.isLoading ? 'Guardando...' : 'Guardar Gasto' }}
-            </button>
+            <AppButton variant="outline" size="md" @click="showAddModal = false">
+              Cancelar
+            </AppButton>
+            <AppButton variant="fill" size="md" @click="submitExpense" :loading="expensesStore.isLoading">
+              {{ expensesStore.isLoading ? 'Guardando...' : 'Guardar Gasto' }}
+            </AppButton>
           </div>
         </form>
       </div>
@@ -110,6 +112,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import AppButton from '@/components/ui/AppButton.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useExpensesStore } from '@/stores/expenses.store';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -208,12 +211,6 @@ const categoryBadge = (cat: string) => {
 .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; }
 .btn-link:hover { text-decoration: underline; }
 
-.btn { padding: 0.75rem 1.2rem; border-radius: 24px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
-.btn-primary { background: var(--color-brand-main, #047857); color: white; }
-.btn-primary:hover:not(:disabled) { background: #065f46; }
-.btn-secondary { background: #e5e7eb; color: #374151; }
-.btn-secondary:hover { background: #d1d5db; }
-
 /* Modal */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1060; padding: 1rem; }
 .modal-card { background: white; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
@@ -227,4 +224,7 @@ const categoryBadge = (cat: string) => {
 .input:focus { outline: none; border-color: #047857; box-shadow: 0 0 0 2px rgba(4,120,87,0.2); }
 .file-input { padding: 0.4rem; font-size: 0.875rem; }
 .modal-footer { margin-top: 1rem; display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+.modal-footer :deep() > * {
+  flex: none;
+}
 </style>
