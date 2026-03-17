@@ -8,7 +8,8 @@
       `app-button--${size}`,
       { 'app-button--full-width': fullWidth },
       { 'app-button--loading': loading },
-      { 'app-button--icon-only': iconOnly }
+      { 'app-button--icon-only': iconOnly },
+      { 'app-button--active': active && variant === 'pill' }
     ]"
     @click="handleClick"
     @mousedown="createRipple"
@@ -67,7 +68,7 @@ import type { Component } from 'vue';
 
 interface Props {
   type?:          'button' | 'submit' | 'reset';
-  variant?:       'fill' | 'outline';
+  variant?:       'fill' | 'outline' | 'pill' | 'ghost';
   size?:          'sm' | 'md' | 'lg';
   disabled?:      boolean;
   fullWidth?:     boolean;
@@ -75,6 +76,7 @@ interface Props {
   icon?:          Component;
   iconPosition?:  'left' | 'right';
   iconOnly?:      boolean;
+  active?:        boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -87,6 +89,7 @@ const props = withDefaults(defineProps<Props>(), {
   icon:           undefined,
   iconPosition:   'left',
   iconOnly:       false,
+  active:         false,
 });
 
 
@@ -288,6 +291,73 @@ const handleClick = (event: MouseEvent) => {
   color: rgba(0, 0, 0, 0.26);
   border: 1px solid rgba(0, 0, 0, 0.12);
   background-color: transparent;
+}
+
+/* Variante: Pill (Chip/Toggle Buttons) */
+.app-button--pill {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 20px;
+  color: var(--color-pill-inactive-text);
+  background: var(--color-pill-inactive-bg);
+  border: 1px solid var(--color-pill-inactive-border);
+  box-shadow: none;
+  font-weight: 500;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-button--pill:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.app-button--pill:active:not(:disabled) {
+  background: #d1d5db;
+}
+
+.app-button--pill.app-button--active {
+  color: var(--color-pill-active-text);
+  background: var(--color-pill-active-bg);
+  border-color: var(--color-pill-active-border);
+  font-weight: 600;
+}
+
+.app-button--pill.app-button--active:hover:not(:disabled) {
+  background: #1f5d47;
+  border-color: #1f5d47;
+  box-shadow: 0 0 0 3px rgba(34, 125, 82, 0.15);
+}
+
+.app-button--pill:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Variante: Ghost (Text-only Buttons) */
+.app-button--ghost {
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0.5rem 0.75rem;
+  font-weight: 400;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-button--ghost:hover:not(:disabled) {
+  color: var(--color-brand-main);
+  background: rgba(34, 125, 82, 0.05);
+  border-radius: 8px;
+}
+
+.app-button--ghost:active:not(:disabled) {
+  color: var(--color-brand-main);
+  background: rgba(34, 125, 82, 0.1);
+}
+
+.app-button--ghost:disabled {
+  color: rgba(0, 0, 0, 0.26);
 }
 
 

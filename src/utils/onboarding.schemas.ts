@@ -7,9 +7,9 @@ import { z } from 'zod';
  */
 
 export const Step1Schema = z.object({
-  company_name: z
+  store_name: z
     .string()
-    .min(1, 'El nombre de la empresa es obligatorio')
+    .min(1, 'El nombre del negocio es obligatorio')
     .min(3, 'El nombre debe tener al menos 3 caracteres')
     .max(200, 'El nombre no puede exceder 200 caracteres'),
   ticket_name: z
@@ -17,6 +17,24 @@ export const Step1Schema = z.object({
     .min(1, 'El nombre del ticket es obligatorio')
     .min(3, 'El nombre debe tener al menos 3 caracteres')
     .max(100, 'El nombre no puede exceder 100 caracteres')
+});
+
+export const Step3Schema = z.object({
+  address: z
+    .string()
+    .max(300, 'La dirección no puede exceder 300 caracteres')
+    .optional()
+    .default(''),
+  phone: z
+    .string()
+    .max(30, 'El teléfono no puede exceder 30 caracteres')
+    .optional()
+    .default(''),
+  ticket_message: z
+    .string()
+    .max(500, 'El mensaje no puede exceder 500 caracteres')
+    .optional()
+    .default('')
 });
 
 export const Step2Schema = z.object({

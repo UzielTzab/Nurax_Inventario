@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="wizard-header">
-      <h2>Personalización Inicial</h2>
-      <p>Configuremos tu empresa y ticket. Estos datos son obligatorios.</p>
+      <h2>Información de tu Negocio</h2>
+      <p>Estos datos son fundamentales y aparecerán en todos tus recibos.</p>
     </div>
 
     <div class="wizard-body">
@@ -12,56 +12,78 @@
         </div>
       </div>
 
-      <!-- Nombre de Empresa -->
+      <!-- Nombre del Negocio -->
       <div class="form-group">
-        <label class="form-label required">Nombre de tu Empresa</label>
+        <label class="form-label required">¿Cuál es el nombre de tu negocio o tienda?</label>
         <input
-          v-model="form.company_name"
+          v-model="form.store_name"
           type="text"
           class="form-control"
-          :class="{ error: hasError('company_name') }"
-          placeholder="Ej: Mi Tienda de Ropa"
-          @input="clearError('company_name')"
+          :class="{ error: hasError('store_name') }"
+          placeholder="Ej: La Tienda de María"
+          @input="clearError('store_name')"
         />
-        <div v-if="hasError('company_name')" class="form-error">
-          {{ getError('company_name') }}
+        <div v-if="hasError('store_name')" class="form-error">
+          {{ getError('store_name') }}
         </div>
         <p class="form-hint">
-          Este nombre aparecerá en tus recibos y reportes
+          Este nombre aparecerá en todos tus recibos 📋
         </p>
       </div>
 
-      <!-- Nombre del Ticket -->
+      <!-- Nombre del Comprobante (Pills Selection) -->
       <div class="form-group">
-        <label class="form-label required">Nombre para tus Recibos</label>
-        <input
-          v-model="form.ticket_name"
-          type="text"
-          class="form-control"
-          :class="{ error: hasError('ticket_name') }"
-          placeholder="Ej: Recibo de Venta"
-          @input="clearError('ticket_name')"
-        />
+        <label class="form-label required">¿Cómo se llama tu comprobante de venta?</label>
+        <p class="form-hint">
+          Elige una opción o crea una personalizada 🧾
+        </p>
+        
+        <!-- Pills Container -->
+        <div class="pills-container">
+          <AppButton
+            v-for="option in ticketOptions"
+            :key="option"
+            variant="pill"
+            size="sm"
+            :active="form.ticket_name === option"
+            @click="form.ticket_name = option"
+          >
+            {{ option }}
+          </AppButton>
+        </div>
+
+        <!-- Input para personalizar (opcional) -->
+        <div class="custom-input-section">
+          <input
+            v-model="form.ticket_name"
+            type="text"
+            class="form-control custom-input"
+            :class="{ error: hasError('ticket_name') }"
+            placeholder="O escribe uno personalizado..."
+            @input="clearError('ticket_name')"
+          />
+          <p class="form-hint custom-hint">
+            Si prefieres otro nombre, escríbelo aquí y aparecerá en tus recibos
+          </p>
+        </div>
+
         <div v-if="hasError('ticket_name')" class="form-error">
           {{ getError('ticket_name') }}
         </div>
-        <p class="form-hint">
-          Personaliza el nombre que verá el cliente en el ticket
-        </p>
       </div>
 
       <!-- Preview -->
       <div class="preview-box">
-        <div class="preview-box-title">Vista Previa</div>
+        <div class="preview-box-title">📄 Vista Previa del Recibo</div>
         <div class="preview-content">
           <div class="preview-item">
-            <span class="preview-label">Empresa:</span>
+            <span class="preview-label">Negocio:</span>
             <span class="preview-value">
-              {{ form.company_name || 'Mi Tienda' }}
+              {{ form.store_name || 'Mi Negocio' }}
             </span>
           </div>
           <div class="preview-item">
-            <span class="preview-label">Tipo de Documento:</span>
+            <span class="preview-label">Comprobante:</span>
             <span class="preview-value">
               {{ form.ticket_name || 'Recibo' }}
             </span>
@@ -74,11 +96,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import AppButton from '@/components/ui/AppButton.vue';
 import { validateStep1 } from '@/utils/onboarding.schemas';
 
 interface Props {
   initialData?: {
-    company_name: string;
+    store_name: string;
     ticket_name: string;
   };
 }
@@ -90,8 +113,17 @@ const emit = defineEmits<{
   (e: 'validate'): boolean;
 }>();
 
+const ticketOptions = [
+  'Recibo',
+  'Factura',
+  'Comprobante',
+  'Boleta',
+  'Ticket',
+  'Tiquete'
+];
+
 const form = ref({
-  company_name: props.initialData?.company_name || '',
+  store_name: props.initialData?.store_name || '',
   ticket_name: props.initialData?.ticket_name || ''
 });
 
@@ -130,4 +162,48 @@ defineExpose({
 
 <style scoped>
 @import '@/styles/onboarding.css';
+
+.pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fafbfc;
+  border-radius: 12px;
+}
+
+.custom-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.custom-input {
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #374151;
+  font-family: inherit;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.custom-input:focus {
+  background: white;
+  border-color: var(--color-brand-main);
+  box-shadow: 0 0 0 3px rgba(34, 125, 82, 0.1);
+}
+
+.custom-hint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+}
 </style>
