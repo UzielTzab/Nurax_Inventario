@@ -84,7 +84,6 @@
                 size="md"
                 @click="goNext"
                 :disabled="isProcessing"
-                :fullWidth="true"
               >
                 <span v-if="!isProcessing">Continuar</span>
                 <span v-else><div class="spinner"></div></span>
@@ -313,17 +312,17 @@ const onSuccess = (storeProfileData: any) => {
 .wizard-footer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   padding-top: 2rem;
   margin-top: 2rem;
   border-top: 1px solid #e5e7eb;
 }
 
 .footer-actions {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: flex-end;
 }
 
 /* Spinner */
