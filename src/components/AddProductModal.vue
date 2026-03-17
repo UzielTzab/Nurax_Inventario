@@ -249,7 +249,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'productAdded', 'productUpdated']);
 
-const { suppliers } = useSuppliers();
+const { suppliers, fetchSuppliers } = useSuppliers();
 const showAddSupplierModal = ref(false);
 
 const categoriesList = ref<Array<{id: number | string, name: string}>>([]);
@@ -307,8 +307,17 @@ const fetchCategories = async () => {
   }
 };
 
+const loadSuppliers = async () => {
+  try {
+    await fetchSuppliers();
+  } catch(e) {
+    console.error("Error loading suppliers:", e);
+  }
+};
+
 onMounted(() => {
   fetchCategories();
+  loadSuppliers();
 });
 
 const formData = reactive({
@@ -407,8 +416,23 @@ const adjustStock = (amount: number) => {
 };
 
 /** Called when AddSupplierModal successfully creates a supplier */
-const onSupplierCreated = (supplierId: string) => {
+const onSupplierCreated = (supplierId: string, supplierName: string) => {
+  // Asignar el proveedor recién creado al formulario
   formData.supplierId = supplierId;
+  
+  // Asegurar que el nuevo proveedor aparece en la lista
+  // (El composable ya lo agregó a través de addSupplier, pero por si acaso)
+  if (suppliers.value && !suppliers.value.find(s => String(s.id) === supplierId)) {
+    suppliers.value.push({
+      id: supplierId,
+      name: supplierName,
+      contactPerson: '',
+      phone: '',
+      email: '',
+      website: '',
+      address: '',
+    } as any);
+  }
 };
 
 const handleSubmit = () => {
