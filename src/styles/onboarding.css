@@ -23,13 +23,14 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 1.5rem;
+  padding: 3rem 1.5rem;
   min-height: 100vh;
 }
 
 .wizard-inner {
   width: 100%;
   max-width: 600px;
+  max-height: calc(100vh - 6rem);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -51,6 +52,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  max-height: 100%;
 }
 
 .wizard-header {
@@ -144,7 +146,7 @@
   padding: 2rem;
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 500px);
 }
 
 .form-group {
