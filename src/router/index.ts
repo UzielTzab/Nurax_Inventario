@@ -9,6 +9,7 @@ import Login from '@/views/Login.vue'
 
 // Views - Dashboard
 import Inventory from '@/views/Inventory.vue'
+import OnboardingWizard from '@/components/onboarding/OnboardingWizard.vue'
 import SalesHistory from '@/views/SalesHistory.vue'
 import Suppliers from '@/views/Suppliers.vue'
 import AdminClients from '@/views/AdminClients.vue'
@@ -35,6 +36,11 @@ const routes: RouteRecordRaw[] = [
       // Will be handled in the guard. For fallback:
       return '/dashboard/inventory'
     }
+  },
+  {
+    path: '/dashboard/onboarding',
+    component: OnboardingWizard,
+    meta: { title: 'Configuración Inicial', roles: ['cliente'] }
   },
   {
     path: '/dashboard/inventory',
@@ -106,6 +112,22 @@ router.beforeEach(async (to) => {
 
   // Si después de initSession() no hay sesión válida y no es ruta pública → login
   if (!isAuthenticated.value) return '/auth/login'
+
+  // ⭐ Detectar si cliente no completó el setup y redirigir al onboarding
+  if (currentUser.value?.role === 'cliente') {
+    const storeProfile = (currentUser.value as any).store_profile
+    const isOnboardingRoute = to.path === '/dashboard/onboarding'
+    
+    if (storeProfile && !storeProfile.is_first_setup_completed && !isOnboardingRoute) {
+      // Cliente no completó setup → mandarlo al onboarding
+      return '/dashboard/onboarding'
+    }
+    
+    if (storeProfile && storeProfile.is_first_setup_completed && isOnboardingRoute) {
+      // Cliente ya completó setup pero intenta volver al onboarding → al inventory
+      return '/dashboard/inventory'
+    }
+  }
 
   // Redirigir la base del dashboard según el rol
   if (to.path === '/dashboard' && currentUser.value) {

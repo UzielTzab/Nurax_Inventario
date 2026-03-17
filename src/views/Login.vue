@@ -265,6 +265,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { z } from 'zod'
 import { useAuth } from '@/composables/useAuth'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -272,6 +273,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
+const router = useRouter()
 const { login } = useAuth()
 
 const email = ref('')
@@ -317,7 +319,7 @@ const humanizeError = (raw: string): string => {
     return 'Demasiados intentos fallidos. Espera unos minutos antes de intentarlo de nuevo.'
   }
   if (r.includes('network') || r.includes('fetch') || r.includes('connection') || r.includes('timeout')) {
-    return 'No pudimos conectar con el servidor. Revisa tu internet e intenta de nuevo.'
+    return 'No pudimos conectar con el servidor en estos momentos, por favor contacta con soporte.'
   }
   // Si ya viene en español o es un mensaje corto legible, lo mostramos tal cual
   if (r.length < 100 && !r.includes('http') && /[áéíóúñ,. ]/.test(raw)) return raw;
@@ -341,14 +343,15 @@ const handleLogin = async () => {
     
     if (result.success && result.role) {
       console.log('✅ Login exitoso! Rol:', result.role)
-      // LoadingScreen deshabilitado: App.vue evaluará si es primera vez para mostrar wizard
-      // showLoadingScreen(result.email!, result.role)
+      // Redirigir al dashboard según el rol
+      const dashboardPath = result.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
+      await router.push(dashboardPath)
     } else {
       loginError.value = humanizeError(result.error || '')
     }
   } catch (error) {
     console.error('❌ Error en login:', error)
-    loginError.value = 'No pudimos conectar con el servidor. Revisa tu internet e intenta de nuevo.'
+    loginError.value = 'No pudimos conectar con el servidor en estos momentos, por favor contacta con soporte.'
   } finally {
     isLoading.value = false
   }

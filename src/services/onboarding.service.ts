@@ -157,20 +157,30 @@ class OnboardingService {
    * Completa el onboarding
    */
   async completeOnboarding(
-    companyName: string,
-    ticketName: string
+    storeName: string,
+    ticketName: string,
+    address: string = '',
+    phone: string = '',
+    ticketMessage: string = ''
   ): Promise<OnboardingCompleteResponse> {
     try {
       const response = await apiClient.post<OnboardingCompleteResponse>(
         '/store/onboarding-complete/',
         {
-          company_name: companyName,
-          ticket_name: ticketName
+          store_name: storeName,
+          ticket_name: ticketName,
+          address: address,
+          phone: phone,
+          ticket_message: ticketMessage
         }
       );
 
       if (response.success) {
-        return response.data as OnboardingCompleteResponse;
+        return {
+          success: true,
+          message: response.data?.message || 'Onboarding completado exitosamente',
+          data: response.data
+        };
       } else {
         return {
           success: false,

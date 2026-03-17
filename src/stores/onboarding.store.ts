@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
 export interface OnboardingStep1Data {
-  company_name: string;
+  store_name: string;
   ticket_name: string;
 }
 
@@ -19,9 +19,16 @@ export interface OnboardingStep2Data {
   };
 }
 
+export interface OnboardingStep3Data {
+  address: string;
+  phone: string;
+  ticket_message: string;
+}
+
 export interface OnboardingFormData {
   step1: OnboardingStep1Data;
   step2: OnboardingStep2Data;
+  step3: OnboardingStep3Data;
 }
 
 export const useOnboardingStore = defineStore('onboarding', () => {
@@ -32,7 +39,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
 
   const formData = ref<OnboardingFormData>({
     step1: {
-      company_name: '',
+      store_name: '',
       ticket_name: ''
     },
     step2: {
@@ -46,6 +53,11 @@ export const useOnboardingStore = defineStore('onboarding', () => {
         price: 'price',
         supplier: 'supplier'
       }
+    },
+    step3: {
+      address: '',
+      phone: '',
+      ticket_message: ''
     }
   });
 
@@ -77,6 +89,10 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     formData.value.step2 = { ...formData.value.step2, ...data };
   };
 
+  const setStep3Data = (data: Partial<OnboardingStep3Data>) => {
+    formData.value.step3 = { ...formData.value.step3, ...data };
+  };
+
   const setError = (message: string) => {
     error.value = message;
   };
@@ -100,7 +116,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     successMessage.value = null;
     formData.value = {
       step1: {
-        company_name: '',
+        store_name: '',
         ticket_name: ''
       },
       step2: {
@@ -114,6 +130,11 @@ export const useOnboardingStore = defineStore('onboarding', () => {
           price: 'price',
           supplier: 'supplier'
         }
+      },
+      step3: {
+        address: '',
+        phone: '',
+        ticket_message: ''
       }
     };
   };
@@ -130,6 +151,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     prevStep,
     setStep1Data,
     setStep2Data,
+    setStep3Data,
     setError,
     setSuccess,
     clearError,
