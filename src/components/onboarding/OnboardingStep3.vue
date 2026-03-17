@@ -86,13 +86,25 @@
 
     <!-- Footer con Botones -->
     <div v-if="!isProcessing && !isSuccess" class="wizard-footer">
-      <button class="wizard-button secondary" @click="goBack" :disabled="isProcessing">
-        Atrás
-      </button>
-      <button class="wizard-button primary" @click="finalize" :disabled="isProcessing">
-        <span v-if="!isProcessing">Finalizar</span>
-        <span v-else><div class="spinner"></div></span>
-      </button>
+      <div class="footer-actions">
+        <AppButton
+          variant="outline"
+          size="md"
+          @click="goBack"
+          :disabled="isProcessing"
+        >
+          Atrás
+        </AppButton>
+        <AppButton
+          variant="fill"
+          size="md"
+          @click="finalize"
+          :disabled="isProcessing"
+        >
+          <span v-if="!isProcessing">Finalizar</span>
+          <span v-else><div class="spinner"></div></span>
+        </AppButton>
+      </div>
     </div>
   </div>
 </template>
@@ -101,6 +113,7 @@
 import { ref } from 'vue';
 import { useOnboardingStore } from '@/stores/onboarding.store';
 import { onboardingService } from '@/services/onboarding.service';
+import AppButton from '@/components/ui/AppButton.vue';
 
 interface Props {
   step1Data: {
@@ -314,10 +327,18 @@ const finalize = async () => {
 
 .wizard-footer {
   display: flex;
-  gap: 1rem;
-  padding-top: 1.5rem;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 2rem;
   margin-top: 2rem;
   border-top: 1px solid #e5e7eb;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .wizard-button {

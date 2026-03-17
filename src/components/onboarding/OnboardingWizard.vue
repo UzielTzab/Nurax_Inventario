@@ -85,7 +85,7 @@
                 @click="goNext"
                 :disabled="isProcessing"
               >
-                <span v-if="!isProcessing">Continuar</span>
+                <span v-if="!isProcessing">Siguiente</span>
                 <span v-else><div class="spinner"></div></span>
               </AppButton>
             </div>
