@@ -155,6 +155,13 @@
       @product-updated="handleUpdateProduct"
     />
 
+    <FirstProductModal
+      :is-open="showFirstProductModal"
+      @close="showFirstProductModal = false"
+      @create-product="handleFirstProductCreate"
+      @load-excel="handleFirstProductLoadExcel"
+    />
+
     <RestockModal
       v-if="selectedProductForRestock"
       :is-open="showRestockModal"
@@ -192,6 +199,7 @@ import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
+import FirstProductModal from '@/components/FirstProductModal.vue';
 import RestockModal from '@/components/RestockModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -233,6 +241,12 @@ let channel: any = null;
 
 onMounted(async () => {
   await fetchProducts();
+  
+  // Mostrar FirstProductModal si no hay productos
+  if (pagination.value.count === 0) {
+    showFirstProductModal.value = true;
+  }
+  
   await salesStore.fetchSales();
   
   // Inicializar Pusher para escuchar cambios de inventario en tiempo real
@@ -297,6 +311,7 @@ onUnmounted(() => {
 });
 
 const showAddProductModal = ref(false);
+const showFirstProductModal = ref(false);
 const showRestockModal = ref(false);
 const selectedProduct = ref<Product | null>(null);
 const selectedProductForRestock = ref<Product | null>(null);
@@ -319,6 +334,23 @@ const formatCurrency = (value: number) => {
 // Handlers
 const handleQuickSell = () => {
   salesStore.openModal();
+};
+
+// ===== FIRST PRODUCT MODAL HANDLERS =====
+const handleFirstProductCreate = () => {
+  showFirstProductModal.value = false;
+  handleAddProduct();
+};
+
+const handleFirstProductLoadExcel = () => {
+  showFirstProductModal.value = false;
+  // TODO: Abrir modal de carga de Excel
+  enqueueSnackbar({
+    type: 'info',
+    title: 'Excel Import',
+    message: 'Funcionalidad de carga de Excel próximamente',
+    duration: 3000
+  });
 };
 
 const handleAddProduct = () => {
