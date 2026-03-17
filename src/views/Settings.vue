@@ -210,6 +210,31 @@
 
           <!-- RIGHT COLUMN: PREVIEW -->
           <div class="settings-preview">
+            <template v-if="isLoading">
+              <!-- Skeleton for preview -->
+              <div class="preview-card">
+                <div style="display: flex; gap: 0.5rem; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                  <AppSkeleton width="24px" height="24px" radius="4px" />
+                  <AppSkeleton width="100px" height="1rem" />
+                </div>
+                <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                  <AppSkeleton width="80px" height="80px" radius="50%" />
+                  <AppSkeleton width="100%" height="1rem" />
+                  <AppSkeleton width="100%" height="1rem" />
+                  <AppSkeleton width="100%" height="1rem" />
+                  <div style="margin-top: 1rem;">
+                    <AppSkeleton width="100%" height="0.5px" />
+                  </div>
+                  <AppSkeleton width="100%" height="6rem" />
+                  <div style="margin-top: 1rem;">
+                    <AppSkeleton width="100%" height="0.5px" />
+                  </div>
+                  <AppSkeleton width="100%" height="2rem" />
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
             <div class="preview-card">
               <div class="preview-header">
                 <div class="preview-title">
@@ -310,6 +335,7 @@
               </div>
 
             </div> <!-- .preview-card -->
+            </template>
 
             <!-- Button Under Preview -->
             <div class="preview-actions">
