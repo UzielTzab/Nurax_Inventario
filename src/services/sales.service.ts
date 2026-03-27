@@ -61,7 +61,7 @@ class SalesService {
    */
   async getSales(page: number = 1, pageSize: number = 10, search?: string) {
     try {
-      let url = `/sales/?page=${page}&page_size=${pageSize}`;
+      let url = `/v1/sales/sales/?page=${page}&page_size=${pageSize}`;
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
       }
@@ -106,7 +106,7 @@ class SalesService {
    */
   async getAccountsReceivable(page: number = 1, pageSize: number = 10, search?: string) {
     try {
-      let url = `/sales/accounts_receivable/?page=${page}&page_size=${pageSize}&include_completed=true`;
+      let url = `/v1/sales/sales/accounts_receivable/?page=${page}&page_size=${pageSize}&include_completed=true`;
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
       }
@@ -149,7 +149,7 @@ class SalesService {
    */
   async getSale(id: number | string) {
     try {
-      const response = await apiClient.get<Sale>(`/sales/${id}/`);
+      const response = await apiClient.get<Sale>(`/v1/sales/sales/${id}/`);
       return {
         success: response.success,
         data: response.data,
@@ -176,7 +176,7 @@ class SalesService {
     status: string;
   }) {
     try {
-      const response = await apiClient.post<Sale>('/sales/', saleData);
+      const response = await apiClient.post<Sale>('/v1/sales/sales/', saleData);
       
       // Normalizar respuesta - backend devuelve Sale en response.data
       if (response.success && response.data) {
@@ -207,7 +207,7 @@ class SalesService {
    */
   async cancelSale(id: number | string) {
     try {
-      const response = await apiClient.post<{ status: string }>(`/sales/${id}/cancel/`, {});
+      const response = await apiClient.post<{ status: string }>(`/v1/sales/sales/${id}/cancel/`, {});
       return {
         success: response.success,
         data: response.data,
@@ -227,7 +227,7 @@ class SalesService {
    */
   async addPayment(saleId: number, amount: number) {
     try {
-      const response = await apiClient.post<Payment>('/payments/', {
+      const response = await apiClient.post<Payment>('/v1/sales/payments/', {
         sale: saleId,
         amount,
       });
@@ -250,7 +250,7 @@ class SalesService {
    */
   async getSalePayments(saleId: number | string) {
     try {
-      const response = await apiClient.get<Payment[]>(`/sales/${saleId}/payments/`);
+      const response = await apiClient.get<Payment[]>(`/v1/sales/sales/${saleId}/payments/`);
       return {
         success: response.success,
         data: response.data || [],

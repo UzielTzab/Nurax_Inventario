@@ -30,14 +30,14 @@ class SuppliersService {
    * Obtiene el listado de proveedores
    */
   async getSuppliers() {
-    return apiClient.get<Supplier[]>('/suppliers/');
+    return apiClient.get<Supplier[]>('/v1/products/suppliers/');
   }
 
   /**
    * Obtiene un proveedor específico por ID
    */
   async getSupplier(id: number | string) {
-    return apiClient.get<Supplier>(`/suppliers/${id}/`);
+    return apiClient.get<Supplier>(`/v1/products/suppliers/${id}/`);
   }
 
   /**
@@ -50,7 +50,7 @@ class SuppliersService {
       email: data.email || '',
       phone: data.phone || '',
     };
-    return apiClient.post<Supplier>('/suppliers/', payload);
+    return apiClient.post<Supplier>('/v1/products/suppliers/', payload);
   }
 
   /**
@@ -63,14 +63,14 @@ class SuppliersService {
       email: data.email,
       phone: data.phone,
     };
-    return apiClient.put<Supplier>(`/suppliers/${id}/`, payload);
+    return apiClient.put<Supplier>(`/v1/products/suppliers/${id}/`, payload);
   }
 
   /**
    * Elimina un proveedor
    */
   async deleteSupplier(id: number | string) {
-    return apiClient.delete(`/suppliers/${id}/`);
+    return apiClient.delete(`/v1/products/suppliers/${id}/`);
   }
 }
 

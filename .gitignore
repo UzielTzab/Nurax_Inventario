@@ -6,7 +6,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-#ignorar dev-dist
+build.txt
+build_log.txt
+build_output.txt
+
+ignorar dev-dist
 dev-dist
 
 node_modules

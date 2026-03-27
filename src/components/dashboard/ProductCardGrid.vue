@@ -153,9 +153,8 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 16px -5px rgba(34, 125, 82, 0.06), 0 2px 6px -2px rgba(0,0,0,0.04);
-  min-height: 350px;
-  width: 100%;
-  height: 10%;
+  min-height: 380px;
+  width: 90%;
 }
 .product-card:hover {
   box-shadow: 0 24px 48px -12px rgba(34, 125, 82, 0.12), 0 8px 20px -8px rgba(0,0,0,0.08);
@@ -173,7 +172,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   position: relative;
   width: 100%;
   aspect-ratio: 12/12;
-  background: white;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   overflow: hidden;
 }
 .card-image { width: 100%; height: 100%; object-fit: cover; }
@@ -186,7 +185,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .card-status-badge { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.7rem; }
 
 /* ── Body ── */
-.card-body { padding: 1.25rem 1.25rem 1.375rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.card-body { padding: 1.25rem 1.25rem 1.375rem; flex: 1; display: flex; flex-direction: column; gap: 0.875rem; }
 .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
 .card-titles { min-width: 0; }
 .card-name { font-size: 0.95rem; font-weight: 800; color: #06402B; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.5px 1px rgba(6, 64, 43, 0.08); }

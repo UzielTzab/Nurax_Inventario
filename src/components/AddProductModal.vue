@@ -298,7 +298,7 @@ const onDecodeSku = (detectedCodes: any[]) => {
 
 const fetchCategories = async () => {
   try {
-    const res = await apiClient.get<any>('/categories/');
+    const res = await apiClient.get<any>('/v1/products/categories/');
     if (res.success && res.data) {
        categoriesList.value = res.data.results || res.data;
     }

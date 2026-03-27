@@ -398,7 +398,7 @@ const isLoading = ref(true);
 onMounted(async () => {
   isLoading.value = true;
   try {
-    const res = await apiClient.get<any>('/store/');
+    const res = await apiClient.get<any>('/v1/accounts/store-profiles/');
     if (res.success && res.data) {
       const d = res.data;
       settings.value.storeName      = d.store_name      ?? '';
@@ -468,7 +468,7 @@ const saveSettings = async () => {
       formData.append('logo_file', logoFile.value);
     }
 
-    const res = await apiClient.patch<any>('/store/1/', formData);
+    const res = await apiClient.patch<any>('/v1/accounts/store-profiles/', formData);
 
     if (res.success && res.data) {
       // Update logo URL with Cloudinary's final URL

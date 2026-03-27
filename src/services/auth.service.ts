@@ -55,7 +55,7 @@ const authService = {
    * 2. Obtener Perfil del Usuario Logueado
    */
   async fetchUser() {
-    const res = await apiClient.get<UserProfileResponse>('/users/me/')
+    const res = await apiClient.get<UserProfileResponse>('/v1/accounts/users/me/')
     return res
   },
 
@@ -65,8 +65,8 @@ const authService = {
   async updateAvatar(file: File) {
     const formData = new FormData();
     formData.append('avatar_file', file);
-    // Pass FormData as body — ApiClient strips Content-Type so browser sets boundary
-    const res = await apiClient.patch<{ avatar_url: string }>('/users/me/avatar/', formData);
+    // Pass FormData as body — backend maneja el archivo en PATCH /me/
+    const res = await apiClient.patch<UserProfileResponse>('/v1/accounts/users/me/', formData);
     return res;
   },
 

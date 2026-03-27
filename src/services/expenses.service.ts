@@ -28,14 +28,14 @@ class ExpensesService {
    * Obtiene el listado de gastos
    */
   async getExpenses() {
-    return apiClient.get<Expense[]>('/expenses/');
+    return apiClient.get<Expense[]>('/v1/expenses/expenses/');
   }
 
   /**
    * Obtiene un gasto específico por ID
    */
   async getExpense(id: number | string) {
-    return apiClient.get<Expense>(`/expenses/${id}/`);
+    return apiClient.get<Expense>(`/v1/expenses/expenses/${id}/`);
   }
 
   /**
@@ -56,7 +56,7 @@ class ExpensesService {
       fd.append('receipt_file', expenseData.receipt_file);
     }
 
-    return apiClient.post<Expense>('/expenses/', fd);
+    return apiClient.post<Expense>('/v1/expenses/expenses/', fd);
   }
 
   /**
@@ -79,14 +79,14 @@ class ExpensesService {
     if (expenseData.description) fd.append('description', expenseData.description);
     if (expenseData.receipt_file) fd.append('receipt_file', expenseData.receipt_file);
 
-    return apiClient.patch<Expense>(`/expenses/${id}/`, fd);
+    return apiClient.patch<Expense>(`/v1/expenses/expenses/${id}/`, fd);
   }
 
   /**
    * Elimina un gasto
    */
   async deleteExpense(id: number | string) {
-    return apiClient.delete(`/expenses/${id}/`);
+    return apiClient.delete(`/v1/expenses/expenses/${id}/`);
   }
 }
 
