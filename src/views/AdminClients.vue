@@ -370,7 +370,7 @@ const applyToggle = async () => {
   try {
     // Enviamos el nuevo estado deseado de forma explícita en el body
     const response = await apiClient.patch<{ is_active: boolean }>(
-      `/users/${client.id}/toggle_active/`,
+      `/v1/accounts/users/${client.id}/toggle_active/`,
       { is_active: newState }
     );
     if (response.success && response.data !== undefined) {
@@ -403,7 +403,7 @@ const deleteClient = async () => {
   const targetId = deleteTarget.value.id;
   isSubmitting.value = true;
   try {
-    const response = await apiClient.delete(`/users/${targetId}/`);
+    const response = await apiClient.delete(`/v1/accounts/users/${targetId}/`);
     if (response.success) {
       clients.value = clients.value.filter(c => c.id !== targetId);
       enqueueSnackbar({ type: 'success', title: 'Usuario eliminado', message: 'La cuenta ha sido eliminada exitosamente.', duration: 3000 });
@@ -422,8 +422,8 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
-    // Consumir /api/users/?role=cliente — devuelve respuesta paginada DRF
-    const response = await apiClient.get<any>('/users/?role=cliente');
+    // Consumir /api/v1/accounts/users/?role=cliente — devuelve respuesta paginada DRF
+    const response = await apiClient.get<any>('/v1/accounts/users/?role=cliente');
     if (response.success && response.data) {
       // Manejar formato paginado DRF: {count, next, previous, results}
       const usersList = Array.isArray(response.data) 
@@ -468,7 +468,7 @@ const addClient = async () => {
       username: newClient.value.email.split('@')[0], 
     };
     
-    const response = await apiClient.post('/users/', payload);
+    const response = await apiClient.post('/v1/accounts/users/', payload);
     if (response.success) {
       enqueueSnackbar({ type: 'success', title: 'Cliente creado', message: 'El cliente se registró correctamente.', duration: 3000 });
       await fetchClients(); // Recargar la lista con los IDs reales de la DB

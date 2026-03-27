@@ -27,14 +27,14 @@ class StoreSettingsService {
    * Obtiene la configuración de la tienda
    */
   async getStoreSettings() {
-    return apiClient.get<StoreSettings>('/store/');
+    return apiClient.get<StoreSettings>('/v1/accounts/store-profiles/');
   }
 
   /**
    * Actualiza la configuración de la tienda
    */
   async updateStoreSettings(data: Partial<StoreSettings>) {
-    return apiClient.patch<StoreSettings>('/store/', data);
+    return apiClient.patch<StoreSettings>('/v1/accounts/store-profiles/', data);
   }
 }
 

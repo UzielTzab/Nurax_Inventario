@@ -778,7 +778,7 @@ const saveProfile = async () => {
     if (currentUser.value && (profileForm.name !== currentUser.value.name || profileForm.email !== currentUser.value.email)) {
       try {
         const response = await apiClient.patch<{ detail: string; success: boolean; user: any }>(
-          '/users/me/profile/',
+          '/v1/accounts/users/me/',
           {
             name: profileForm.name,
             email: profileForm.email
@@ -1197,7 +1197,7 @@ const changePassword = async () => {
   isChangingPassword.value = true;
   try {
     const response = await apiClient.patch<{ detail: string; success: boolean }>(
-      '/users/me/change-password/',
+      '/v1/accounts/users/me/change-password/',
       {
         current_password: passwordForm.current,
         new_password    : passwordForm.new,

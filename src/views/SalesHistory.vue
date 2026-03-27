@@ -522,7 +522,10 @@ const todayIncome = computed(() => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return filteredSales.value
-      .filter(s => new Date(s.created_at) >= startOfDay)
+      .filter(s => {
+        const saleDate = new Date(s.created_at);
+        return saleDate >= startOfDay && s.status !== 'cancelled';
+      })
       .reduce((sum, s) => sum + Number(s.total), 0);
 });
 

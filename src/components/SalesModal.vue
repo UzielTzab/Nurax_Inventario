@@ -673,7 +673,7 @@ let isRemoteUpdate = false;
 const syncCartToBackend = async () => {
   if (isRemoteUpdate) return;
   try {
-    await apiClient.post('/products/sync-cart/', {
+    await apiClient.post('/v1/products/products/sync-cart/', {
       cart: cart.value,
       device_id: localDeviceId
     });
@@ -781,7 +781,7 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
 
     // 2. Si no está en memoria local, buscarlo en el backend vía GET
     if (!productFound) {
-      const res = await apiClient.get<any>(`/products/?search=${sku}`);
+      const res = await apiClient.get<any>(`/v1/products/products/?search=${sku}`);
       if (res.success && res.data && res.data.results && res.data.results.length > 0) {
         productFound = res.data.results[0] as Product;
       }
@@ -807,7 +807,7 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
         setTimeout(() => scanState.isLocal = false, timeoutDuration);
 
         // Avisar a otras pestañas con device_id para evitar duplicación
-        apiClient.post<any>('/products/scan/', { 
+        apiClient.post<any>('/v1/products/products/scan/', { 
           sku: productFound.sku,
           device_id: localDeviceId 
         }).catch(() => {});
@@ -1028,7 +1028,7 @@ onMounted(async () => {
     await fetchProducts();
 
     // 3. Cargar el carrito guardado en la Base de Datos (si existe)
-    const res = await apiClient.get<any>('/products/my-cart/');
+    const res = await apiClient.get<any>('/v1/products/products/my-cart/');
     if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
       isRemoteUpdate = true;
       cart.value = res.data.cart;

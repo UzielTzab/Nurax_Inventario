@@ -30,28 +30,28 @@ class ShiftsService {
    * Obtiene el listado de todos los turnos
    */
   async getShifts() {
-    return apiClient.get<Shift[]>('/shifts/');
+    return apiClient.get<Shift[]>('/v1/expenses/cash-shifts/');
   }
 
   /**
    * Obtiene un turno específico por ID
    */
   async getShift(id: number | string) {
-    return apiClient.get<Shift>(`/shifts/${id}/`);
+    return apiClient.get<Shift>(`/v1/expenses/cash-shifts/${id}/`);
   }
 
   /**
    * Abre un nuevo turno con efectivo inicial
    */
   async openShift(starting_cash: number) {
-    return apiClient.post<Shift>('/shifts/open/', { starting_cash });
+    return apiClient.post<Shift>('/v1/expenses/cash-shifts/open/', { starting_cash });
   }
 
   /**
    * Cierra un turno abierto
    */
   async closeShift(id: number, expected_cash: number, actual_cash: number) {
-    return apiClient.post<Shift>(`/shifts/${id}/close/`, {
+    return apiClient.post<Shift>(`/v1/expenses/cash-shifts/${id}/close/`, {
       expected_cash,
       actual_cash,
     });

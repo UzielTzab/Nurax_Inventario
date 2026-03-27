@@ -61,15 +61,6 @@
 
           <!-- Footer con Botones (no visible en step 3) -->
           <div v-if="store.currentStep !== 3" class="wizard-footer">
-            <AppButton
-              variant="ghost"
-              size="md"
-              @click="skipWizard"
-              :disabled="isProcessing"
-            >
-              Omitir por ahora
-            </AppButton>
-
             <div class="footer-actions">
               <AppButton
                 variant="outline"

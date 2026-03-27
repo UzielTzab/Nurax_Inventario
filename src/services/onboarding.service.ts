@@ -127,7 +127,7 @@ class OnboardingService {
   async uploadProducts(products: ProductFromExcel[]): Promise<BulkImportResponse> {
     try {
       const response = await apiClient.post<BulkImportResponse>(
-        '/products/bulk-import/',
+        '/v1/products/products/bulk-import/',
         { products }
       );
 
@@ -165,7 +165,7 @@ class OnboardingService {
   ): Promise<OnboardingCompleteResponse> {
     try {
       const response = await apiClient.post<OnboardingCompleteResponse>(
-        '/store/onboarding-complete/',
+        '/v1/accounts/store-profiles/onboarding-complete/',
         {
           store_name: storeName,
           ticket_name: ticketName,

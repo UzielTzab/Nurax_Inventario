@@ -206,7 +206,7 @@ const handleSubmit = async () => {
   isLoading.value = true;
 
   try {
-    const response = await apiClient.post<{ quantity: number; expense_amount: number }>('/products/register-restock/', {
+    const response = await apiClient.post<{ quantity: number; expense_amount: number }>('/v1/products/products/register-restock/', {
       product_id: parseInt(productIdToUse),
       quantity: form.value.quantity,
       unit_cost: form.value.unit_cost,

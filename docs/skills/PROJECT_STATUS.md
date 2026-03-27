@@ -1,7 +1,7 @@
 # 📊 PROJECT_STATUS.md — Nurax Inventario Frontend
 
 > Documento de estado del proyecto frontend. Ayuda a alinear el trabajo entre desarrollo y agentes AI.
-> Última actualización: 17 de Marzo 2026
+> Última actualización: 23 de Marzo 2026
 
 ---
 
@@ -55,7 +55,7 @@
 
 ## 🔧 Cambios Recientes
 
-### ✅ Corregidos en esta sesión
+### ✅ Corregidos en sesiones anteriores
 1. **Bug: Proveedor no aparecía después de crear** 
    - Causa: AddProductModal no cargaba lista de proveedores
    - Fix: Agregué `fetchSuppliers()` en onMounted y actualización en `onSupplierCreated()`
@@ -97,7 +97,7 @@
 | Estado | Bug | Impacto | Fix Status |
 |--------|-----|---------|-----------|
 | ✅ FIXED | Proveedor no aparecía post-create | Media | Commit 72af48b |
-| ✅ FIXED | Error cerrar turno (FieldError) | Alta | Commit d10fc72 + a652a9d |
+| ✅ FIXED | Error cerrar turno (FieldError) | Alta | Commits d10fc72 + a652a9d |
 | ❓ UNKNOWN | (Revisar si hay más) | - | - |
 
 ---
@@ -117,9 +117,9 @@
 
 ---
 
-## ❓ PREGUNTAS PARA TI — COMPLETAR PRECISAMENTE
+## ❓ PREGUNTAS PARA COMPLETAR
 
-**Por favor responde con máxima precisión (no asumir):**
+Por favor responde con máxima precisión (no asumir):
 
 ### 1. **Cuentas por Cobrar (AccountsReceivable.vue)**
 - ¿Está completamente funcional o es WIP?

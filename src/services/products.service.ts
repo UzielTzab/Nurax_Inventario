@@ -79,7 +79,7 @@ class ProductsService {
     if (filters?.max_price) params.max_price = filters.max_price;
     if (filters?.ordering) params.ordering = filters.ordering;
 
-    return apiClient.get<PaginationResponse<Product>>('/products/', { params });
+    return apiClient.get<PaginationResponse<Product>>('/v1/products/products/', { params });
   }
 
   /**
@@ -87,7 +87,7 @@ class ProductsService {
    * NOTA: El endpoint retorna datos paginados, se extrae automaticamente .results
    */
   async getAllProducts(): Promise<{ success: boolean; data?: Product[]; error?: string; status?: number }> {
-    const response = await apiClient.get<PaginationResponse<Product> | Product[]>('/products/');
+    const response = await apiClient.get<PaginationResponse<Product> | Product[]>('/v1/products/products/');
     
     // Normalizar respuesta: si es paginada, extraer .results
     if (response.success && response.data) {
@@ -116,28 +116,28 @@ class ProductsService {
    * Obtiene un producto específico por ID
    */
   async getProduct(id: number | string) {
-    return apiClient.get<Product>(`/products/${id}/`);
+    return apiClient.get<Product>(`/v1/products/products/${id}/`);
   }
 
   /**
    * Crea un nuevo producto
    */
   async createProduct(data: FormData | Partial<Product>) {
-    return apiClient.post<Product>('/products/', data);
+    return apiClient.post<Product>('/v1/products/products/', data);
   }
 
   /**
    * Actualiza un producto existente
    */
   async updateProduct(id: number | string, data: FormData | Partial<Product>) {
-    return apiClient.put<Product>(`/products/${id}/`, data);
+    return apiClient.put<Product>(`/v1/products/products/${id}/`, data);
   }
 
   /**
    * Elimina un producto
    */
   async deleteProduct(id: number | string) {
-    return apiClient.delete(`/products/${id}/`);
+    return apiClient.delete(`/v1/products/products/${id}/`);
   }
 
   /**
