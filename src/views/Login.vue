@@ -361,7 +361,7 @@ const handleLogin = async () => {
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
   background: #ffffff;
-  font-family: 'Recursive', sans-serif;
+  font-family: inherit;
 }
 
 /* =============================================
@@ -879,7 +879,7 @@ const handleLogin = async () => {
   background: #ffffff;
   transition: border-color 0.2s, box-shadow 0.2s;
   color: #111827;
-  font-family: 'Recursive', sans-serif;
+  font-family: inherit;
   box-sizing: border-box;
 }
 
@@ -995,7 +995,7 @@ const handleLogin = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s;
-  font-family: 'Recursive', sans-serif;
+  font-family: inherit;
   letter-spacing: 0.1px;
   margin-top: 0.25rem;
 }
@@ -1124,7 +1124,7 @@ const handleLogin = async () => {
   color: #374151;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Recursive', sans-serif;
+  font-family: inherit;
 }
 
 .social-btn:hover {

@@ -202,96 +202,88 @@ Frontend no puede alcanzar el backend.
 
 ---
 
-## 🎨 Fuente (Google Fonts) No Carga
+## 🎨 Cambiar la Fuente (Font-Family) de Toda la App
 
-### Síntoma
+### 🎯 CENTRALIZADO EN UN ÚNICO LUGAR
+
+**Toda la fuente está controlada por UNA sola variable en `src/style.css`:**
+
+```css
+/* src/style.css - @theme section */
+--font-family-sans: "Plus Jakarta Sans", sans-serif;
 ```
-Texto se ve en fuente por defecto del navegador (serif/generic)
-No cambia aunque hayas modificado el CSS
-```
 
-Google Fonts no está cargando correctamente.
+No hay múltiples archivos. Un cambio aquí = cambio en toda la app.
 
-### Verificación
+### ✅ Cómo Cambiar la Fuente
 
-**1. Abre DevTools → Network → Font / XHR**
-2. **Busca request a `fonts.googleapis.com`**
-3. **Si está en rojo:** El request falló o la URL es inválida
-4. **Si está verde pero font no se aplica:** Problema en CSS
+#### Opción 1: Cambiar a Recursive (Google Fonts)
+```css
+/* src/style.css */
+--font-family-sans: "Recursive", sans-serif;
 
-### Causas Comunes
-
-**A) Google Fonts URL incorrecta en `index.html`:**
-```html
-<!-- ❌ INCORRECTO - Fuente no existe o está mal escrita -->
-<link href="https://fonts.googleapis.com/css2?family=Recursive+Variable" rel="stylesheet">
-
-<!-- ✅ CORRECTO - El nombre es solo "Recursive" (sin Variable) -->
+/* index.html */
 <link href="https://fonts.googleapis.com/css2?family=Recursive:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 ```
 
-**B) CSS usa nombre de fuente incorrecto en `src/style.css`:**
+#### Opción 2: Cambiar a Inter (Google Fonts)
 ```css
-/* ❌ INCORRECTO - "Recursive Variable" no es el name family correcto */
---font-family-sans: "Recursive Variable", sans-serif;
-body { font-family: 'Recursive Variable', sans-serif; }
+/* src/style.css */
+--font-family-sans: "Inter", sans-serif;
 
-/* ✅ CORRECTO - El name family es solo "Recursive" */
---font-family-sans: "Recursive", sans-serif;
-body { font-family: 'Recursive', sans-serif; }
+/* index.html */
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ```
 
-**C) @import de Google Fonts debe ir PRIMERO en `src/style.css`:**
+#### Opción 3: Cambiar a Plus Jakarta Sans (Google Fonts)
 ```css
-/* ❌ INCORRECTO - @import debe estar al inicio */
-@import "@/styles/onboarding.css";
-@import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Recursive:wght@300;400;500;600;700;800&display=swap');
+/* src/style.css */
+--font-family-sans: "Plus Jakarta Sans", sans-serif;
 
-/* ✅ CORRECTO - @import de fuentes primero */
-@import url('https://fonts.googleapis.com/css2?family=Recursive:wght@300;400;500;600;700;800&display=swap');
-@import "@/styles/onboarding.css";
-@import "tailwindcss";
+/* index.html */
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 ```
 
-### ⚠️ Trap Común: "Recursive Variable" vs "Recursive"
+### 📝 Pasos para Cambiar
 
-> **IMPORTANTE:** En Google Fonts, el nombre de la familia es **solo "Recursive"**. 
-> "Variable" es una característica de la fuente (variable font), NO parte del nombre.
->
-> - ❌ Nunca uses: `'Recursive Variable'`
-> - ✅ Siempre usa: `'Recursive'`
-
-### Solución
-
-1. **Verificar URL en `index.html`:**
-   ```bash
-   grep "googleapis.com" nurax_inventario/index.html
-   # Debe mostrar: family=Recursive:wght@300;400;500;600;700;800&display=swap
+1. **Actualiza la variable CSS** en `src/style.css`:
+   ```css
+   --font-family-sans: "NEW_FONT_NAME", sans-serif;
    ```
 
-2. **Verificar CSS en `src/style.css`:**
-   ```bash
-   grep "font-family.*:" nurax_inventario/src/style.css
-   # Debe mostrar: "Recursive", sans-serif (sin "Variable")
+2. **Actualiza el Google Fonts link** en `index.html` (si es de Google Fonts):
+   ```html
+   <link href="https://fonts.googleapis.com/css2?family=NEW_FONT_NAME:wght@300;400;500;600;700&display=swap" rel="stylesheet">
    ```
 
-3. **Verificar que @import está PRIMERO en `src/style.css`:**
-   ```bash
-   head -5 nurax_inventario/src/style.css
-   # Línea 1 debe ser el @import de Google Fonts
-   ```
+3. **Baja el servidor**: `Ctrl+C`
 
-4. **Limpiar cache y recargar:**
-   - Baja el servidor: `Ctrl+C`
-   - Levanta el servidor: `npm run dev`
-   - Hard refresh en navegador: `Ctrl+Shift+R`
-   - Abre DevTools → Application → Clear Storage → Clear all
-   - Recarga página: `F5`
+4. **Levanta el servidor**: `npm run dev`
 
-5. **Verifica en Dev Tools que la fuente se aplicó:**
-   - Abre DevTools → Inspect → Selecciona un texto
-   - En la sección "Styles" verifica que muestre `font-family: 'Recursive', sans-serif`
+5. **Hard refresh**: `Ctrl+Shift+R`
+
+### ⚠️ Problemas Comunes
+
+#### "La fuente no cambia en toda la app"
+- Asegúrate que la variable en `src/style.css` está actualizada
+- Verifica que el `index.html` tiene el Google Fonts link correcto
+- Limpia todo el cache: DevTools → Application → Clear all storage
+
+#### "La landing no tiene la fuente"
+- La landing heredaba `font-family` anterior. Ahora usa `font-family: inherit;` en todos los componentes
+- Si sigue sin funcionar, limpia cache: `Ctrl+Shift+R`
+
+#### "Solo cambió en parte de la app"
+- **NO** hay `font-family` hardcoded en componentes (todos usan `inherit`)
+- Si ves `font-family` en algún lado, es un bug. Reporta para que lo arreglemos
+
+### 🔍 Verificación en DevTools
+
+1. **Abre DevTools** (F12)
+2. **Inspect cualquier elemento**
+3. **Mira la sección "Styles"**
+4. Deberías ver: `font-family: var(--font-family-sans)` o `font-family: inherit`
+5. **NO deberías ver** `font-family: 'NombreEspecifico', sans-serif;` (hardcoded)
 
 ---
 
