@@ -1,3 +1,9 @@
+---
+name: pusher-events-contexto
+description: >
+  Eventos Pusher en tiempo real, estructura de payloads, canales y ejemplos de sincronización.
+---
+
 # 📡 Eventos Pusher - Contexto Para Frontend
 
 ## Estado Actual

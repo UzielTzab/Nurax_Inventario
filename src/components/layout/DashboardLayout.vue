@@ -1405,7 +1405,7 @@ defineEmits(['quickSell']);
   border: none;
   background: transparent;
   transition: background 0.2s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 
 .topbar-profile:hover,
@@ -1537,7 +1537,7 @@ defineEmits(['quickSell']);
   color: #374151;
   cursor: pointer;
   transition: background 0.15s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   text-align: left;
 }
 .dropdown-item svg { width: 16px; height: 16px; flex-shrink: 0; color: #6b7280; }
@@ -1708,7 +1708,7 @@ defineEmits(['quickSell']);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   transition: background 0.15s;
 }
 .pm-photo-btn:hover { background: #0a5c3a; }
@@ -1754,7 +1754,7 @@ defineEmits(['quickSell']);
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   font-size: 0.9375rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   color: #111827;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: white;
@@ -1791,7 +1791,7 @@ defineEmits(['quickSell']);
   background: white;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   font-size: 0.9375rem;
   font-weight: 500;
   color: #374151;
@@ -1887,7 +1887,7 @@ defineEmits(['quickSell']);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   transition: background 0.15s;
 }
 .pm-btn-cancel:hover { background: #e5e7eb; }
@@ -1901,7 +1901,7 @@ defineEmits(['quickSell']);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   transition: all 0.15s;
 }
 .pm-btn-save:hover {
@@ -2033,7 +2033,7 @@ defineEmits(['quickSell']);
   color: #6b7280;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
