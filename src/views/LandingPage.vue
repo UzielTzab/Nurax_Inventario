@@ -712,7 +712,7 @@ const plans = [
    ROOT & GLOBAL — Minimalist
 ======================== */
 .lp-root {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Recursive', sans-serif;
   background: #fafafa;
   color: #1a1a1a;
   overflow-x: hidden;
@@ -757,7 +757,7 @@ const plans = [
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Recursive', sans-serif;
   font-weight: 500;
   font-size: 0.9375rem;
   padding: 0.75rem 1.75rem;

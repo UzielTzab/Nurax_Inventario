@@ -1,5 +1,5 @@
 ---
-name: Nurax Inventario — Contexto del Proyecto
+name: nurax-proyecto-skill
 description: >
   Guía de referencia rápida para agentes AI. Describe tecnologías, estructura,
   componentes reutilizables y consumos de API del sistema de gestión de inventario Nurax.
@@ -157,34 +157,67 @@ src/
 
 ## 🌐 Endpoints de API
 
-**Base URL:** `VITE_API_BASE_URL` → fallback `http://localhost:8000/api`
+**Base URL:** `http://localhost:8000`  
+**API Prefix:** `/api/v1/` (actualizado 30-Mar-2026)
 
-### ✅ Endpoints Activos
+⚠️ **CRÍTICO:** Todos los endpoints usan `/api/v1/{domain}/` desde 30 de Marzo 2026. Ver [BACKEND_TROUBLESHOOTING.md](./BACKEND_TROUBLESHOOTING.md) para detalles.
 
+### ✅ Endpoints Activos (Organizados por Dominio)
+
+#### **Accounts Domain** (Autenticación & Usuarios)
 | Endpoint | Método | Quién | Descripción |
 |---|---|---|---|
-| `/auth/login/` | POST | `auth.service` | Obtiene `access` + `refresh` JWT |
-| `/auth/refresh/` | POST | `api.ts` auto | Interceptor 401 — renueva token silenciosamente |
-| `/users/me/` | GET | `auth.service` | Perfil del usuario autenticado |
-| `/users/me/avatar/` | PATCH (FormData) | `auth.service` | Actualizar foto de perfil |
-| `/products/` | GET | `product.store` | Lista todos los productos del usuario |
-| `/products/` | POST (FormData) | `product.store` | Crea producto (con imagen a Cloudinary) |
-| `/products/:id/` | PATCH (FormData) | `product.store` | Edita producto |
-| `/sales/` | GET | `sales.store` | Lista ventas del usuario |
-| `/sales/` | POST | `sales.store` | Registra una venta nueva |
-| `/sales/:id/cancel/` | POST | `sales.store` | Cancela una venta |
-| `/store/` | GET | `useStoreSettings` | Config de tienda (nombre, moneda, etc.) |
-| `/suppliers/` | GET | `useSuppliers` | Lista proveedores |
-| `/suppliers/` | POST | `useSuppliers` | Crea proveedor |
-| `/suppliers/:id/` | DELETE | `useSuppliers` | Elimina proveedor |
+| `/api/auth/login/` | POST | `auth.service` | Obtiene `access` + `refresh` JWT |
+| `/api/auth/refresh/` | POST | `api.ts` auto | Interceptor 401 — renueva token silenciosamente |
+| `/api/v1/accounts/users/me/` | GET | `auth.service` | Perfil del usuario autenticado |
+| `/api/v1/accounts/users/me/` | PATCH (FormData) | `auth.service` | Actualizar perfil + foto |
+| `/api/v1/accounts/users/me/change-password/` | PATCH | `auth.service` | Cambiar contraseña |
+| `/api/v1/accounts/users/` | GET | `AdminClients.vue` | Lista usuarios (admin) |
+| `/api/v1/accounts/store-profiles/` | GET | `useStoreSettings` | Config de tienda |
+| `/api/v1/accounts/store-profiles/{id}/` | PATCH | `useStoreSettings` | Actualizar config tienda |
+
+#### **Products Domain** (Inventario)
+| Endpoint | Método | Quién | Descripción |
+|---|---|---|---|
+| `/api/v1/products/products/` | GET | `product.store` | Lista productos |
+| `/api/v1/products/products/` | POST (FormData) | `product.store` | Crea producto (imagen a Cloudinary) |
+| `/api/v1/products/products/{id}/` | PATCH (FormData) | `product.store` | Edita producto |
+| `/api/v1/products/products/bulk-import/` | POST | `onboarding.service` | Import masivo de Excel |
+| `/api/v1/products/categories/` | GET | `AddProductModal.vue` | Lista categorías |
+| `/api/v1/products/suppliers/` | GET | `useSuppliers` | Lista proveedores |
+| `/api/v1/products/suppliers/` | POST | `useSuppliers` | Crea proveedor |
+| `/api/v1/products/suppliers/{id}/` | DELETE | `useSuppliers` | Delete proveedor |
+
+#### **Sales Domain** (Ventas)
+| Endpoint | Método | Quién | Descripción |
+|---|---|---|---|
+| `/api/v1/sales/sales/` | GET | `sales.store` | Lista ventas |
+| `/api/v1/sales/sales/` | POST | `sales.store` | Registra venta nueva |
+| `/api/v1/sales/sales/{id}/cancel/` | POST | `sales.store` | Cancela venta |
+| `/api/v1/sales/clients/` | GET | `SalesModal.vue` | Lista clientes |
+
+#### **Expenses Domain** (Gastos & Turnos)
+| Endpoint | Método | Quién | Descripción |
+|---|---|---|---|
+| `/api/v1/expenses/expenses/` | GET | `expenses.service` | Lista gastos |
+| `/api/v1/expenses/expenses/` | POST | `expenses.service` | Créa gasto |
+| `/api/v1/expenses/cash-shifts/` | GET | `shifts.service` | Lista turnos (cash shifts) |
+| `/api/v1/expenses/cash-shifts/` | POST | `shifts.service` | Abre turno nuevo |
+| `/api/v1/expenses/cash-shifts/{id}/close/` | POST | `shifts.service` | Cierra turno |
+
+#### **Inventory Domain** (Restock & Transactions)
+| Endpoint | Método | Quién | Descripción |
+|---|---|---|---|
+| `/api/v1/inventory/transactions/` | GET | - | Historial de movimientos |
+| `/api/v1/products/products/register-restock/` | POST | `RestockModal.vue` | Registra restock |
 
 ### ⏳ Endpoints Pendientes (no implementados aún)
 
 | Endpoint | Método | Descripción |
 |---|---|---|
-| `/auth/register/` | POST | Registro de usuario (placeholder en auth.service) |
-| `/auth/verify/` | POST | Verificación de token (placeholder) |
-| `/products/:id/` | DELETE | Borrado físico en backend (actualmente solo local) |
+| `/api/auth/register/` | POST | Registro de usuario (placeholder) |
+| `/api/auth/verify/` | POST | Verificación de token (placeholder) |
+| `/api/v1/products/products/{id}/delete/` | DELETE | Borrado físico en backend |
 
 ---
 

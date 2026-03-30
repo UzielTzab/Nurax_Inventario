@@ -132,7 +132,7 @@ const containerClass = computed(() => ({
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 
 .app-input-required {
@@ -175,7 +175,7 @@ const containerClass = computed(() => ({
   background: transparent;
   font-size: 0.9375rem;
   color: #111827;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   outline: none;
   border-radius: 12px;
 }
@@ -250,13 +250,13 @@ const containerClass = computed(() => ({
   font-size: 0.8125rem;
   color: #dc2626;
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 
 .app-input-hint {
   font-size: 0.8125rem;
   color: #6b7280;
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 </style>

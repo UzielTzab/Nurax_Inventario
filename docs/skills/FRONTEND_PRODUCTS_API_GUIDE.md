@@ -1,8 +1,14 @@
+---
+name: products-api-guide
+description: >
+  Guía de consumo de API de Productos con paginación, filtros y búsqueda.
+---
+
 # 📦 Guía de Consumo - API de Productos con Paginación y Filtros
 
 ## 🎯 Introducción
 
-El endpoint `/api/products/` ha sido refactorizado para soportar **paginación servidor-lado** con **filtros avanzados**. Esto garantiza:
+El endpoint `/api/v1/products/products/` ha sido refactorizado para soportar **paginación servidor-lado** con **filtros avanzados**. Esto garantiza:
 
 ✅ Mejor rendimiento (solo se traen los datos necesarios)  
 ✅ Escalabilidad (soporta catálogos de 100K+ productos)  
@@ -13,9 +19,12 @@ El endpoint `/api/products/` ha sido refactorizado para soportar **paginación s
 
 ## 📡 Endpoint Principal
 
-### **GET `/api/products/`**
+### **GET `/api/v1/products/products/`**
 
 Retorna una lista paginada de productos con soporte para búsqueda, filtrado y ordenamiento.
+
+**Base URL:** `http://localhost:8000`  
+**Ruta completa:** `http://localhost:8000/api/v1/products/products/`
 
 ---
 

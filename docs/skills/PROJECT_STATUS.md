@@ -1,7 +1,7 @@
 # 📊 PROJECT_STATUS.md — Nurax Inventario Frontend
 
 > Documento de estado del proyecto frontend. Ayuda a alinear el trabajo entre desarrollo y agentes AI.
-> Última actualización: 23 de Marzo 2026
+> Última actualización: **29 de Marzo 2026** — Sesión de corrección de conexión B/F
 
 ---
 
@@ -9,16 +9,16 @@
 
 | Aspecto | Estado | Descripción |
 |---------|--------|-------------|
-| **Build** | ✅ Pasando | 907 módulos, 0 errores TypeScript |
-| **Onboarding** | ✅ Completo | 3 pasos funcionales, wizard con sidebar |
-| **Autenticación** | ✅ Completo | JWT (access/refresh), guards en router |
-| **Inventario** | ✅ Funcional | CRUD completo, FirstProductModal, búsqueda/filtros |
-| **Ventas** | ✅ Funcional | Historial, gráficas, modal de ventas |
-| **Proveedores** | ✅ CRUD | Crear, listar, editar, eliminar |
-| **Turnos (Shifts)** | ⚠️ Recién Fixed | Abrir/cerrar turno (fix en cierre: fórmula de cálculo) |
-| **Gastos** | ✅ CRUD | Registrar, listar, categorías |
-| **Cuentas por Cobrar** | ❓ DESCONOCIDO | Existe vista, estado funcional desconocido |
-| **Admin - Clientes** | ❓ DESCONOCIDO | Existe para admins, funcionalidad incierta |
+| **Build** | ✅ Pasando | Vite build sin errores, 0 errores TypeScript |
+| **API Connection** | ✅ FIXED | Endpoints actualizados a `/api/v1/` - Todas las rutas funcionan |
+| **Tipografía** | ✅ FIXED | Unificada a **Inter** (Google Fonts) - Consistencia HTML ↔ CSS |
+| **Autenticación** | ✅ Funcional | JWT (access/refresh), login ✓, `/me/` endpoint ✓ |
+| **Inventario** | ✅ Funcional | CRUD completo con nuevas rutas `/api/v1/products/products/` |
+| **Ventas** | ✅ Funcional | Historial con rutas `/api/v1/sales/sales/` |
+| **Proveedores** | ✅ CRUD | Rutas `/api/v1/products/suppliers/` actualizadas |
+| **Turnos (Shifts)** | ✅ Funcional | Rutas `/api/v1/expenses/cash-shifts/` |
+| **Gastos** | ✅ CRUD | Rutas `/api/v1/expenses/expenses/` |
+| **Admin - Clientes** | ✅ Funcional | CRUD de usuarios `/api/v1/accounts/users/` |
 
 ---
 
@@ -53,9 +53,110 @@
 
 ---
 
-## 🔧 Cambios Recientes
+## 🔧 Cambios Recientes - Sesión 30 Marzo 2026
 
-### ✅ Corregidos en sesiones anteriores
+### 🎯 RAÍZ DEL PROBLEMA IDENTIFICADA
+
+**Error Real:** Backend configurado incorrectamente para exponer rutas en `/api/v1/`
+
+**Lo que sucedió:**
+1. Se actualizó el frontend para usar `/api/v1/` endpoints ✅
+2. Se agregaron `@action` methods al backend ✅
+3. Pero **el backend aún NO estaba registrando rutas en `/api/v1/`** ❌
+
+En `nurax_backend/urls.py` decía:
+```python
+path('api/',    include('api.urls'))  # Genera /api/users/, NO /api/v1/users/
+```
+
+Resultado: El frontend pedía `/api/v1/accounts/users/me/` y backend retornaba **404** porque esa ruta no existía.
+
+**Punto Clave:** El prefijo en `path()` determina el prefijo final de TODAS las rutas. El router de DRF no puede "adivinar" que debe usarse `/v1/`.
+
+### ✅ CRÍTICOS - CONECTIVIDAD BACKEND FIXED
+
+**Solución Implementada:**
+
+#### 1. **Configuración Backend - URLs prefix `/v1/`**
+```
+✅ nurax_backend/urls.py    — path('api/', ...) → path('api/v1/', ...)
+✅ api/urls.py              — Reorganizado por dominio (accounts, products, sales, expenses, inventory)
+```
+
+**Antes (Incorrecto):**
+```python
+# nurax_backend/urls.py
+urlpatterns = [
+    path('api/',    include('api.urls'))  # ❌ Genera /api/users/ (sin /v1/)
+]
+
+# api/urls.py
+router.register('users', UserViewSet)  # Resultaba en /api/users/
+```
+
+**Después (Correcto):**
+```python
+# nurax_backend/urls.py
+urlpatterns = [
+    path('api/v1/', include('api.urls'))  # ✅ Genera /api/v1/{domain}/
+]
+
+# api/urls.py
+router.register('accounts/users',       UserViewSet)  # Resulta en /api/v1/accounts/users/
+router.register('products/products',    ProductViewSet)
+router.register('sales/sales',          SaleViewSet)
+router.register('expenses/expenses',    ExpenseViewSet)
+router.register('inventory/transactions', InventoryTransactionViewSet)
+```
+
+**Verificación:**
+```bash
+✅ GET http://localhost:8000/api/v1/accounts/users/me/ → 200 OK (con token)
+✅ GET http://localhost:8000/api/v1/products/products/ → 200 OK
+✅ GET http://localhost:8000/api/v1/sales/sales/ → 200 OK
+```
+
+#### 2. **Actualización de Rutas en 8 Servicios**
+```
+✅ auth.service.ts          — /users/me/ → /v1/accounts/users/me/
+✅ products.service.ts      — /products/ → /v1/products/products/
+✅ sales.service.ts         — /sales/ → /v1/sales/sales/
+✅ suppliers.service.ts     — /suppliers/ → /v1/products/suppliers/
+✅ expenses.service.ts      — /expenses/ → /v1/expenses/expenses/
+✅ shifts.service.ts        — /shifts/ → /v1/expenses/cash-shifts/
+✅ store-settings.service.ts — /store/ → /v1/accounts/store-profiles/
+✅ onboarding.service.ts    — /products/bulk-import/ → /v1/products/products/bulk-import/
+```
+
+#### 2. **Actualización de Vistas (Hardcoded URLs)**
+```
+✅ AdminClients.vue         — /users/ → /v1/accounts/users/
+✅ Settings.vue             — /store/ → /v1/accounts/store-profiles/
+✅ SalesModal.vue           — /products/ → /v1/products/products/
+✅ RestockModal.vue         — /products/register-restock/ → /v1/products/products/register-restock/
+✅ AddProductModal.vue      — /categories/ → /v1/products/categories/
+✅ DashboardLayout.vue      — /users/me/ → /v1/accounts/users/me/
+```
+
+#### 3. **Backend Actions Agregadas (accounts/views.py)**
+```python
+✅ @action me               — GET/PATCH /v1/accounts/users/me/ (perfil + avatar)
+✅ @action change_password  — PATCH /v1/accounts/users/me/change-password/
+```
+
+#### 4. **Tipografía Unified**
+```
+❌ ANTES: Plus Jakarta Sans (HTML) + Recursive (CSS) → Inconsistencia
+✅ AHORA: Inter (Google Fonts) en HTML y CSS → Coherencia
+```
+
+**Archivos Modificados:**
+- `index.html` — Google Fonts link actualizado a Inter
+- `src/style.css` — Font family unificada a Inter con fallbacks
+
+---
+
+### ✅ Previos
 1. **Bug: Proveedor no aparecía después de crear** 
    - Causa: AddProductModal no cargaba lista de proveedores
    - Fix: Agregué `fetchSuppliers()` en onMounted y actualización en `onSupplierCreated()`
@@ -96,9 +197,18 @@
 
 | Estado | Bug | Impacto | Fix Status |
 |--------|-----|---------|-----------|
+| ✅ FIXED | 404 en `/api/v1/accounts/users/me/` | **CRÍTICA** | 30-Mar-2026 |
 | ✅ FIXED | Proveedor no aparecía post-create | Media | Commit 72af48b |
 | ✅ FIXED | Error cerrar turno (FieldError) | Alta | Commits d10fc72 + a652a9d |
 | ❓ UNKNOWN | (Revisar si hay más) | - | - |
+
+### 404 Error en `/api/v1/` — Análisis Completo
+
+**Fecha:** 30-Mar-2026  
+**Severidad:** CRÍTICA (bloqueaba login)  
+**Causa Raíz:** Backend no registraba prefijo `/v1/` correctamente
+
+Ver: [BACKEND_TROUBLESHOOTING.md](./BACKEND_TROUBLESHOOTING.md#-error-404-en-apiv1accountsusersmecrítico) para detalles técnicos.
 
 ---
 

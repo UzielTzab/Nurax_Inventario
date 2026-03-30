@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Recursive:wght@300;400;500;600;700;800&display=swap');
 @import "@/styles/onboarding.css";
 @import "tailwindcss";
 
@@ -54,7 +55,7 @@
   --color-dark-input: #ffffff;       
 
   /* Tipografía */
-  --font-family-sans: "Plus Jakarta Sans", sans-serif;
+  --font-family-sans: "Recursive", sans-serif;
 }
 
 html, body {
@@ -63,7 +64,7 @@ html, body {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Recursive', sans-serif;
   background-color: var(--color-background);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;

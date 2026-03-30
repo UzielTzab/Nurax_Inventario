@@ -540,7 +540,7 @@ const addClient = async () => {
   cursor: pointer;
   transition: all 0.2s;
   border: none;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 
 .btn-action svg {
@@ -598,7 +598,7 @@ const addClient = async () => {
   font-size: 0.9375rem;
   background: white;
   transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   color: #111827;
   box-sizing: border-box;
 }
@@ -617,7 +617,7 @@ const addClient = async () => {
   background: white;
   color: #374151;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   transition: border-color 0.2s;
   min-width: 180px;
 }
@@ -922,7 +922,7 @@ const addClient = async () => {
   border: 1.5px solid #e5e7eb;
   border-radius: 8px;
   font-size: 0.9375rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   color: #111827;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: white;
@@ -948,7 +948,7 @@ const addClient = async () => {
   font-weight: 600;
   cursor: pointer;
   border: none;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   transition: all 0.15s;
 }
 

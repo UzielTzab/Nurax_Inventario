@@ -1,8 +1,14 @@
+---
+name: nurax-agent-contexto
+description: >
+  Documento de contexto para agentes AI (Claude, Copilot, etc.)
+---
+
 # 🤖 AGENT.md — Nurax Inventario Frontend
 
 > **Documento de contexto para agentes AI (Claude, Copilot, etc.)**
 > 
-> Última actualización: 23 de Marzo 2026
+> Última actualización: **30 de Marzo 2026** — Fix de routing backend y documentación
 
 ---
 
@@ -15,12 +21,71 @@
 **Stack Principal:**
 - **Frontend:** Vue 3 (Composition API) + TypeScript + Vite + Pinia + Vue Router 4
 - **Backend:** Django REST Framework (Python 3.10+)
+- **API Base:** `http://localhost:8000/api/v1/` (desde 30-Mar-2026)
 - **Comunicación Real-time:** Pusher.js
 - **Hosting Imágenes:** Cloudinary
 - **Estilos:** TailwindCSS v4 (tokens custom en CSS)
+- **Tipografía:** Inter (Google Fonts, unificada 30-Mar-2026)
 
 **Estado:** MVP funcional en desarrollo constante  
-**Última sesión:** 23 Marzo 2026 — Refactorización de documentación a `docs/skills/`
+**Última sesión:** 30 Marzo 2026 — **Fix crítico de routing + documentación completa**
+
+---
+
+## 🚨 CRÍTICO: Sesión 30 Marzo 2026 - Backend Routing Fix
+
+### El Problema
+Frontend no podía conectarse al backend después de login:
+```
+POST /api/auth/login/ → ✅ 200 OK (tokens recibidos)
+GET /api/v1/accounts/users/me/ → ❌ 404 Not Found (ruta no existía)
+```
+
+### La Causa
+Django no tenía el prefijo `/v1/` registrado en `urls.py`:
+```python
+# ❌ ANTES
+urlpatterns = [
+    path('api/', include('api.urls'))  # Generaba /api/users/ (SIN /v1/)
+]
+
+# ✅ AHORA
+urlpatterns = [
+    path('api/v1/', include('api.urls'))  # Genera /api/v1/accounts/users/
+]
+```
+
+### Punto Clave
+**Django DRF Router concatena automáticamente:** `path()` + `register()` => ruta final
+
+Si el prefijo es incorrecto en `path()`, TODAS las rutas quedarán mal.
+
+### Solución Implementada
+1. ✅ Actualizado `nurax_backend/urls.py`: `path('api/',` → `path('api/v1/',`
+2. ✅ Reorganizado `api/urls.py` por dominio (accounts, products, sales, expenses, inventory)
+3. ✅ Reiniciado backend: `docker-compose restart api`
+4. ✅ Verificado: Todos los endpoints ahora retornan **200 OK** con `/api/v1/` prefix
+
+**Resultado:**
+```
+✅ GET /api/v1/accounts/users/me/            → 200 (perfil del usuario)
+✅ GET /api/v1/products/products/            → 200 (lista de productos)
+✅ GET /api/v1/sales/sales/                  → 200 (ventas)
+✅ GET /api/v1/expenses/cash-shifts/         → 200 (turnos)
+```
+
+---
+
+## 📚 Documentation Created/Updated
+
+| Archivo | Tipo | Propósito |
+|---------|------|----------|
+| [BACKEND_TROUBLESHOOTING.md](./BACKEND_TROUBLESHOOTING.md) | NEW | Guía para resolver errores backend (routing, migrations, auth) |
+| [FRONTEND_TROUBLESHOOTING.md](./FRONTEND_TROUBLESHOOTING.md) | NEW | Guía para resolver errores frontend (404, CORS, auth, fonts) |
+| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | UPDATED | Sesión fix documentada con análisis de causa raíz |
+| [FRONTEND_PRODUCTS_API_GUIDE.md](./FRONTEND_PRODUCTS_API_GUIDE.md) | UPDATED | Endpoints actualizados a `/api/v1/products/products/` |
+| [SKILL.md](./SKILL.md) | REFERENCE | Stack técnico (no cambió, solo para referencia) |
+| [PUSHER_EVENTS_CONTEXT.md](./PUSHER_EVENTS_CONTEXT.md) | REFERENCE | Eventos real-time (no cambió) |
 
 ---
 

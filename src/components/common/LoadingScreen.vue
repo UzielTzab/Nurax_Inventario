@@ -222,7 +222,7 @@ onMounted(() => {
 }
 
 .progress-percentage {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Recursive', sans-serif;
   font-weight: 700;
   color: var(--color-brand-main, #06402B);
 }
