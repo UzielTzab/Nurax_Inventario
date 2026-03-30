@@ -1046,8 +1046,8 @@ const initPusher = () => {
 onMounted(async () => {
   document.addEventListener('mousedown', handleClickOutside);
 
-  // Auto-verificación de caja cerrada
-  if (currentUser.value) {
+  // Auto-verificación de caja cerrada (solo para clientes, no para admins)
+  if (currentUser.value && currentUser.value.role !== 'admin') {
     await shiftsStore.fetchShifts();
     if (!shiftsStore.hasOpenShift) {
       showOpenShiftModal.value = true;
