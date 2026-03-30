@@ -140,12 +140,14 @@ const goBack = () => {
   }
 };
 
+/* Comentado: No se usa actualmente, pero podría ser útil en el futuro
 const skipWizard = () => {
   console.log('⏭️ Saltando el wizard...');
   // Para ahora solo lo dejamos ir a inventory
   // En el futuro podrías marcar un flag de "skipped_wizard"
   router.push('/dashboard/inventory');
 };
+*/
 
 const onSuccess = (storeProfileData: any) => {
   console.log('🎉 OnboardingWizard: onSuccess llamado con data:', storeProfileData);
