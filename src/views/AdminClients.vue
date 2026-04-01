@@ -368,23 +368,20 @@ const applyToggle = async () => {
   const newState = !client.is_active;
   isSubmitting.value = true;
   try {
-    // Enviamos el nuevo estado deseado de forma explícita en el body
-    const response = await apiClient.patch<{ is_active: boolean }>(
-      `/v1/accounts/users/${client.id}/toggle_active/`,
-      { is_active: newState }
+    // PATCH /v1/accounts/clients/{id}/ with active field (note: Client model uses 'active' not 'is_active')
+    const response = await apiClient.patch<{ active: boolean }>(
+      `/v1/accounts/clients/${client.id}/`,
+      { active: newState }
     );
     if (response.success && response.data !== undefined) {
       // Actualizamos localmente con el valor que devuelve el servidor
-      client.is_active = response.data.is_active ?? newState;
+      client.is_active = response.data.active ?? newState;
       const action = client.is_active ? 'activado' : 'desactivado';
-      enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: `El usuario fue ${action} correctamente.`, duration: 3000 });
+      enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: `El cliente fue ${action} correctamente.`, duration: 3000 });
       // Re-fetch para confirmar el estado persistido en el servidor
       await fetchClients();
     } else {
-      const msg = response.status === 400
-        ? 'No puedes desactivar tu propia cuenta de administrador.'
-        : (response.error || 'No se pudo actualizar el estado.');
-      enqueueSnackbar({ type: 'error', title: 'Acción no permitida', message: msg, duration: 4000 });
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 4000 });
     }
   } catch (error) {
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
@@ -403,12 +400,13 @@ const deleteClient = async () => {
   const targetId = deleteTarget.value.id;
   isSubmitting.value = true;
   try {
-    const response = await apiClient.delete(`/v1/accounts/users/${targetId}/`);
+    // DELETE /v1/accounts/clients/{id}/ to remove a client
+    const response = await apiClient.delete(`/v1/accounts/clients/${targetId}/`);
     if (response.success) {
       clients.value = clients.value.filter(c => c.id !== targetId);
-      enqueueSnackbar({ type: 'success', title: 'Usuario eliminado', message: 'La cuenta ha sido eliminada exitosamente.', duration: 3000 });
+      enqueueSnackbar({ type: 'success', title: 'Cliente eliminado', message: 'El cliente ha sido eliminado exitosamente.', duration: 3000 });
     } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar la cuenta.', duration: 3000 });
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar el cliente.', duration: 3000 });
     }
   } catch (err) {
     console.error(err);
@@ -422,22 +420,22 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
-    // Consumir /api/v1/accounts/users/?role=cliente — devuelve respuesta paginada DRF
-    const response = await apiClient.get<any>('/v1/accounts/users/?role=cliente');
+    // Consumir /api/v1/accounts/clients/ — devuelve clientes registrados
+    const response = await apiClient.get<any>('/v1/accounts/clients/');
     if (response.success && response.data) {
       // Manejar formato paginado DRF: {count, next, previous, results}
-      const usersList = Array.isArray(response.data) 
+      const clientsList = Array.isArray(response.data) 
         ? response.data 
         : (response.data.results || []);
       
-      clients.value = usersList.map((u: any, index: number) => ({
-        id: u.id,
-        name: u.name || u.username || 'Sin nombre',
-        email: u.email,
-        role: u.role || 'cliente',
-        is_active: u.is_active,
-        joinDate: u.date_joined
-          ? new Date(u.date_joined).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+      clients.value = clientsList.map((c: any, index: number) => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        role: 'cliente',
+        is_active: c.active,
+        joinDate: c.created_at
+          ? new Date(c.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
           : '—',
         avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length] ?? '#06402B',
       }));
@@ -445,7 +443,7 @@ const fetchClients = async () => {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudieron cargar los clientes.', duration: 3000 });
     }
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching clients:', error);
     enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
     isLoading.value = false;
@@ -464,11 +462,10 @@ const addClient = async () => {
       email: newClient.value.email,
       company: newClient.value.company || '',
       plan: newClient.value.plan,
-      role: 'cliente',
-      username: newClient.value.email.split('@')[0], 
     };
     
-    const response = await apiClient.post('/v1/accounts/users/', payload);
+    // POST to /api/v1/accounts/clients/ to create a client
+    const response = await apiClient.post('/v1/accounts/clients/', payload);
     if (response.success) {
       enqueueSnackbar({ type: 'success', title: 'Cliente creado', message: 'El cliente se registró correctamente.', duration: 3000 });
       await fetchClients(); // Recargar la lista con los IDs reales de la DB
