@@ -142,6 +142,13 @@ class ProductsService {
 
   /**
    * Registra un movimiento de inventario (entrada, salida, ajuste, desperdicio)
+   * 
+   * @param productId - ID del producto
+   * @param transactionType - Tipo: 'in' | 'out' | 'adjustment' | 'waste'
+   * @param quantity - Cantidad de unidades
+   * @param reason - Razón del movimiento
+   * 
+   * ✅ ENDPOINT CORRECTO: POST /v1/inventory/transactions/
    */
   async recordInventoryTransaction(
     productId: number | string,
@@ -150,16 +157,28 @@ class ProductsService {
     reason: string,
   ) {
     return apiClient.post<InventoryTransaction>(
-      `/products/${productId}/record-transaction/`,
-      { transaction_type: transactionType, quantity, reason }
+      `/v1/inventory/transactions/`,
+      { 
+        product: productId, 
+        transaction_type: transactionType, 
+        quantity, 
+        reason 
+      }
     );
   }
 
   /**
-   * Obtiene el historial de movimientos de un producto (kardex)
+   * Obtiene el historial de movimientos de un producto (kardex/transacciones)
+   * 
+   * @param productId - ID del producto para filtrar
+   * @returns Lista de transacciones del producto
+   * 
+   * ✅ ENDPOINT CORRECTO: GET /v1/inventory/transactions/?product=ID
    */
   async getProductKardex(productId: number | string) {
-    return apiClient.get<InventoryTransaction[]>(`/products/${productId}/kardex/`);
+    return apiClient.get<InventoryTransaction[]>(
+      `/v1/inventory/transactions/?product=${productId}`
+    );
   }
 }
 
