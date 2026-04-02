@@ -1001,8 +1001,8 @@ const initPusher = () => {
 
   console.log(`[Pusher] Iniciando conexión para usuario: ${userId}`);
   
-  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || 'e70dbf94ba0a7be11d70';
-  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
+  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
 
   globalPusher = new Pusher(pusherKey, {
     cluster: pusherCluster,

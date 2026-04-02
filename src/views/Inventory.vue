@@ -251,8 +251,8 @@ onMounted(async () => {
   
   // Inicializar Pusher para escuchar cambios de inventario en tiempo real
   const userId = currentUser.value?.id || 1;
-  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
-  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
+  const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
 
   pusher = new Pusher(pusherKey, {
     cluster: pusherCluster,
