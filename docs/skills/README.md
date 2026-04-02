@@ -6,14 +6,100 @@ description: >
 
 # 📚 Skills Documentation Index
 
-> Referencia central de toda la documentación de Nurax Inventario.
-> Última actualización: **30 de Marzo 2026**
+> Referencia central de toda la documentación de Nurax Inventario (Frontend).
+> Última actualización: **2 de Abril 2026**
+
+---
+
+## 🚨 IMPORTANTE - URLs de API (Lo Más Crítico)
+
+### Si tienes problemas con peticiones HTTP 404:
+1. **Primero lee:** [API_URLS_COMPARISON.md](./API_URLS_COMPARISON.md) (2 min) ← Aquí están TODAS las URLs correctas
+2. **Luego revisa:** [API_URLS_VERIFICATION.md](./API_URLS_VERIFICATION.md) (5 min) ← Auditoría completa
+3. **Cuando cambies un servicio:** Sigue [FRONTEND_API_URLS_MAINTENANCE.md](./FRONTEND_API_URLS_MAINTENANCE.md) ← Obligatorio
+4. **Después de cambio:** Ejecuta [POST_CHANGE_DOCS_SYNC.md](./POST_CHANGE_DOCS_SYNC.md) ← Auto-sync documentation
 
 ---
 
 ## 🗺️ Mapa de Documentos
 
-### 🎓 Onboarding & Context (Empezar por aquí)
+### 🔐 API URLs & HTTP Requests (CRÍTICO)
+
+#### [API_URLS_COMPARISON.md](./API_URLS_COMPARISON.md) - 📋 COMIENZA AQUÍ
+**Para qué:** Comparación lado-a-lado Frontend ↔ Backend de TODAS las URLs  
+**Cuándo usarlo:**
+- ✅ Empezar un cambio en servicios
+- ✅ Error 404 en peticiones HTTP
+- ✅ Verificación rápida de ruta correcta
+- ✅ Nuevo desarrollador necesita referencia rápida
+
+**Contiene:**
+- ✅ Tabla de correspondencias Frontend/Backend
+- ✅ Explicación de diferencia /v1/ vs /auth/
+- ✅ URLs correctas e incorrectas (corregidas)
+- ✅ Testing con curl
+
+**Estado:** ✅ Actualizado 2-Abr-26 (Después de correcciones)
+
+---
+
+#### [API_URLS_VERIFICATION.md](./API_URLS_VERIFICATION.md) - 📊 AUDITORÍA COMPLETA
+**Para qué:** Auditoría exhaustiva de TODAS las URLs por servicio  
+**Cuándo usarlo:**
+- ✅ Verificación deep de un servicio específico
+- ✅ Entender qué endpoints existen/no existen
+- ✅ Ver problemas identificados con detalles
+- ✅ Referencia completa de cada servicio
+
+**Contiene:**
+- ✅ Detalle por archivo de servicio
+- ✅ Status ✅/❌ de cada URL
+- ✅ Problemas críticos encontrados + soluciones
+- ✅ Convenciones de URLs
+- ✅ Referencias a código backend
+
+**Problemas corregidos:**
+- ✅ `/products/{id}/record-transaction/` → `/v1/inventory/transactions/`
+- ✅ `/products/{id}/kardex/` → `/v1/inventory/transactions/?product=ID`
+
+**Estado:** ✅ Actualizado 2-Abr-26
+
+---
+
+#### [FRONTEND_API_URLS_MAINTENANCE.md](./FRONTEND_API_URLS_MAINTENANCE.md) - 🔗 MANTENIMIENTO
+**Para qué:** SKILL obligatorio para TODOS los cambios en `src/services/`  
+**Cuándo usarlo:** ⚠️ SIEMPRE que modifiques un servicio
+
+**Contenido:**
+- ✅ Checklist de verificación de URLs
+- ✅ Referencia rápida de todas las rutas
+- ✅ Errores comunes + cómo evitarlos
+- ✅ Protocolo de verificación
+- ✅ Git commit estándar
+
+**OBLIGATORIO:** Seguir este SKILL después de cambios en servicios
+
+---
+
+#### [POST_CHANGE_DOCS_SYNC.md](./POST_CHANGE_DOCS_SYNC.md) - 🔄 AUTO-SYNC
+**Para qué:** Auto-sincronizar documentación después CADA cambio  
+**Cuándo usarlo:** ⚠️ Después de modificar `src/services/` (OBLIGATORIO)
+
+**Procesos:**
+- ✅ Checklist tipo de cambio (corregir/agregar/refactorizar)
+- ✅ Validación en 4 pasos ('grep's + curl)
+- ✅ Template para nuevos serviceios
+- ✅ Señales de alerta
+- ✅ Para CI/CD futuro
+
+**Flujo:**
+```
+Editar servicio → Seguir FRONTEND_API_URLS_MAINTENANCE → Ejecutar POST_CHANGE_DOCS_SYNC
+```
+
+---
+
+### 🎓 Onboarding & Context
 
 #### [SKILL.md](./SKILL.md)
 **Para qué:** Entender el **stack técnico completo** del proyecto  
@@ -30,8 +116,6 @@ description: >
 - ✅ Endpoints de API organizados por dominio
 - ✅ Design system y paleta de colores
 
-**Última actualización:** 30-Mar-2026 (endpoints ahora con `/api/v1/`)
-
 ---
 
 #### [AGENT.md](./AGENT.md)
@@ -43,10 +127,9 @@ description: >
 
 **Contiene:**
 - ✅ Overview del proyecto
-- ✅ **🚨 CRÍTICO:** Explicación del bug de routing backend + fix (30-Mar-2026)
-- ✅ Documentación creada/actualizada
-- ✅ Stack principal resumido
-- ✅ Git workflow y convenciones
+- ✅ Stack resumido
+- ✅ Problemas conocidos y soluciones
+- ✅ Git workflow
 
 **Última actualización:** 30-Mar-2026 (agregado fix de routing)
 
