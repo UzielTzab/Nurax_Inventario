@@ -23,7 +23,7 @@ description: >
 | Estado | Pinia |
 | Routing | Vue Router 4 |
 | HTTP | Fetch nativo vía `ApiClient` (`services/api.ts`) |
-| Auth | JWT (access + refresh token en `localStorage`) |
+| Auth | **JWT (HttpOnly + Secure Cookies recomendado)** — ⚠️ Actualmente en localStorage (vulnerable) |
 | Imágenes | Cloudinary (URLs almacenadas en backend) |
 | Animaciones | AOS (solo en Login y LandingPage) |
 | Icons | Heroicons (`@heroicons/vue/24/outline`) |

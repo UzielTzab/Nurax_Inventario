@@ -244,6 +244,37 @@ Editar servicio → Seguir FRONTEND_API_URLS_MAINTENANCE → Ejecutar POST_CHANG
 
 ---
 
+### 🔐 Seguridad & Autenticación
+
+#### [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md) ⚠️ **CRÍTICO**
+**Para qué:** Guía completa de seguridad de tokens JWT, prevención de XSS/CSRF, y mejores prácticas  
+**Cuándo usarlo:**
+- ❌ **URGENTE:** Almacenar tokens en localStorage es vulnerable a XSS
+- ✅ Implementar autenticación segura con HttpOnly cookies
+- ✅ Entender ataques de seguridad y mitigaciones
+- ✅ Auditoría de seguridad de autenticación
+
+**Contiene:**
+- 🚨 **Vulnerabilidad identificada:** localStorage + XSS = robo de token
+- ✅ Solución recomendada: HttpOnly + Secure Cookies
+- ✅ Implementación backend (Django) con ejemplos código
+- ✅ Implementación frontend (Vue) simplificada
+- ✅ Comparativa localStorage vs HttpOnly
+- ✅ Checklist de seguridad OWASP
+- ✅ Mitigaciones contra XSS, CSRF, token theft
+- ✅ Plan de implementación por fases
+- ✅ Referencias OWASP
+
+**Impacto potencial si no se implementa:**
+- 🔴 CRÍTICA: Robo de tokens vía XSS
+- 🔴 CRÍTICA: Acceso no autorizado a datos de clientes
+- 🔴 CRÍTICA: Manipulación de inventario y ventas
+- 🔴 CRÍTICA: Exfiltración de datos de negocio
+
+**Estado:** 📝 RECIÉN CREADO 4-Abr-2026 — **IMPLEMENTACIÓN URGENTE RECOMENDADA**
+
+---
+
 ## 🗂️ Cuando Usar Cada Documento
 
 ### Escenario 1: "Soy nuevo en el proyecto"
@@ -274,6 +305,12 @@ Editar servicio → Seguir FRONTEND_API_URLS_MAINTENANCE → Ejecutar POST_CHANG
 2. Busca tu síntoma específico
 3. Sigue los pasos de fix
 
+### Escenario 6: "Necesito auditar seguridad de autenticación"
+1. Lee [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md) ⚠️ CRÍTICO
+2. Entiende vulnerabilidad actual (localStorage + XSS)
+3. Revisa plan de implementación (HttpOnly cookies)
+4. Coordina con backend para implementación por fases
+
 ---
 
 ## 📄 Checklist para Agentes IA
@@ -282,6 +319,7 @@ Cuando invoques un agente IA para trabajar en Nurax, proporciona:
 
 - [ ] Lee [AGENT.md](./AGENT.md) — Contexto del proyecto y últimas sesiones
 - [ ] Accede [SKILL.md](./SKILL.md) — Endpoints y estructura técnica
+- [ ] Revisa [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md) — Posibles vulnerabilidades de seguridad
 - [ ] Revisa [PROJECT_STATUS.md](./PROJECT_STATUS.md) — Qué está hecho/por hacer
 - [ ] Consulta troubleshooting si hay error:
   - Si es API 404: [BACKEND_TROUBLESHOOTING.md](./BACKEND_TROUBLESHOOTING.md)
@@ -299,6 +337,7 @@ Cuando invoques un agente IA para trabajar en Nurax, proporciona:
 | Fix un bug importante | [PROJECT_STATUS.md](./PROJECT_STATUS.md#-bugs-conocidos), [troubleshooting correspondiente] |
 | Cambias stack o estructura | [SKILL.md](./SKILL.md), [AGENT.md](./AGENT.md) |
 | Implementas feature nueva | [PROJECT_STATUS.md](./PROJECT_STATUS.md#-features-por-prioridad) |
+| Cambias autenticación/JWT | [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md) |
 | Descubres issue común | Crea/actualiza en [FRONTEND_TROUBLESHOOTING.md](./FRONTEND_TROUBLESHOOTING.md) o [BACKEND_TROUBLESHOOTING.md](./BACKEND_TROUBLESHOOTING.md) |
 
 ---
@@ -308,7 +347,8 @@ Cuando invoques un agente IA para trabajar en Nurax, proporciona:
 - 🎨 **Design System:** [SKILL.md — Diseño & Paleta](./SKILL.md#%EF%B8%8F-dise%C3%B1o--paleta)
 - 📦 **Componentes:** [SKILL.md — Componentes más usados](./SKILL.md#-componentes-más-usados)
 - 🔐 **Auth:** [FRONTEND_TROUBLESHOOTING.md — Authentication](./FRONTEND_TROUBLESHOOTING.md#--authentication-errors)
-- 🛠️ **API:** [SKILL.md — Endpoints](./SKILL.md#%EF%B8%8F-endpoints-de-api)
+- �️ **Seguridad JWT:** [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md) ⚠️ **CRÍTICO - localStorage es vulnerable**
+- �🛠️ **API:** [SKILL.md — Endpoints](./SKILL.md#%EF%B8%8F-endpoints-de-api)
 - 🐛 **404 Fix:** [BACKEND_TROUBLESHOOTING.md — Error 404](./BACKEND_TROUBLESHOOTING.md#-error-404-en-apiv1accountsusersmecrítico)
 - 📊 **Estado:** [PROJECT_STATUS.md](./PROJECT_STATUS.md)
 

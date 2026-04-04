@@ -1,9 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
-// Views - Landing
-import LandingPage from '@/views/LandingPage.vue'
-
 // Views - Auth
 import Login from '@/views/Login.vue'
 
@@ -21,11 +18,6 @@ import AccountsReceivable from '@/views/AccountsReceivable.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: LandingPage,
-    meta: { title: 'Nurax - Gestión Inteligente de Inventario', public: true }
-  },
-  {
-    path: '/auth/login',
     component: Login,
     meta: { title: 'Login', public: true }
   },
@@ -84,7 +76,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/auth/login'
+    redirect: '/'
   }
 ]
 
@@ -103,7 +95,7 @@ router.beforeEach(async (to) => {
   await initSession()
 
   // Si el usuario ya está logueado e intenta entrar al login, mandarlo directo a su dashboard.
-  if (to.path === '/auth/login' && isAuthenticated.value) {
+  if (to.path === '/' && isAuthenticated.value) {
     return currentUser.value?.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
   }
 
@@ -111,7 +103,7 @@ router.beforeEach(async (to) => {
   if (to.meta.public) return true
 
   // Si después de initSession() no hay sesión válida y no es ruta pública → login
-  if (!isAuthenticated.value) return '/auth/login'
+  if (!isAuthenticated.value) return '/'
 
   // ⭐ Detectar si cliente no completó el setup y redirigir al onboarding
   if (currentUser.value?.role === 'cliente') {
