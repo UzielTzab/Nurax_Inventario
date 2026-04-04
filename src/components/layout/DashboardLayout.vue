@@ -1059,9 +1059,16 @@ onMounted(async () => {
 watch(currentUser, (newUser, oldUser) => {
   if (newUser && newUser.id !== oldUser?.id) {
     initPusher();
-    // Cargas globales iniciales para que el modal de caja funcioné donde sea:
-    productStore.fetchProducts();
-    shiftsStore.fetchShifts();
+    
+    // Cargas según el rol del usuario
+    if (newUser.role === 'admin') {
+      // Admin: cargar solo datos de administración
+      // (clientes se cargan en AdminClients.vue cuando navega allá)
+    } else if (newUser.role === 'cliente') {
+      // Cliente: cargar datos necesarios para vender y gestionar inventario
+      productStore.fetchProducts();
+      shiftsStore.fetchShifts();
+    }
   }
 }, { immediate: true });
 
@@ -1252,7 +1259,7 @@ defineEmits(['quickSell']);
   display: flex;
   min-height: 100vh;
   background: var(--color-background);
-  padding: 12px;
+  padding: 0 12px 0 0;
   gap: 16px;
   box-sizing: border-box;
 }
@@ -1262,12 +1269,11 @@ defineEmits(['quickSell']);
   width: 250px;
   flex-shrink: 0;
   background: #ffffff;
-  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  height: calc(100vh - 24px);
+  height: 100vh;
   position: sticky;
-  top: 12px;
+  top: 0;
   transition: transform 0.3s ease;
 }
 

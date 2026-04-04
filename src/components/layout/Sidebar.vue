@@ -6,7 +6,7 @@
         <div class="logo-icon-container">
           <div class="logo-icon">
             <!-- Leaf icon -->
-            <img src="/images/nurax_logo.png" alt="Logo">
+            <img src="/images/nurax_logo_app.png" alt="Logo">
           </div>
         </div>
         <div class="logo-text-container">
@@ -235,8 +235,8 @@ defineProps<{
 <style scoped>
 .sidebar {
   width: 100%;
-  background: var(--color-card-stats-fill);
-  color: var(--color-text-main);
+  background: var(--color-brand-contrast);
+  color: var(--color-background);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -295,7 +295,7 @@ defineProps<{
   font-size: 0.5625rem;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--color-brand-primary);
+  color: var(--color-background);
   line-height: 1;
   text-transform: uppercase;
 }
@@ -373,7 +373,7 @@ defineProps<{
 .nav-section-label {
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--color-background);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 0 1rem;
@@ -389,7 +389,7 @@ defineProps<{
   padding: 0.7rem 1.25rem;
   margin: 0 0.5rem;
   border-radius: 24px;
-  color: var(--color-text-secondary);
+  color: var(--color-background);
   text-decoration: none;
   font-size: 1rem;
   font-weight: 300;
@@ -405,7 +405,7 @@ defineProps<{
 
 /* ═══════ Active state with animated pill ═══════ */
 .nav-item-active {
-  background: rgba(6, 64, 43, 0.04);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Pill indicator — slides in from left */
@@ -418,7 +418,7 @@ defineProps<{
   transform: translateY(-50%);
   width: 10px;
   height: 100%;
-  background: linear-gradient(210deg, #4ade80 0%, #06402b 100%);
+  background: var(--color-status-success);
   border-radius: 0 10px 10px 0;
   animation: pillSlideIn 0.9s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
@@ -444,7 +444,7 @@ defineProps<{
 }
 
 .nav-item-active .nav-text {
-  color: #000000;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -462,13 +462,13 @@ defineProps<{
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-status-success);
   transition: color 0.35s ease;
 }
 
 .nav-item-active .nav-icon,
 .nav-item-active .nav-icon svg {
-  color: var(--color-brand-main);
+  color: var(--color-status-success);
 }
 
 /* Icon swap transition — scale bounce */
