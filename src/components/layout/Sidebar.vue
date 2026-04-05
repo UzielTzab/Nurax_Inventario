@@ -235,7 +235,7 @@ defineProps<{
 <style scoped>
 .sidebar {
   width: 100%;
-  background: var(--color-brand-contrast);
+  background: var(--color-text-main);
   color: var(--color-background);
   display: flex;
   flex-direction: column;
