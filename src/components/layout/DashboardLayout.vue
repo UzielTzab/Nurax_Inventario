@@ -312,7 +312,7 @@
               <AppButton 
                 v-if="showPasswordSection" 
                 variant="fill" 
-                @click="changePassword" 
+                @click="submitChangePassword" 
                 :loading="isChangingPassword"
                 :disabled="!passwordForm.current || !passwordForm.new || passwordForm.new !== passwordForm.confirm"
               >
@@ -500,7 +500,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
-import { z } from 'zod';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
 import OpenShiftModal from '@/components/OpenShiftModal.vue';
@@ -513,7 +512,9 @@ import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
 import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useChangePassword } from '@/composables/useChangePassword';
 import apiClient from '@/services/api';
+import type { UserProfileResponse } from '@/services/auth.service';
 import Pusher from 'pusher-js';
 import * as XLSX from 'xlsx';
 import AppButton from '@/components/ui/AppButton.vue';
@@ -777,7 +778,7 @@ const saveProfile = async () => {
     // 3. Save name & email to backend
     if (currentUser.value && (profileForm.name !== currentUser.value.name || profileForm.email !== currentUser.value.email)) {
       try {
-        const response = await apiClient.patch<{ detail: string; success: boolean; user: any }>(
+        const response = await apiClient.patch<UserProfileResponse>(
           '/v1/accounts/users/me/',
           {
             name: profileForm.name,
@@ -785,11 +786,11 @@ const saveProfile = async () => {
           }
         );
         
-        if (response.success && response.data?.user) {
-          // Actualizar el usuario en el store con los datos del backend
+        if (response.success && response.data) {
+          // Backend retorna el UserSerializer directamente: {id, username, email, name, role, avatar_url, ...}
           if (currentUser.value) {
-            currentUser.value.name = response.data.user.name;
-            currentUser.value.email = response.data.user.email;
+            currentUser.value.name = response.data.name;
+            currentUser.value.email = response.data.email;
           }
           enqueueSnackbar({
             type: 'success',
@@ -1124,131 +1125,14 @@ const handleSidebarQuickSell = () => {
   salesStore.openModal();
 };
 
-// ===== PASSWORD CHANGE =====
+// ===== PASSWORD CHANGE - Usando Composable =====
 const showPasswordSection = ref(false);
-const passwordForm = reactive({
-  current: '',
-  new: '',
-  confirm: ''
-});
-const isChangingPassword = ref(false);
-
-/** Errores Zod por campo — se muestran en el template */
-const passwordErrors = reactive({
-  current: '',
-  new: '',
-  confirm: ''
-});
-
-/** Schema Zod para validar el formulario de contraseña antes de llamar al backend */
-const passwordSchema = z
-  .object({
-    current: z.string().min(1, 'La contraseña actual es obligatoria'),
-    new: z
-      .string()
-      .min(8, 'Debe tener al menos 8 caracteres')
-      .regex(/[A-Z]/, 'Debe incluir al menos una letra mayúscula')
-      .regex(/[0-9]/, 'Debe incluir al menos un número'),
-    confirm: z.string().min(1, 'Confirma tu nueva contraseña'),
-  })
-  .superRefine((data, ctx) => {
-    if (data.new && data.current && data.new === data.current) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['new'],
-        message: 'La nueva contraseña no puede ser igual a la actual',
-      });
-    }
-    if (data.confirm && data.new !== data.confirm) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['confirm'],
-        message: 'Las contraseñas no coinciden',
-      });
-    }
-  });
-
-/**
- * Valida el formulario con Zod y rellena passwordErrors.
- * Devuelve true si todo es válido.
- */
-const validatePasswordFields = (): boolean => {
-  // Limpiar errores previos
-  passwordErrors.current = '';
-  passwordErrors.new     = '';
-  passwordErrors.confirm = '';
-
-  const result = passwordSchema.safeParse({
-    current: passwordForm.current,
-    new    : passwordForm.new,
-    confirm: passwordForm.confirm,
-  });
-
-  if (!result.success) {
-    result.error.issues.forEach(issue => {
-      const field = issue.path[0] as 'current' | 'new' | 'confirm';
-      if (field in passwordErrors && !passwordErrors[field]) {
-        passwordErrors[field] = issue.message;
-      }
-    });
-    return false;
-  }
-
-  return true;
-};
-
-const changePassword = async () => {
-  // Validar con Zod — si hay errores se muestran en el template y NO se llama al backend
-  if (!validatePasswordFields()) return;
-
-  isChangingPassword.value = true;
-  try {
-    const response = await apiClient.patch<{ detail: string; success: boolean }>(
-      '/v1/accounts/users/me/change-password/',
-      {
-        current_password: passwordForm.current,
-        new_password    : passwordForm.new,
-        confirm_password: passwordForm.confirm
-      }
-    );
-
-    if (!response.success) {
-      // El backend rechazó (ej. contraseña actual incorrecta); mostrarlo en el campo correcto
-      const errorMessage = response.error || 'Error al cambiar la contraseña';
-      passwordErrors.current = errorMessage;
-      return;
-    }
-
-    // Éxito
-    enqueueSnackbar({
-      type   : 'success',
-      title  : 'Contraseña actualizada',
-      message: 'Tu contraseña fue cambiada exitosamente.',
-      duration: 3000
-    });
-
-    // Limpiar formulario
-    passwordForm.current = '';
-    passwordForm.new     = '';
-    passwordForm.confirm = '';
-    passwordErrors.current = '';
-    passwordErrors.new     = '';
-    passwordErrors.confirm = '';
-    showPasswordSection.value = false;
-
-    showProfileEdit.value = false;
-  } catch (error: any) {
-    console.error('Error changing password:', error);
-    enqueueSnackbar({
-      type   : 'error',
-      title  : 'Error de conexión',
-      message: 'No se pudo conectar con el servidor para cambiar la contraseña.',
-      duration: 4000
-    });
-  } finally {
-    isChangingPassword.value = false;
-  }
-};
+const { 
+  passwordForm, 
+  passwordErrors, 
+  isChangingPassword, 
+  changePassword: submitChangePassword
+} = useChangePassword();
 
 defineEmits(['quickSell']);
 </script>
