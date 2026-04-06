@@ -71,11 +71,17 @@ const authService = {
   },
 
   /**
-   * Registrar nuevo usuario (Placeholder)
+   * Registrar nuevo usuario
    */
-  async register(data: LoginData & { name: string }) {
-    // Cuando el endpoint esté listo
-    return apiClient.post('/auth/register/', data)
+  async register(data: LoginData & { name: string; username: string }) {
+    // Endpoint: POST /v1/accounts/users/register/
+    return apiClient.post('/v1/accounts/users/register/', {
+      email: data.email,
+      username: data.username,
+      name: data.name,
+      password: data.password,
+      password_confirm: data.password
+    })
   },
 
   /**
@@ -96,6 +102,18 @@ const authService = {
    */
   async verifyToken(token: string) {
     return apiClient.post('/auth/verify/', { token })
+  },
+
+  /**
+   * 4. Cambiar contraseña del usuario logueado
+   */
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string) {
+    const res = await apiClient.patch('/v1/accounts/users/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword
+    })
+    return res
   },
   
   /**

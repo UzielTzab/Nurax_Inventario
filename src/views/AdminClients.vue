@@ -175,42 +175,42 @@
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
-        <div class="modal-card" data-aos="zoom-in" data-aos-duration="250">
-          <div class="modal-header">
-            <h3 class="modal-title">Nuevo Cliente</h3>
-            <button class="modal-close" @click="showAddModal = false">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-              </svg>
-            </button>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3 class="modal-title">Nuevo Cliente</h3>
+              <button class="modal-close" @click="showAddModal = false">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                </svg>
+              </button>
+            </div>
+            <form @submit.prevent="addClient" class="modal-body">
+              <div class="modal-field">
+                <label class="modal-label">Nombre completo *</label>
+                <input v-model="newClient.name" type="text" class="modal-input" placeholder="Ej. Juan García" required />
+              </div>
+              <div class="modal-field">
+                <label class="modal-label">Correo electrónico *</label>
+                <input v-model="newClient.email" type="email" class="modal-input" placeholder="juan@empresa.com" required />
+              </div>
+              <div class="modal-field">
+                <label class="modal-label">Empresa</label>
+                <input v-model="newClient.company" type="text" class="modal-input" placeholder="Nombre de la empresa" />
+              </div>
+              <div class="modal-field">
+                <label class="modal-label">Plan</label>
+                <select v-model="newClient.plan" class="modal-input">
+                  <option value="basico">Básico</option>
+                  <option value="pro">Pro</option>
+                </select>
+              </div>
+              <div class="modal-footer">
+                <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+                <AppButton variant="fill" type="submit" :loading="isSubmitting">Agregar Cliente</AppButton>
+              </div>
+            </form>
           </div>
-          <form @submit.prevent="addClient" class="modal-body">
-            <div class="modal-field">
-              <label class="modal-label">Nombre completo *</label>
-              <input v-model="newClient.name" type="text" class="modal-input" placeholder="Ej. Juan García" required />
-            </div>
-            <div class="modal-field">
-              <label class="modal-label">Correo electrónico *</label>
-              <input v-model="newClient.email" type="email" class="modal-input" placeholder="juan@empresa.com" required />
-            </div>
-            <div class="modal-field">
-              <label class="modal-label">Empresa</label>
-              <input v-model="newClient.company" type="text" class="modal-input" placeholder="Nombre de la empresa" />
-            </div>
-            <div class="modal-field">
-              <label class="modal-label">Plan</label>
-              <select v-model="newClient.plan" class="modal-input">
-                <option value="básico">Básico</option>
-                <option value="pro">Pro</option>
-              </select>
-            </div>
-            <div class="modal-footer">
-              <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-              <AppButton variant="fill" type="submit" :loading="isSubmitting">Agregar Cliente</AppButton>
-            </div>
-          </form>
         </div>
-      </div>
       </transition>
     </Teleport>
 
@@ -218,53 +218,53 @@
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="toggleTarget" class="modal-backdrop" @click.self="toggleTarget = null">
-        <div class="modal-card modal-card-sm">
-          <div class="modal-header">
-            <div class="modal-title-row">
-              <!-- Ícono contextual -->
-              <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-success'">
-                <svg v-if="toggleTarget.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+          <div class="modal-card modal-card-sm">
+            <div class="modal-header">
+              <div class="modal-title-row">
+                <!-- Ícono contextual -->
+                <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-success'">
+                  <svg v-if="toggleTarget.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <h3 class="modal-title">{{ toggleTarget.is_active ? 'Desactivar cuenta' : 'Activar cuenta' }}</h3>
+              </div>
+              <button class="modal-close" @click="toggleTarget = null">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
-                </svg>
-              </div>
-              <h3 class="modal-title">{{ toggleTarget.is_active ? 'Desactivar cuenta' : 'Activar cuenta' }}</h3>
+              </button>
             </div>
-            <button class="modal-close" @click="toggleTarget = null">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-              </svg>
-            </button>
-          </div>
-          <div class="modal-body">
-            <!-- Preview del cliente -->
-            <div class="toggle-client-preview">
-              <div class="client-avatar" :style="{ background: toggleTarget.avatarColor }">
-                {{ toggleTarget.name.charAt(0).toUpperCase() }}
+            <div class="modal-body">
+              <!-- Preview del cliente -->
+              <div class="toggle-client-preview">
+                <div class="client-avatar" :style="{ background: toggleTarget.avatarColor }">
+                  {{ toggleTarget.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="client-name">{{ toggleTarget.name }}</p>
+                  <p class="client-email">{{ toggleTarget.email }}</p>
+                </div>
               </div>
-              <div>
-                <p class="client-name">{{ toggleTarget.name }}</p>
-                <p class="client-email">{{ toggleTarget.email }}</p>
+              <!-- Mensaje contextual -->
+              <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
+                Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
+              </p>
+              <p v-else class="toggle-msg toggle-msg-success">
+                Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
+              </p>
+              <div class="modal-footer">
+                <AppButton variant="outline" @click="toggleTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+                <AppButton variant="fill" @click="applyToggle" type="button" :loading="isSubmitting">
+                  {{ toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar' }}
+                </AppButton>
               </div>
-            </div>
-            <!-- Mensaje contextual -->
-            <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
-              Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
-            </p>
-            <p v-else class="toggle-msg toggle-msg-success">
-              Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
-            </p>
-            <div class="modal-footer">
-              <AppButton variant="outline" @click="toggleTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-              <AppButton variant="fill" @click="applyToggle" type="button" :loading="isSubmitting">
-                {{ toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar' }}
-              </AppButton>
             </div>
           </div>
         </div>
-      </div>
       </transition>
     </Teleport>
 
@@ -272,24 +272,24 @@
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="deleteTarget" class="modal-backdrop" @click.self="deleteTarget = null">
-        <div class="modal-card modal-card-sm">
-          <div class="modal-header">
-            <h3 class="modal-title">Eliminar Cliente</h3>
-            <button class="modal-close" @click="deleteTarget = null">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-              </svg>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p class="delete-msg">¿Estás seguro de eliminar a <strong>{{ deleteTarget?.name }}</strong>? Esta acción no se puede deshacer.</p>
-            <div class="modal-footer">
-              <AppButton variant="outline" @click="deleteTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-              <AppButton variant="fill" @click="deleteClient" type="button" :loading="isSubmitting">Sí, eliminar</AppButton>
+          <div class="modal-card modal-card-sm">
+            <div class="modal-header">
+              <h3 class="modal-title">Eliminar Cliente Permanentemente</h3>
+              <button class="modal-close" @click="deleteTarget = null">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p class="delete-msg">¿Estás seguro de eliminar permanentemente a <strong>{{ deleteTarget?.name }}</strong>? Esta acción borra su cuenta de acceso y no se puede deshacer.</p>
+              <div class="modal-footer">
+                <AppButton variant="outline" @click="deleteTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+                <AppButton variant="fill" @click="deleteClient" type="button" :loading="isSubmitting">Sí, eliminar permanentemente</AppButton>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </transition>
     </Teleport>
   </DashboardLayout>
@@ -316,6 +316,15 @@ interface Client {
   avatarColor: string;
   company?: string;
   plan?: string;
+  store_id?: string;
+}
+
+interface CreateWithOwnerResponse {
+  credentials?: {
+    username?: string;
+    email?: string;
+    password?: string;
+  };
 }
 
 const AVATAR_COLORS = [
@@ -337,7 +346,7 @@ const newClient = ref({
   name: '',
   email: '',
   company: '',
-  plan: 'básico',
+  plan: 'basico',
 });
 
 const activeClients = computed(() => clients.value.filter(c => c.is_active).length);
@@ -368,14 +377,14 @@ const applyToggle = async () => {
   const newState = !client.is_active;
   isSubmitting.value = true;
   try {
-    // PATCH /v1/accounts/clients/{id}/ with active field (note: Client model uses 'active' not 'is_active')
+    // PATCH /v1/accounts/users/software-clients/{id}/toggle-active/
     const response = await apiClient.patch<{ active: boolean }>(
-      `/v1/accounts/clients/${client.id}/`,
-      { active: newState }
+      `/v1/accounts/users/software-clients/${client.id}/toggle-active/`,
+      { is_active: newState }
     );
     if (response.success && response.data !== undefined) {
-      // Actualizamos localmente con el valor que devuelve el servidor
-      client.is_active = response.data.active ?? newState;
+      // Actualizamos localmente. El backend devuelve la respuesta pero el estado se actualiza con newState
+      client.is_active = newState;
       const action = client.is_active ? 'activado' : 'desactivado';
       enqueueSnackbar({ type: 'success', title: 'Estado actualizado', message: `El cliente fue ${action} correctamente.`, duration: 3000 });
       // Re-fetch para confirmar el estado persistido en el servidor
@@ -400,11 +409,11 @@ const deleteClient = async () => {
   const targetId = deleteTarget.value.id;
   isSubmitting.value = true;
   try {
-    // DELETE /v1/accounts/clients/{id}/ to remove a client
-    const response = await apiClient.delete(`/v1/accounts/clients/${targetId}/`);
+    // DELETE /v1/accounts/users/software-clients/{id}/ (soft delete => is_active=false)
+    const response = await apiClient.delete(`/v1/accounts/users/software-clients/${targetId}/`);
     if (response.success) {
       clients.value = clients.value.filter(c => c.id !== targetId);
-      enqueueSnackbar({ type: 'success', title: 'Cliente eliminado', message: 'El cliente ha sido eliminado exitosamente.', duration: 3000 });
+      enqueueSnackbar({ type: 'success', title: 'Cliente eliminado', message: 'La cuenta fue eliminada permanentemente.', duration: 3000 });
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo eliminar el cliente.', duration: 3000 });
     }
@@ -420,8 +429,8 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
-    // Consumir /api/v1/accounts/clients/ — devuelve clientes registrados
-    const response = await apiClient.get<any>('/v1/accounts/clients/');
+    // Consumir /api/v1/accounts/users/software-clients/ — dueños de tienda
+    const response = await apiClient.get<any>('/v1/accounts/users/software-clients/');
     if (response.success && response.data) {
       // Manejar formato paginado DRF: {count, next, previous, results}
       const clientsList = Array.isArray(response.data) 
@@ -432,12 +441,15 @@ const fetchClients = async () => {
         id: c.id,
         name: c.name,
         email: c.email,
-        role: 'cliente',
-        is_active: c.active,
+        role: c.role || 'owner',
+        is_active: Boolean(c.is_active),
         joinDate: c.created_at
           ? new Date(c.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
           : '—',
         avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length] ?? '#06402B',
+        company: c.store_name,
+        plan: c.store_plan,
+        store_id: c.store_id,
       }));
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudieron cargar los clientes.', duration: 3000 });
@@ -457,19 +469,27 @@ onMounted(() => {
 const addClient = async () => {
   isSubmitting.value = true;
   try {
+    const normalizedPlan = newClient.value.plan === 'básico' ? 'basico' : newClient.value.plan;
     const payload = {
-      name: newClient.value.name,
-      email: newClient.value.email,
-      company: newClient.value.company || '',
-      plan: newClient.value.plan,
+      store_name: newClient.value.company?.trim() || `Tienda de ${newClient.value.name.trim()}`,
+      store_plan: normalizedPlan,
+      store_tax_id: '',
+      owner_email: newClient.value.email,
+      owner_name: newClient.value.name,
     };
     
-    // POST to /api/v1/accounts/clients/ to create a client
-    const response = await apiClient.post('/v1/accounts/clients/', payload);
+    // POST /api/v1/accounts/stores/create-with-owner/ crea User + Store + StoreMembership(owner)
+    const response = await apiClient.post<CreateWithOwnerResponse>('/v1/accounts/stores/create-with-owner/', payload);
     if (response.success) {
-      enqueueSnackbar({ type: 'success', title: 'Cliente creado', message: 'El cliente se registró correctamente.', duration: 3000 });
+      const username = response.data?.credentials?.username || payload.owner_email;
+      enqueueSnackbar({
+        type: 'success',
+        title: 'Cliente creado',
+        message: `Cuenta lista. Usuario: ${username} | Password temporal: nurax123`,
+        duration: 6000
+      });
       await fetchClients(); // Recargar la lista con los IDs reales de la DB
-      newClient.value = { name: '', email: '', company: '', plan: 'básico' };
+      newClient.value = { name: '', email: '', company: '', plan: 'basico' };
       showAddModal.value = false;
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el cliente. Verifica los datos.', duration: 4000 });
