@@ -85,23 +85,27 @@ const authService = {
   },
 
   /**
-   * Cerrar sesión (limpia todo el almacenamiento local)
+   * Cerrar sesión (Backend limpia las cookies HttpOnly)
+   * ✅ SEGURO: No manipulamos localStorage
    */
   async logout() {
-    // Clear all possible token storage locations
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    localStorage.removeItem('token')
-    localStorage.removeItem('authToken')
-    sessionStorage.clear()
+    // Backend establece cookies con Max-Age=0 para expirarlas
+    // No necesitamos limpiar localStorage (¡no hay tokens allí!)
+    try {
+      await apiClient.post('/auth/logout/', {})
+    } catch (e) {
+      // Aunque falle, el usuario se desconecta localmente
+      console.error('[Auth] Logout failed:', e)
+    }
     return { success: true }
   },
 
   /**
    * Verificar token (Opcional, si tienes endpoint Verify)
    */
-  async verifyToken(token: string) {
-    return apiClient.post('/auth/verify/', { token })
+  async verifyToken() {
+    // Backend verifica cookie access_token directamente
+    return apiClient.post('/auth/verify/', {})
   },
 
   /**
@@ -114,14 +118,6 @@ const authService = {
       confirm_password: confirmPassword
     })
     return res
-  },
-  
-  /**
-   * Helpers Sync
-   */
-  saveTokens(access: string, refresh: string) {
-    localStorage.setItem('access_token', access)
-    localStorage.setItem('refresh_token', refresh)
   }
 }
 

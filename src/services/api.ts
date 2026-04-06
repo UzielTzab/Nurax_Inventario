@@ -1,5 +1,9 @@
 /**
- * API Configuration and Base Instance
+ * API Configuration and Base Instance (Seguridad: HttpOnly Cookies)
+ * 
+ * ✅ IMPORTANTE: Tokens almacenados en HttpOnly cookies (NO en localStorage)
+ * ✅ Browser envía cookies automáticamente con credentials: 'include'
+ * ✅ XSS-safe: tokens NO accesibles desde JavaScript
  */
 
 export interface RequestConfig extends RequestInit {
@@ -21,17 +25,13 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
-  private getAuthToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
-
   private async request<T>(
     method: string,
     endpoint: string,
     config?: RequestConfig & { body?: any }
   ): Promise<ApiResponse<T>> {
     try {
-      // 1. Prepare URL with Query Params if necessary
+      // 1. Prepare URL with Query Params
       let url = new URL(`${this.baseUrl}${endpoint}`)
       if (config?.params) {
         Object.entries(config.params).forEach(([key, value]) => {
@@ -46,16 +46,15 @@ class ApiClient {
         ...config?.headers,
       }
 
-      // Automatically inject Auth Token!
-      const token = this.getAuthToken()
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
+      // ✅ NO inyectamos token manualmente
+      // El navegador envía cookies HttpOnly automáticamente
+      // (especialmente importante: credentials: 'include')
 
-      // 3. Prepare Fetch Options
+      // 3. Prepare Fetch Options con credentials
       const fetchOptions: RequestInit = {
         method,
         headers,
+        credentials: 'include',  // ← CRÍTICO: Envía cookies HttpOnly automáticamente
         ...config, // Will bring things like credentials, mode, etc if overridden
       }
 
@@ -71,43 +70,28 @@ class ApiClient {
       // 4. Do Request
       let response = await fetch(url.toString(), fetchOptions)
 
-      // Handle 401 Unauthorized (Token expired) interception
-      if (response.status === 401 && !endpoint.includes('/auth/login/') && !endpoint.includes('/auth/refresh/')) {
-        const refreshToken = localStorage.getItem('refresh_token')
-        if (refreshToken) {
-          try {
-            // Intentar refrescar el token
-            const refreshUrl = new URL(`${this.baseUrl}/auth/refresh/`)
-            const refreshResponse = await fetch(refreshUrl.toString(), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refresh: refreshToken }),
-            })
+      // ✅ Handle 401 Unauthorized: Backend refrescará cookie automáticamente
+      if (response.status === 401 && !endpoint.includes('/auth/login/')) {
+        try {
+          // Intentar refrescar el token (el backend lo maneja en cookies)
+          const refreshUrl = new URL(`${this.baseUrl}/auth/refresh/`)
+          const refreshResponse = await fetch(refreshUrl.toString(), {
+            method: 'POST',
+            credentials: 'include',  // ← Envía refresh_token cookie
+            headers: { 'Content-Type': 'application/json' },
+          })
 
-            if (refreshResponse.ok) {
-              const refreshData = await refreshResponse.json()
-              const newAccessToken = refreshData.access
-              localStorage.setItem('access_token', newAccessToken)
-              
-              // Actualizar el header de Authorization con el nuevo token
-              headers['Authorization'] = `Bearer ${newAccessToken}`
-              fetchOptions.headers = headers
-              
-              // Reintentar la petición original
-              response = await fetch(url.toString(), fetchOptions)
-            } else {
-              // El refresh token expiró o es inválido
-              localStorage.removeItem('access_token')
-              localStorage.removeItem('refresh_token')
-              // Se podría agregar un window.location.href = '/login' si se desea forzar redirección
-            }
-          } catch (e) {
-            console.error('[API] Error refreshing token:', e)
-            localStorage.removeItem('access_token')
-            localStorage.removeItem('refresh_token')
+          if (refreshResponse.ok) {
+            // Backend actualizó el access_token en la cookie HttpOnly
+            // Reintentar la petición original
+            response = await fetch(url.toString(), fetchOptions)
+          } else {
+            // Refresh falló → usuario debe hacer login nuevamente
+            console.error('[API] Token refresh failed')
+            // Opcionalmente: window.location.href = '/auth/login'
           }
-        } else {
-          localStorage.removeItem('access_token')
+        } catch (e) {
+          console.error('[API] Error refreshing token:', e)
         }
       }
 

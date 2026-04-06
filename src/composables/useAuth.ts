@@ -40,12 +40,13 @@ export function useAuth() {
         return { success: false, error: loginRes.error || 'Credenciales incorrectas' };
       }
 
-      authService.saveTokens(loginRes.data.access, loginRes.data.refresh);
+      // ✅ REMOVIDO: authService.saveTokens()
+      // Backend ahora envía tokens en HttpOnly cookies (secure, no localStorage)
 
       const userRes = await authService.fetchUser();
       if (!userRes.success || !userRes.data) {
         console.error('Error en fetchUser:', userRes.error, userRes.status);
-        authService.logout();
+        await authService.logout();
         return { success: false, error: userRes.error || 'No se pudo obtener el perfil de usuario' };
       }
 
@@ -80,17 +81,19 @@ export function useAuth() {
     sessionPromise = null;
   };
 
-  // ── checkSession: restaura sesión desde token guardado ───────────────────
+  // ── checkSession: valida sesión contra backend (con HttpOnly cookie) ────
   const checkSession = async (): Promise<void> => {
-    if (localStorage.getItem('access_token')) {
-      const userRes = await authService.fetchUser();
-      if (userRes.success && userRes.data) {
-        isAuthenticated.value = true;
-        currentUser.value = userRes.data;
-      } else {
-        // Token expirado o inválido → limpiar todo
-        logout();
-      }
+    // ✅ SIMPLIFICADO: Ya NO verificamos localStorage
+    // Simplemente preguntamos al backend si el usuario está autenticado
+    // Backend valida el access_token en la cookie HttpOnly
+    const userRes = await authService.fetchUser();
+    if (userRes.success && userRes.data) {
+      isAuthenticated.value = true;
+      currentUser.value = userRes.data;
+    } else {
+      // Backend retornó 401 o error → usuario no autenticado
+      isAuthenticated.value = false;
+      currentUser.value = null;
     }
   };
 
