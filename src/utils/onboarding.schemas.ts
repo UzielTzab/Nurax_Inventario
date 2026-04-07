@@ -20,9 +20,12 @@ export const Step1Schema = z.object({
 });
 
 export const Step2Schema = z.object({
-  niche: z.enum(['ELECTRONICA', 'ABARROTES', 'FARMACIA', 'FERRETERIA'], {
-    required_error: 'Selecciona un nicho de negocio'
-  })
+  niche: z
+    .string()
+    .min(1, 'Selecciona un nicho de negocio')
+    .refine((value) => ['ELECTRONICA', 'ABARROTES', 'FARMACIA', 'FERRETERIA'].includes(value), {
+      message: 'Selecciona un nicho de negocio'
+    })
 });
 
 export const Step3Schema = z.object({

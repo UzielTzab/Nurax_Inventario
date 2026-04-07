@@ -129,7 +129,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 const handleEdit = (p: Product) => { openMenuId.value = null; emit('edit', p); };
 const handleDelete = (p: Product) => { openMenuId.value = null; emit('delete', p); };
 
-const formatPrice = (v: number | string) => Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatPrice = (v?: number | string) => {
+  if (v === null || v === undefined || v === '') return '0.00';
+  return Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 const getStatusVariant = (s: number): 'success' | 'warning' | 'danger' => s === 0 ? 'danger' : s <= 10 ? 'warning' : 'success';
 const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Bajo' : 'En Stock';
 </script>
