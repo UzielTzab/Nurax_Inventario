@@ -24,6 +24,22 @@ export interface OnboardingCompleteResponse {
   data: any;
 }
 
+export interface OnboardingWizardPayload {
+  tienda: {
+    nombre: string;
+    identificador_fiscal?: string;
+    nicho: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA';
+  };
+  configuracion: {
+    fondo_inicial_defecto: number;
+  };
+  proveedor_inicial: {
+    incluir: boolean;
+    nombre?: string;
+    telefono?: string;
+  };
+}
+
 class OnboardingService {
   /**
    * Parsea un archivo Excel y extrae los datos de productos
@@ -154,7 +170,7 @@ class OnboardingService {
   }
 
   /**
-   * Completa el onboarding
+    * Completa el onboarding (legacy)
    */
   async completeOnboarding(
     storeName: string,
@@ -188,6 +204,38 @@ class OnboardingService {
           data: null
         };
       }
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Error de conexión: ${error.message}`,
+        data: null
+      };
+    }
+  }
+
+  /**
+   * Wizard v2 - crea tienda + categorias + proveedor
+   */
+  async submitWizard(payload: OnboardingWizardPayload): Promise<OnboardingCompleteResponse> {
+    try {
+      const response = await apiClient.post<OnboardingCompleteResponse>(
+        '/v1/onboarding/wizard/',
+        payload
+      );
+
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data?.message || 'Wizard completado exitosamente',
+          data: response.data
+        };
+      }
+
+      return {
+        success: false,
+        message: response.error || 'Error al completar el wizard',
+        data: null
+      };
     } catch (error: any) {
       return {
         success: false,

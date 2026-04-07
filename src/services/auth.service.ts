@@ -12,7 +12,8 @@ export interface LoginBackendResponse {
 
 export interface StoreProfileResponse {
   id: number
-  store_name: string
+  store_name?: string
+  name?: string
   currency_symbol: string
   address: string
   phone: string
@@ -22,6 +23,11 @@ export interface StoreProfileResponse {
   ticket_name: string
   is_first_setup_completed: boolean
   updated_at: string
+  tax_id?: string
+  plan?: string
+  active?: boolean
+  niche?: string
+  default_cash?: string
 }
 
 export interface UserProfileResponse {

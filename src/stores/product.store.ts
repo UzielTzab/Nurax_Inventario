@@ -67,7 +67,7 @@ export const useProductStore = defineStore('products', () => {
   };
 
   /**
-   * Crea un nuevo producto con archivo de imagen opcional
+   * Crea un nuevo producto con archivo de imagen opcional, códigos y empaques
    */
   const addProduct = async (productData: any) => {
     isLoading.value = true;
@@ -77,7 +77,14 @@ export const useProductStore = defineStore('products', () => {
       const fd = new FormData();
       fd.append('name', productData.name);
       fd.append('sku', productData.sku);
-      fd.append('price', String(productData.price));
+      
+      // Usar base_cost y sale_price en lugar de price
+      if (productData.baseCost !== undefined) {
+        fd.append('base_cost', String(productData.baseCost));
+      }
+      if (productData.salePrice !== undefined) {
+        fd.append('sale_price', String(productData.salePrice));
+      }
 
       // Manejo de categoría: convertir string a número si es necesario
       const catVal = parseInt(String(productData.category), 10);
@@ -103,16 +110,61 @@ export const useProductStore = defineStore('products', () => {
       const response = await productsService.createProduct(fd);
 
       if (response.success && response.data) {
-        const newData = {
-          ...response.data,
-          category_name:
-            (response.data as any).category_name ||
-            CATEGORY_MAP[Number(response.data.category)] ||
-            `Categoría ${response.data.category}`,
-          image: response.data.image_url || response.data.image || null,
-        };
-        products.value.push(newData);
-        return { success: true, data: newData };
+        const productId = response.data.id;
+        
+        // Crear códigos de producto en endpoint separado
+        if (productData.productCodes && Array.isArray(productData.productCodes)) {
+          for (const code of productData.productCodes) {
+            if (code.code && code.codeType) {
+              try {
+                await apiClient.post('/v1/products/codes/', {
+                  product: productId,
+                  code: code.code,
+                  code_type: code.codeType,
+                });
+              } catch (err) {
+                console.warn('Error creating product code:', err);
+                // No fallar el proceso completo si falla un código
+              }
+            }
+          }
+        }
+
+        // Crear empaques en endpoint separado
+        if (productData.packagings && Array.isArray(productData.packagings)) {
+          for (const pkg of productData.packagings) {
+            if (pkg.name && pkg.quantityPerUnit) {
+              try {
+                await apiClient.post('/v1/products/packagings/', {
+                  product: productId,
+                  name: pkg.name,
+                  quantity_per_unit: pkg.quantityPerUnit,
+                });
+              } catch (err) {
+                console.warn('Error creating product packaging:', err);
+                // No fallar el proceso completo si falla un empaque
+              }
+            }
+          }
+        }
+
+        // Re-obtener el producto con códigos y empaques actualizados
+        const updatedResponse = await productsService.getProduct(productId);
+        if (updatedResponse.success && updatedResponse.data) {
+          const newData = {
+            ...updatedResponse.data,
+            category_name:
+              (updatedResponse.data as any).category_name ||
+              CATEGORY_MAP[Number(updatedResponse.data.category)] ||
+              `Categoría ${updatedResponse.data.category}`,
+            image: updatedResponse.data.image_url || updatedResponse.data.image || null,
+          };
+          products.value.push(newData);
+          return { success: true, data: newData };
+        } else {
+          products.value.push(response.data);
+          return { success: true, data: response.data };
+        }
       } else {
         error.value = response.error || 'No se pudo crear el producto';
         return { success: false, error: error.value };
@@ -127,7 +179,7 @@ export const useProductStore = defineStore('products', () => {
   };
 
   /**
-   * Actualiza un producto existente
+   * Actualiza un producto existente con código y empaques
    */
   const updateProduct = async (updatedProduct: any) => {
     isLoading.value = true;
@@ -137,7 +189,14 @@ export const useProductStore = defineStore('products', () => {
       const fd = new FormData();
       if (updatedProduct.name) fd.append('name', updatedProduct.name);
       if (updatedProduct.sku) fd.append('sku', updatedProduct.sku);
-      if (updatedProduct.price) fd.append('price', String(updatedProduct.price));
+      
+      // Usar base_cost y sale_price en lugar de price
+      if (updatedProduct.baseCost !== undefined) {
+        fd.append('base_cost', String(updatedProduct.baseCost));
+      }
+      if (updatedProduct.salePrice !== undefined) {
+        fd.append('sale_price', String(updatedProduct.salePrice));
+      }
 
       if (updatedProduct.category) {
         const updatedCat = parseInt(String(updatedProduct.category), 10);
@@ -159,19 +218,75 @@ export const useProductStore = defineStore('products', () => {
       const response = await productsService.updateProduct(updatedProduct.id, fd);
 
       if (response.success && response.data) {
-        const newData = {
-          ...response.data,
-          category_name:
-            (response.data as any).category_name ||
-            CATEGORY_MAP[Number(response.data.category)] ||
-            `Categoría ${response.data.category}`,
-          image: response.data.image_url || response.data.image || null,
-        };
-        const index = products.value.findIndex(p => p.id === updatedProduct.id);
-        if (index !== -1) {
-          products.value[index] = newData;
+        const productId = response.data.id;
+        
+        // Si hay códigos nuevos, crearlos
+        if (updatedProduct.productCodes && Array.isArray(updatedProduct.productCodes)) {
+          for (const code of updatedProduct.productCodes) {
+            if (code.code && code.codeType && !code.id) {
+              // Solo crear si no tiene ID (son nuevos)
+              try {
+                await apiClient.post('/v1/products/codes/', {
+                  product: productId,
+                  code: code.code,
+                  code_type: code.codeType,
+                });
+              } catch (err) {
+                console.warn('Error creating product code:', err);
+              }
+            }
+          }
         }
-        return { success: true, data: newData };
+
+        // Si hay empaques nuevos, crearlos
+        if (updatedProduct.packagings && Array.isArray(updatedProduct.packagings)) {
+          for (const pkg of updatedProduct.packagings) {
+            if (pkg.name && pkg.quantityPerUnit && !pkg.id) {
+              // Solo crear si no tiene ID (son nuevos)
+              try {
+                await apiClient.post('/v1/products/packagings/', {
+                  product: productId,
+                  name: pkg.name,
+                  quantity_per_unit: pkg.quantityPerUnit,
+                });
+              } catch (err) {
+                console.warn('Error creating product packaging:', err);
+              }
+            }
+          }
+        }
+
+        // Re-obtener el producto actualizado
+        const updatedResponse = await productsService.getProduct(productId);
+        if (updatedResponse.success && updatedResponse.data) {
+          const newData = {
+            ...updatedResponse.data,
+            category_name:
+              (updatedResponse.data as any).category_name ||
+              CATEGORY_MAP[Number(updatedResponse.data.category)] ||
+              `Categoría ${updatedResponse.data.category}`,
+            image: updatedResponse.data.image_url || updatedResponse.data.image || null,
+          };
+          const index = products.value.findIndex(p => p.id === updatedProduct.id);
+          if (index !== -1) {
+            products.value[index] = newData;
+          }
+          return { success: true, data: newData };
+        } else {
+          const newData = {
+            ...response.data,
+            category_name:
+              (response.data as any).category_name ||
+              CATEGORY_MAP[Number(response.data.category)] ||
+              `Categoría ${response.data.category}`,
+            image: response.data.image_url || response.data.image || null,
+          };
+          const index = products.value.findIndex(p => p.id === updatedProduct.id);
+          if (index !== -1) {
+            products.value[index] = newData;
+          }
+          return { success: true, data: newData };
+        }
       } else {
         error.value = response.error || 'No se pudo actualizar el producto';
         return { success: false, error: error.value };

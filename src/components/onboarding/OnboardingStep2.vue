@@ -1,64 +1,30 @@
 <template>
   <div>
     <div class="wizard-header">
-      <h2>Importar Productos (Opcional)</h2>
-      <p>Sube tu archivo Excel con productos. Si no tienes, puedes agregar manualmente después.</p>
+      <h2>El Acelerador (Nicho de Negocio)</h2>
+      <p>Elige tu giro para crear categorias listas para vender.</p>
     </div>
 
     <div class="wizard-body">
-      <div v-if="globalError" class="error-banner">
-        {{ globalError }}
-      </div>
-
-      <!-- Área Drag-Drop -->
-      <div
-        class="drag-drop-area"
-        :class="{ active: isDragging }"
-        @dragover.prevent="isDragging = true"
-        @dragleave="isDragging = false"
-        @drop.prevent="handleFileDrop"
-      >
-        <div class="drag-drop-icon">📊</div>
-        <p class="drag-drop-text">Arrastra tu Excel aquí</p>
-        <p class="drag-drop-hint">o haz clic para seleccionar</p>
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          style="display: none"
-          @change="handleFileSelect"
-        />
-      </div>
-
-      <!-- Archivo Seleccionado -->
-      <div v-if="selectedFile" class="file-selected">
-        <span class="file-selected-icon">✓</span>
-        <span class="file-selected-name">{{ selectedFile.name }}</span>
-        <button class="file-remove-btn" @click="removeFile" title="Eliminar archivo">
-          ✕
-        </button>
-      </div>
-
-      <!-- Preview de Datos -->
-      <div v-if="previewData.length > 0" class="form-group">
-        <label class="form-label">Vista Previa de Datos</label>
-        <ExcelPreview :data="previewData" :columns="previewColumns" />
-      </div>
-
-      <!-- Mapeo de Columnas -->
-      <div v-if="previewData.length > 0" class="form-group">
-        <label class="form-label">Mapeo de Columnas (arrastra para asociar)</label>
-        <div class="mappings-container">
-          <div v-for="excelCol in Object.keys(columnMappings)" :key="excelCol" class="mapping-item">
-            <span class="mapping-label">{{ excelCol }}:</span>
-            <select v-model="(columnMappings as any)[excelCol]" class="form-control">
-              <option value="">—</option>
-              <option v-for="col in previewColumns" :key="col" :value="col">
-                {{ col }}
-              </option>
-            </select>
-          </div>
+      <div v-if="errors.length > 0" class="error-banner">
+        <div v-for="(error, idx) in errors" :key="idx">
+          {{ error.message }}
         </div>
+      </div>
+
+      <div class="niche-grid">
+        <button
+          v-for="option in nicheOptions"
+          :key="option.value"
+          type="button"
+          class="niche-card"
+          :class="{ active: form.niche === option.value }"
+          @click="selectNiche(option.value)"
+        >
+          <span class="niche-icon">{{ option.icon }}</span>
+          <span class="niche-title">{{ option.label }}</span>
+          <span class="niche-subtitle">{{ option.subtitle }}</span>
+        </button>
       </div>
     </div>
   </div>
@@ -66,130 +32,99 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import ExcelPreview from './ExcelPreview.vue';
-import { onboardingService } from '@/services/onboarding.service';
+import { validateStep2 } from '@/utils/onboarding.schemas';
 
 interface Props {
-  initialData?: any;
+  initialData?: {
+    niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | '';
+  };
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'update', data: any): void;
+  (e: 'validate'): boolean;
 }>();
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const selectedFile = ref<File | null>(null);
-const isDragging = ref(false);
-const globalError = ref('');
-const previewData = ref<any[]>([]);
-const previewColumns = ref<string[]>([]);
-const columnMappings = ref({
-  name: 'name',
-  sku: 'sku',
-  category_name: 'category',
-  stock: 'stock',
-  price: 'price',
-  supplier_name: 'supplier'
+const form = ref({
+  niche: props.initialData?.niche || ''
 });
 
-const handleFileDrop = (event: DragEvent) => {
-  isDragging.value = false;
-  const files = event.dataTransfer?.files;
-  if (files?.[0]) {
-    processFile(files[0]);
-  }
+const errors = ref<any[]>([]);
+
+const nicheOptions = [
+  { value: 'ELECTRONICA', label: 'Electronica', icon: '📱', subtitle: 'Cables, cargadores, audio' },
+  { value: 'ABARROTES', label: 'Abarrotes', icon: '🛒', subtitle: 'Snacks, bebidas, despensa' },
+  { value: 'FARMACIA', label: 'Farmacia', icon: '💊', subtitle: 'Medicamentos y cuidado' },
+  { value: 'FERRETERIA', label: 'Ferreteria', icon: '🔧', subtitle: 'Herramientas y repuestos' }
+];
+
+const selectNiche = (value: any) => {
+  form.value.niche = value;
+  errors.value = [];
+  emit('update', { niche: value });
 };
 
-const handleFileSelect = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files?.[0]) {
-    processFile(input.files[0]);
+const validateForm = () => {
+  const validation = validateStep2(form.value);
+  if (!validation.success) {
+    errors.value = validation.errors || [];
+    return false;
   }
-};
-
-const processFile = async (file: File) => {
-  globalError.value = '';
-  selectedFile.value = file;
-
-  const { products, columns, error } = await onboardingService.parseExcelFile(file);
-
-  if (error) {
-    globalError.value = error;
-    previewData.value = [];
-    previewColumns.value = [];
-    return;
-  }
-
-  previewData.value = products;
-  previewColumns.value = columns;
-
-  // Auto-mapear columnas
-  const autoMappings = {
-    name: columns.find(c => c.toLowerCase().includes('nombre')) || 'name',
-    sku: columns.find(c => c.toLowerCase().includes('sku')) || 'sku',
-    category_name: columns.find(c => c.toLowerCase().includes('categoria')) || '',
-    stock: columns.find(c => c.toLowerCase().includes('stock')) || '',
-    price: columns.find(c => c.toLowerCase().includes('precio')) || '',
-    supplier_name: columns.find(c => c.toLowerCase().includes('proveedor')) || ''
-  };
-
-  Object.assign(columnMappings.value, autoMappings);
-
-  emit('update', {
-    excelFile: file,
-    products,
-    columnMappings: columnMappings.value
-  });
-};
-
-const removeFile = () => {
-  selectedFile.value = null;
-  previewData.value = [];
-  previewColumns.value = [];
-  globalError.value = '';
-  if (fileInput.value) {
-    fileInput.value.value = '';
-  }
-  emit('update', {
-    excelFile: null,
-    products: [],
-    columnMappings: columnMappings.value
-  });
-};
-
-const clickInput = () => {
-  fileInput.value?.click();
+  errors.value = [];
+  emit('update', validation.data);
+  return true;
 };
 
 defineExpose({
-  clickInput
+  validateForm
 });
 </script>
 
 <style scoped>
 @import '@/styles/onboarding.css';
 
-.mappings-container {
+.niche-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.niche-card {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.mapping-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.niche-card:hover {
+  border-color: var(--color-brand-main);
+  box-shadow: 0 8px 20px rgba(34, 125, 82, 0.12);
 }
 
-.mapping-label {
-  min-width: 100px;
-  font-weight: 500;
+.niche-card.active {
+  border-color: var(--color-brand-main);
+  background: rgba(34, 125, 82, 0.07);
+}
+
+.niche-icon {
+  font-size: 1.8rem;
+}
+
+.niche-title {
+  font-weight: 700;
   color: var(--color-wizard-text-dark);
 }
 
-.mapping-item .form-control {
-  flex: 1;
+.niche-subtitle {
+  color: var(--color-wizard-text-grey);
+  font-size: 0.85rem;
 }
 </style>

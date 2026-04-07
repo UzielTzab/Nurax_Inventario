@@ -21,12 +21,21 @@ export interface Product {
   supplier?: number | string | null;
   sku: string;
   stock: number;
-  price: number | string;
+  current_stock?: number;
+  baseCost?: number | string;
+  base_cost?: number | string;
+  salePrice?: number | string;
+  sale_price?: number | string;
+  price?: number | string; // legacy support
   image_url?: string | null;
   image?: string | null;
   status?: string;
   created_at?: string;
   updated_at?: string;
+  productCodes?: Array<{ id?: string; codeType?: string; code_type?: string; code: string }>;
+  product_codes?: Array<{ id?: string; codeType?: string; code_type?: string; code: string }>;
+  packagings?: Array<{ id?: string; name: string; quantityPerUnit?: number; quantity_per_unit?: number }>;
+  product_packagings?: Array<{ id?: string; name: string; quantityPerUnit?: number; quantity_per_unit?: number }>;
 }
 
 export interface PaginationResponse<T> {
