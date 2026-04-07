@@ -175,6 +175,7 @@ src/
 | `/api/v1/accounts/users/` | GET | `AdminClients.vue` | Lista usuarios (admin) |
 | `/api/v1/accounts/store-profiles/` | GET | `useStoreSettings` | Config de tienda |
 | `/api/v1/accounts/store-profiles/{id}/` | PATCH | `useStoreSettings` | Actualizar config tienda |
+| `/api/v1/onboarding/wizard/` | POST | `onboarding.service` | Wizard v2 (tienda + categorias + proveedor) |
 
 #### **Products Domain** (Inventario)
 | Endpoint | Método | Quién | Descripción |
@@ -304,3 +305,35 @@ Incluye: sidebar, topbar (búsqueda, perfil, notificaciones), modales de perfil 
 8. **El rol `admin` solo ve `/dashboard/clients`** — no tiene acceso a inventario, ventas ni proveedores.
 9. **El rol `cliente` no ve `/dashboard/clients`** — el router lo bloquea y redirige.
 10. **Imágenes de productos** → se suben como `FormData` con campo `image_file` → backend maneja Cloudinary.
+
+---
+
+## 🧭 Wizard de Inicio (v2)
+
+**Objetivo:** recolectar datos en 4 pasos sin escribir en BD hasta el final.
+
+**Pasos UI:**
+1. Identidad de tienda: `nombre`, `identificador_fiscal` (opcional)
+2. Nicho de negocio: `ELECTRONICA | ABARROTES | FARMACIA | FERRETERIA`
+3. Proveedor principal: `nombre`, `telefono` (opcional, puede saltarse)
+4. Caja: `fondo_inicial_defecto`
+
+**Endpoint final:** `POST /api/v1/onboarding/wizard/`
+
+```json
+{
+  "tienda": {
+    "nombre": "Electronica Nurax",
+    "identificador_fiscal": "XAXX010101000",
+    "nicho": "ELECTRONICA"
+  },
+  "configuracion": {
+    "fondo_inicial_defecto": 500.0
+  },
+  "proveedor_inicial": {
+    "incluir": true,
+    "nombre": "TechWholesale Mx",
+    "telefono": "555-123-4567"
+  }
+}
+```

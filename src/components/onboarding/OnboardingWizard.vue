@@ -10,7 +10,7 @@
 
         <nav class="steps-nav">
           <div
-            v-for="step in 3"
+            v-for="step in 4"
             :key="step"
             :class="[
               'step-item',
@@ -33,7 +33,7 @@
       <!-- Panel derecho con contenido -->
       <div class="wizard-content-wrapper">
         <div class="wizard-card">
-          <!-- Step 1: Información -->
+          <!-- Step 1: Identidad -->
           <OnboardingStep1
             v-if="store.currentStep === 1"
             ref="step1Ref"
@@ -42,25 +42,38 @@
             @validate="validateStep1"
           />
 
-          <!-- Step 2: Personalización -->
+          <!-- Step 2: Nicho -->
           <OnboardingStep2
             v-if="store.currentStep === 2"
             ref="step2Ref"
             :initial-data="store.formData.step2"
             @update="updateStep2"
+            @validate="validateStep2"
           />
 
-          <!-- Step 3: Finalizar -->
+          <!-- Step 3: Proveedor -->
           <OnboardingStep3
             v-if="store.currentStep === 3"
+            ref="step3Ref"
+            :initial-data="store.formData.step3"
+            @update="updateStep3"
+            @validate="validateStep3"
+          />
+
+          <!-- Step 4: Caja -->
+          <OnboardingStep4
+            v-if="store.currentStep === 4"
             :step1-data="store.formData.step1"
             :step2-data="store.formData.step2"
+            :step3-data="store.formData.step3"
+            :step4-data="store.formData.step4"
             @back="goBack"
+            @update="updateStep4"
             @success="onSuccess"
           />
 
-          <!-- Footer con Botones (no visible en step 3) -->
-          <div v-if="store.currentStep !== 3" class="wizard-footer">
+          <!-- Footer con Botones (no visible en step 4) -->
+          <div v-if="store.currentStep !== 4" class="wizard-footer">
             <div class="footer-actions">
               <AppButton
                 variant="outline"
@@ -96,18 +109,21 @@ import AppButton from '@/components/ui/AppButton.vue';
 import OnboardingStep1 from './OnboardingStep1.vue';
 import OnboardingStep2 from './OnboardingStep2.vue';
 import OnboardingStep3 from './OnboardingStep3.vue';
+import OnboardingStep4 from './OnboardingStep4.vue';
 
 const router = useRouter();
 const { currentUser } = useAuth();
 const store = useOnboardingStore();
 const step1Ref = ref<any>(null);
 const step2Ref = ref<any>(null);
+const step3Ref = ref<any>(null);
 const isProcessing = ref(false);
 
 const stepTitles: Array<{ title: string; subtitle: string }> = [
-  { title: 'Información', subtitle: 'Datos básicos' },
-  { title: 'Personalización', subtitle: 'Diseño y marca' },
-  { title: 'Finalizar', subtitle: 'Lanzamiento' }
+  { title: 'Identidad', subtitle: 'Nombre y fiscal' },
+  { title: 'Acelerador', subtitle: 'Nicho de negocio' },
+  { title: 'Proveedor', subtitle: 'Opcional' },
+  { title: 'Caja', subtitle: 'Fondo inicial' }
 ];
 
 const updateStep1 = (data: any) => {
@@ -118,13 +134,41 @@ const updateStep2 = (data: any) => {
   store.setStep2Data(data);
 };
 
+const updateStep3 = (data: any) => {
+  store.setStep3Data(data);
+};
+
+const updateStep4 = (data: any) => {
+  store.setStep4Data(data);
+};
+
 const validateStep1 = () => {
   return step1Ref.value?.validateForm() || false;
+};
+
+const validateStep2 = () => {
+  return step2Ref.value?.validateForm() || false;
+};
+
+const validateStep3 = () => {
+  return step3Ref.value?.validateForm() || false;
 };
 
 const goNext = () => {
   if (store.currentStep === 1) {
     if (!validateStep1()) {
+      return;
+    }
+  }
+
+  if (store.currentStep === 2) {
+    if (!validateStep2()) {
+      return;
+    }
+  }
+
+  if (store.currentStep === 3) {
+    if (!validateStep3()) {
       return;
     }
   }
@@ -149,21 +193,19 @@ const skipWizard = () => {
 };
 */
 
-const onSuccess = (storeProfileData: any) => {
-  console.log('🎉 OnboardingWizard: onSuccess llamado con data:', storeProfileData);
-  
-  if (currentUser.value && currentUser.value.store_profile) {
-    console.log('✅ Antes de actualizar:', currentUser.value.store_profile.is_first_setup_completed);
+const onSuccess = (wizardResponse: any) => {
+  console.log('🎉 OnboardingWizard: onSuccess llamado con data:', wizardResponse);
+
+  const storeData = wizardResponse?.store || wizardResponse?.data?.store || wizardResponse;
+  if (currentUser.value && storeData) {
     currentUser.value.store_profile = {
       ...currentUser.value.store_profile,
-      ...storeProfileData,
+      ...storeData,
       is_first_setup_completed: true
     };
-    console.log('✅ Después de actualizar:', currentUser.value.store_profile?.is_first_setup_completed);
   }
-  
+
   store.reset();
-  console.log('🚀 Redirigiendo a /dashboard/inventory');
   router.push('/dashboard/inventory');
 };
 </script>

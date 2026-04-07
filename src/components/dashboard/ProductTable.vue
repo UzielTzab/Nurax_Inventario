@@ -237,7 +237,7 @@ export interface Product {
   category: string | number;
   sku: string;
   stock: number;
-  price: string | number;
+  price?: string | number;
   image?: string | null;
 }
 
@@ -392,7 +392,10 @@ const handleDelete = (product: Product) => {
 };
 
 // --- Helpers ---
-const formatPrice = (price: number | string) => Number(price).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatPrice = (price?: number | string) => {
+  if (price === null || price === undefined || price === '') return '0.00';
+  return Number(price).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 
 const getStatusVariant = (stock: number): 'success' | 'warning' | 'danger' => {
   if (stock === 0) return 'danger';

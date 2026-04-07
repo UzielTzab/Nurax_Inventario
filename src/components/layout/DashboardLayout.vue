@@ -1177,7 +1177,7 @@ defineEmits(['quickSell']);
   padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
   position: sticky;

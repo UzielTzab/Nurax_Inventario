@@ -9,67 +9,51 @@ import { z } from 'zod';
 export const Step1Schema = z.object({
   store_name: z
     .string()
-    .min(1, 'El nombre del negocio es obligatorio')
+    .min(1, 'El nombre de la tienda es obligatorio')
     .min(3, 'El nombre debe tener al menos 3 caracteres')
     .max(200, 'El nombre no puede exceder 200 caracteres'),
-  ticket_name: z
+  tax_id: z
     .string()
-    .min(1, 'El nombre del ticket es obligatorio')
-    .min(3, 'El nombre debe tener al menos 3 caracteres')
-    .max(100, 'El nombre no puede exceder 100 caracteres')
-});
-
-export const Step3Schema = z.object({
-  address: z
-    .string()
-    .max(300, 'La dirección no puede exceder 300 caracteres')
-    .optional()
-    .default(''),
-  phone: z
-    .string()
-    .max(30, 'El teléfono no puede exceder 30 caracteres')
-    .optional()
-    .default(''),
-  ticket_message: z
-    .string()
-    .max(500, 'El mensaje no puede exceder 500 caracteres')
+    .max(50, 'El identificador fiscal no puede exceder 50 caracteres')
     .optional()
     .default('')
 });
 
 export const Step2Schema = z.object({
-  excelFile: z
-    .instanceof(File)
-    .optional()
-    .nullable(),
-  products: z
-    .array(z.object({
-      name: z.string().min(1, 'Nombre requerido'),
-      sku: z.string().min(1, 'SKU requerido'),
-      category_name: z.string().optional(),
-      stock: z.number().nonnegative().optional(),
-      price: z.number().nonnegative().optional(),
-      supplier_name: z.string().optional()
-    }))
-    .optional()
-    .default([]),
-  columnMappings: z.object({
-    name: z.string(),
-    sku: z.string(),
-    category: z.string().optional(),
-    stock: z.string().optional(),
-    price: z.string().optional(),
-    supplier: z.string().optional()
+  niche: z.enum(['ELECTRONICA', 'ABARROTES', 'FARMACIA', 'FERRETERIA'], {
+    required_error: 'Selecciona un nicho de negocio'
   })
+});
+
+export const Step3Schema = z.object({
+  include_supplier: z.boolean().default(true),
+  supplier_name: z.string().max(200, 'El nombre es muy largo').optional().default(''),
+  supplier_phone: z.string().max(50, 'El telefono es muy largo').optional().default('')
+}).refine((data) => {
+  if (!data.include_supplier) return true;
+  return data.supplier_name.trim().length > 0;
+}, {
+  message: 'El nombre del proveedor es requerido si decides incluirlo',
+  path: ['supplier_name']
+});
+
+export const Step4Schema = z.object({
+  default_cash: z
+    .number()
+    .min(0, 'El fondo inicial no puede ser negativo')
 });
 
 export const OnboardingFormSchema = z.object({
   step1: Step1Schema,
-  step2: Step2Schema.partial() // step2 puede ser parcial en el formulario
+  step2: Step2Schema,
+  step3: Step3Schema,
+  step4: Step4Schema
 });
 
 export type Step1FormData = z.infer<typeof Step1Schema>;
 export type Step2FormData = z.infer<typeof Step2Schema>;
+export type Step3FormData = z.infer<typeof Step3Schema>;
+export type Step4FormData = z.infer<typeof Step4Schema>;
 export type OnboardingFormData = z.infer<typeof OnboardingFormSchema>;
 
 /**
@@ -124,6 +108,64 @@ export const validateStep2 = (data: any) => {
       };
     }
     // Error genérico
+    return {
+      success: false,
+      data: null,
+      errors: [{ field: 'form', message: error.message || 'Error en validación' }]
+    };
+  }
+};
+
+/**
+ * Validar Step3 (proveedor)
+ */
+export const validateStep3 = (data: any) => {
+  try {
+    return {
+      success: true,
+      data: Step3Schema.parse(data),
+      errors: null
+    };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        errors: error.issues.map((issue: any) => ({
+          field: issue.path.join('.'),
+          message: issue.message
+        }))
+      };
+    }
+    return {
+      success: false,
+      data: null,
+      errors: [{ field: 'form', message: error.message || 'Error en validación' }]
+    };
+  }
+};
+
+/**
+ * Validar Step4 (caja)
+ */
+export const validateStep4 = (data: any) => {
+  try {
+    return {
+      success: true,
+      data: Step4Schema.parse(data),
+      errors: null
+    };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        errors: error.issues.map((issue: any) => ({
+          field: issue.path.join('.'),
+          message: issue.message
+        }))
+      };
+    }
     return {
       success: false,
       data: null,

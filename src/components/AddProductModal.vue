@@ -81,10 +81,22 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="category">Categoría *</label>
-                <select id="category" v-model="formData.category" required class="form-input">
-                  <option value="">Seleccione una categoría</option>
-                  <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                </select>
+                <div class="category-select-row">
+                  <select id="category" v-model="formData.category" required class="form-input">
+                    <option value="">Seleccione una categoría</option>
+                    <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                  </select>
+                  <AppButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    :icon="PlusIcon"
+                    iconOnly
+                    class="square-icon-button"
+                    title="Agregar categoría"
+                    @click="showCategoryModal = true"
+                  />
+                </div>
               </div>
               <div class="form-group">
                 <div class="label-with-tooltip">
@@ -111,18 +123,35 @@
               </div>
             </div>
 
-            <!-- Price & Stock -->
+            <!-- Cost & Price -->
             <div class="form-row">
               <div class="form-group">
                 <AppInput
-                  id="price"
-                  v-model="formData.price"
+                  id="baseCost"
+                  v-model.number="formData.baseCost"
                   type="number"
-                  label="Precio ($)"
+                  label="Costo Base ($)"
                   placeholder="0.00"
+                  :hint="`Costo para ti: ${formData.baseCost}`"
                   required
                 />
               </div>
+              <div class="form-group">
+                <AppInput
+                  id="salePrice"
+                  v-model.number="formData.salePrice"
+                  type="number"
+                  label="Precio de Venta ($)"
+                  placeholder="0.00"
+                  :hint="`Margen: ${(formData.salePrice - formData.baseCost).toFixed(2)}`"
+                  required
+                  :class="{ 'input-error': formData.salePrice <= formData.baseCost && formData.salePrice > 0 }"
+                />
+              </div>
+            </div>
+
+            <!-- Stock -->
+            <div class="form-row">
               <div class="form-group">
                 <label for="stock">{{ productToEdit ? 'Stock Actual (Disponible)' : 'Stock Inicial *' }}</label>
                 <div class="stock-input-wrapper">
@@ -172,9 +201,95 @@
                 </button>
               </div>
             </div>
-            
               </div> <!-- /product-data-section -->
             </div>     <!-- /product-top-row -->
+
+            <div class="advanced-toggle">
+              <AppButton
+                variant="outline"
+                size="sm"
+                type="button"
+                :icon="showAdvanced ? ChevronUpIcon : ChevronDownIcon"
+                iconPosition="right"
+                @click="toggleAdvanced"
+              >
+                Opciones avanzadas
+              </AppButton>
+              <p class="advanced-hint">Codigos y empaques son opcionales.</p>
+            </div>
+
+            <div v-if="showAdvanced" class="advanced-sections">
+            <!-- ── SECCIÓN EXPANDIBLE: CÓDIGOS ── -->
+            <details class="collapsible-section">
+              <summary class="collapsible-header">
+                <span class="collapsible-title">
+                  <TagIcon class="icon-small" />
+                  Codigos de producto
+                </span>
+                <span class="badge-count">{{ formData.productCodes.length }}</span>
+              </summary>
+              <div class="collapsible-content">
+                <p class="section-hint">
+                  Usa el tipo que veas impreso en el producto. Si no sabes, elige "EAN-13 (codigo de barras)".
+                </p>
+                <div class="codes-list">
+                  <div v-if="formData.productCodes.length === 0" class="empty-state">
+                    <p>No hay códigos agregados. Opcional.</p>
+                  </div>
+                  <div v-for="(code, idx) in formData.productCodes" :key="idx" class="code-item">
+                    <select v-model="code.codeType" class="form-input code-type-select">
+                      <option value="ean13">EAN-13 (codigo de barras)</option>
+                      <option value="qr">QR (codigo rapido)</option>
+                      <option value="upc">UPC (codigo de producto)</option>
+                      <option value="shelf_label">Etiqueta de estante</option>
+                    </select>
+                    <input v-model="code.code" type="text" placeholder="Código..." class="form-input code-value-input" />
+                    <button type="button" class="btn-remove" @click="removeCode(idx)" title="Eliminar código">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <AppButton type="button" variant="outline" size="sm" :icon="PlusIcon" @click="addCode">
+                  Agregar codigo
+                </AppButton>
+              </div>
+            </details>
+
+            <!-- ── SECCIÓN EXPANDIBLE: EMPAQUES ── -->
+            <details class="collapsible-section">
+              <summary class="collapsible-header">
+                <span class="collapsible-title">
+                  <ArchiveBoxIcon class="icon-small" />
+                  Empaques y formatos de venta
+                </span>
+                <span class="badge-count">{{ formData.packagings.length }}</span>
+              </summary>
+              <div class="collapsible-content">
+                <p class="section-hint">
+                  Ejemplos: "Caja con 50", "Paquete x6", "Unidad".
+                </p>
+                <div class="packagings-list">
+                  <div v-if="formData.packagings.length === 0" class="empty-state">
+                    <p>No hay empaques agregados. Opcional.</p>
+                  </div>
+                  <div v-for="(pkg, idx) in formData.packagings" :key="idx" class="packaging-item">
+                    <input v-model="pkg.name" type="text" placeholder="Nombre del empaque" class="form-input packaging-name-input" />
+                    <input v-model.number="pkg.quantityPerUnit" type="number" placeholder="Cantidad" class="form-input packaging-qty-input" min="1" />
+                    <button type="button" class="btn-remove" @click="removePackaging(idx)" title="Eliminar empaque">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <AppButton type="button" variant="outline" size="sm" :icon="PlusIcon" @click="addPackaging">
+                  Agregar empaque
+                </AppButton>
+              </div>
+            </details>
+            </div>
             <!-- Actions -->
             <div class="form-actions">
               <AppButton variant="outline" type="button" @click="$emit('close')" :disabled="loading">Cancelar</AppButton>
@@ -216,16 +331,69 @@
     @close="showAddSupplierModal = false"
     @supplier-created="onSupplierCreated"
   />
+
+  <!-- Sub-modal: Crear Categoría -->
+  <Transition name="fade">
+    <div v-if="showCategoryModal" class="modal-overlay" @click.self="showCategoryModal = false">
+      <div class="modal-content" style="max-width: 420px;">
+        <header class="modal-header">
+          <div class="header-title">
+            <FolderPlusIcon class="icon" />
+            <h2 class="modal-title">Nueva Categoría</h2>
+          </div>
+          <button class="close-btn" @click="showCategoryModal = false">
+            <XMarkIcon class="icon" />
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="form-group">
+            <AppInput
+              v-model="newCategoryName"
+              label="Nombre de la categoría"
+              placeholder="Ej: Audio, Cables, Accesorios"
+            />
+            <p v-if="categoryError" class="category-error">{{ categoryError }}</p>
+          </div>
+          <div class="form-actions">
+            <AppButton variant="outline" type="button" @click="showCategoryModal = false">
+              Cancelar
+            </AppButton>
+            <AppButton
+              variant="fill"
+              type="button"
+              :loading="isCreatingCategory"
+              :icon="PlusIcon"
+              @click="createCategory"
+            >
+              Crear categoría
+            </AppButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, reactive, onMounted } from 'vue';
-import { XMarkIcon, PlusCircleIcon, QuestionMarkCircleIcon, QrCodeIcon } from '@heroicons/vue/24/outline';
+import {
+  XMarkIcon,
+  PlusCircleIcon,
+  QuestionMarkCircleIcon,
+  QrCodeIcon,
+  TagIcon,
+  ArchiveBoxIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PlusIcon,
+  FolderPlusIcon,
+} from '@heroicons/vue/24/outline';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
+import { useAuth } from '@/composables/useAuth';
 import apiClient from '@/services/api';
 
 interface Product {
@@ -234,10 +402,14 @@ interface Product {
   category: string | number;
   sku: string;
   stock: number;
-  price: string | number;
+  baseCost?: string | number;
+  salePrice?: string | number;
+  price?: string | number; // legacy support
   image?: string | null;
   supplierId?: string;
   supplier?: string | number | null;
+  productCodes?: Array<{ codeType: string; code: string }>;
+  packagings?: Array<{ name: string; quantityPerUnit: number }>;
 }
 
 const props = defineProps<{
@@ -250,10 +422,17 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'productAdded', 'productUpdated']);
 
 const { suppliers, fetchSuppliers } = useSuppliers();
+const { currentUser, initSession } = useAuth();
 const showAddSupplierModal = ref(false);
 
 const categoriesList = ref<Array<{id: number | string, name: string}>>([]);
 const isScanning = ref(false);
+const showAdvanced = ref(false);
+const showCategoryModal = ref(false);
+const newCategoryName = ref('');
+const isCreatingCategory = ref(false);
+const categoryError = ref('');
+const activeStoreId = ref<string | null>(null);
 
 const barcodeFormats = ref<any[]>([
   'qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e'
@@ -296,10 +475,36 @@ const onDecodeSku = (detectedCodes: any[]) => {
   }
 };
 
+const resolveStoreId = async (): Promise<string | null> => {
+  if (activeStoreId.value) return activeStoreId.value;
+
+  const fromUser = currentUser.value?.store_profile?.id;
+  if (fromUser) {
+    activeStoreId.value = String(fromUser);
+    return activeStoreId.value;
+  }
+
+  try {
+    const storesRes = await apiClient.get<any>('/v1/accounts/stores/');
+    if (storesRes.success && Array.isArray(storesRes.data) && storesRes.data.length > 0) {
+      const active = storesRes.data.find((s: any) => s.active) || storesRes.data[0];
+      activeStoreId.value = String(active.id);
+      return activeStoreId.value;
+    }
+  } catch (e) {
+    console.error('Error resolving store id:', e);
+  }
+
+  return null;
+};
+
 const fetchCategories = async () => {
   try {
-    const res = await apiClient.get<any>('/v1/products/categories/');
-    if (res.success && res.data) {
+    const storeId = await resolveStoreId();
+    const res = await apiClient.get<any>('/v1/products/categories/', {
+      params: storeId ? { store_id: storeId } : undefined,
+    });
+     if (res.success && res.data) {
        categoriesList.value = res.data.results || res.data;
     }
   } catch(e) {
@@ -315,7 +520,45 @@ const loadSuppliers = async () => {
   }
 };
 
-onMounted(() => {
+const createCategory = async () => {
+  categoryError.value = '';
+  const name = newCategoryName.value.trim();
+  if (!name) {
+    categoryError.value = 'Escribe un nombre para la categoria.';
+    return;
+  }
+
+  const storeId = await resolveStoreId();
+  if (!storeId) {
+    categoryError.value = 'No se encontro la tienda activa.';
+    return;
+  }
+
+  isCreatingCategory.value = true;
+  try {
+    const res = await apiClient.post<any>('/v1/products/categories/', {
+      name,
+      store: storeId,
+    });
+
+    if (res.success && res.data) {
+      const created = res.data;
+      categoriesList.value.push(created);
+      formData.category = created.id;
+      newCategoryName.value = '';
+      showCategoryModal.value = false;
+    } else {
+      categoryError.value = res.error || 'No se pudo crear la categoria.';
+    }
+  } catch (e: any) {
+    categoryError.value = e?.message || 'Error al crear la categoria.';
+  } finally {
+    isCreatingCategory.value = false;
+  }
+};
+
+onMounted(async () => {
+  await initSession();
   fetchCategories();
   loadSuppliers();
 });
@@ -325,9 +568,12 @@ const formData = reactive({
   category: '',
   sku: '',
   stock: 0,
-  price: 0,
+  baseCost: 0,
+  salePrice: 0,
   image: '',
   supplierId: '',
+  productCodes: [] as Array<{ codeType: string; code: string }>,
+  packagings: [] as Array<{ name: string; quantityPerUnit: number }>,
 });
 
 const imagePreview = ref('');
@@ -344,17 +590,34 @@ watch(() => props.isOpen, (newVal) => {
         category: props.productToEdit.category,
         sku: props.productToEdit.sku,
         stock: props.productToEdit.stock,
-        price: props.productToEdit.price,
+        baseCost: props.productToEdit.baseCost ?? 0,
+        salePrice: props.productToEdit.salePrice ?? props.productToEdit.price ?? 0,
         image: props.productToEdit.image,
         supplierId: props.productToEdit.supplierId ?? props.productToEdit.supplier ?? '',
+        productCodes: props.productToEdit.productCodes ?? [],
+        packagings: props.productToEdit.packagings ?? [],
       });
       imagePreview.value = props.productToEdit.image || '';
-      rawImageFile.value = null; // No new file by default
+      rawImageFile.value = null;
+      showAdvanced.value =
+        (formData.productCodes?.length ?? 0) > 0 || (formData.packagings?.length ?? 0) > 0;
     } else {
-      Object.assign(formData, { name: '', category: '', sku: '', stock: 0, price: 0, image: '', supplierId: '' });
+      Object.assign(formData, { 
+        name: '', 
+        category: '', 
+        sku: '', 
+        stock: 0, 
+        baseCost: 0, 
+        salePrice: 0, 
+        image: '', 
+        supplierId: '',
+        productCodes: [],
+        packagings: [],
+      });
       imagePreview.value = '';
       rawImageFile.value = null;
-      generateSKU(); // Auto-generar al crear uno nuevo
+      generateSKU();
+      showAdvanced.value = false;
     }
   }
 });
@@ -415,6 +678,35 @@ const adjustStock = (amount: number) => {
   if (newValue >= 0) formData.stock = newValue;
 };
 
+const addCode = () => {
+  formData.productCodes.push({ codeType: 'ean13', code: '' });
+};
+
+const removeCode = (index: number) => {
+  formData.productCodes.splice(index, 1);
+};
+
+const addPackaging = () => {
+  formData.packagings.push({ name: '', quantityPerUnit: 1 });
+};
+
+const removePackaging = (index: number) => {
+  formData.packagings.splice(index, 1);
+};
+
+const toggleAdvanced = () => {
+  showAdvanced.value = !showAdvanced.value;
+  if (showAdvanced.value && formData.productCodes.length === 0) {
+    addCode();
+  }
+};
+
+watch(showCategoryModal, (open) => {
+  if (open) {
+    categoryError.value = '';
+  }
+});
+
 /** Called when AddSupplierModal successfully creates a supplier */
 const onSupplierCreated = (supplierId: string, supplierName: string) => {
   // Asignar el proveedor recién creado al formulario
@@ -436,6 +728,12 @@ const onSupplierCreated = (supplierId: string, supplierName: string) => {
 };
 
 const handleSubmit = () => {
+  // Validación: sale_price debe ser mayor que base_cost
+  if (formData.salePrice <= formData.baseCost) {
+    alert('El precio de venta debe ser mayor que el costo base');
+    return;
+  }
+
   if (props.productToEdit) {
     const updatedProduct: any = {
       ...props.productToEdit,
@@ -443,11 +741,13 @@ const handleSubmit = () => {
       category: formData.category,
       sku: formData.sku,
       stock: formData.stock,
-      price: formData.price,
-      // Pass real file so Store knows to use FormData
+      baseCost: formData.baseCost,
+      salePrice: formData.salePrice,
       imageFile: rawImageFile.value,
       supplierId: formData.supplierId,
       supplier: formData.supplierId,
+      productCodes: formData.productCodes.filter(c => c.code.trim()), // Solo enviar los que tengan código
+      packagings: formData.packagings.filter(p => p.name.trim()), // Solo enviar los que tengan nombre
     };
     emit('productUpdated', updatedProduct);
   } else {
@@ -456,10 +756,13 @@ const handleSubmit = () => {
       category: formData.category,
       sku: formData.sku,
       stock: formData.stock,
-      price: formData.price,
+      baseCost: formData.baseCost,
+      salePrice: formData.salePrice,
       imageFile: rawImageFile.value,
       supplierId: formData.supplierId,
       supplier: formData.supplierId,
+      productCodes: formData.productCodes.filter(c => c.code.trim()), // Solo enviar los que tengan código
+      packagings: formData.packagings.filter(p => p.name.trim()), // Solo enviar los que tengan nombre
     };
     emit('productAdded', newProduct);
   }
@@ -694,7 +997,7 @@ select.form-input {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke='%236B7280' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4' /%3e%3c/svg%3e");
   background-position: right 1rem center;
   background-repeat: no-repeat;
   background-size: 1.2rem;
@@ -841,6 +1144,222 @@ select.form-input:focus {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #E5E7EB;
+}
+
+.category-error {
+  margin: 0;
+  color: #DC2626;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.category-select-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+:deep(.square-icon-button) {
+  border-radius: 8px !important;
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  min-width: 40px !important;
+  justify-content: center;
+}
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.advanced-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6B7280;
+}
+
+.advanced-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Collapsible Sections */
+.collapsible-section {
+  display: block;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  background: #F9FAFB;
+  overflow: hidden;
+}
+
+.collapsible-section > summary {
+  list-style: none;
+  padding: 1rem;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #374151;
+  transition: all 0.2s;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.collapsible-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.collapsible-section > summary:hover {
+  background: #F3F4F6;
+}
+
+.collapsible-section > summary::marker {
+  content: '';
+}
+
+.collapsible-section > summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.2s;
+  color: var(--color-brand-main, #06402B);
+}
+
+.collapsible-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-brand-main, #06402B);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.collapsible-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6B7280;
+}
+
+.codes-list,
+.packagings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 1rem;
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px dashed #D1D5DB;
+}
+
+.code-item,
+.packaging-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.code-type-select,
+.packaging-name-input,
+.packaging-qty-input {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+}
+
+.code-type-select {
+  min-width: 100px;
+}
+
+.code-value-input {
+  flex: 1;
+}
+
+.packaging-name-input {
+  flex: 1;
+}
+
+.packaging-qty-input {
+  width: 80px;
+}
+
+.btn-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #EF4444;
+  background: #FEE2E2;
+  color: #DC2626;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove:hover {
+  background: #FCA5A5;
+  border-color: #DC2626;
+}
+
+.btn-add-code,
+.btn-add-packaging {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-brand-main, #06402B);
+  background: rgba(6, 64, 43, 0.07);
+  color: var(--color-brand-main, #06402B);
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.btn-add-code:hover,
+.btn-add-packaging:hover {
+  background: rgba(6, 64, 43, 0.13);
+}
+
+.input-error {
+  border-color: #EF4444;
+  background: #FEE2E2;
 }
 
 /* Transitions */

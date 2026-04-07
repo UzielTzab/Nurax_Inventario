@@ -3,32 +3,28 @@ import { ref, computed } from 'vue';
 
 export interface OnboardingStep1Data {
   store_name: string;
-  ticket_name: string;
+  tax_id: string;
 }
 
 export interface OnboardingStep2Data {
-  excelFile: File | null;
-  products: any[];
-  columnMappings: {
-    name: string;
-    sku: string;
-    category?: string;
-    stock?: string;
-    price?: string;
-    supplier?: string;
-  };
+  niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | '';
 }
 
 export interface OnboardingStep3Data {
-  address: string;
-  phone: string;
-  ticket_message: string;
+  include_supplier: boolean;
+  supplier_name: string;
+  supplier_phone: string;
+}
+
+export interface OnboardingStep4Data {
+  default_cash: number;
 }
 
 export interface OnboardingFormData {
   step1: OnboardingStep1Data;
   step2: OnboardingStep2Data;
   step3: OnboardingStep3Data;
+  step4: OnboardingStep4Data;
 }
 
 export const useOnboardingStore = defineStore('onboarding', () => {
@@ -40,28 +36,22 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   const formData = ref<OnboardingFormData>({
     step1: {
       store_name: '',
-      ticket_name: ''
+      tax_id: ''
     },
     step2: {
-      excelFile: null,
-      products: [],
-      columnMappings: {
-        name: 'name',
-        sku: 'sku',
-        category: 'category',
-        stock: 'stock',
-        price: 'price',
-        supplier: 'supplier'
-      }
+      niche: ''
     },
     step3: {
-      address: '',
-      phone: '',
-      ticket_message: ''
+      include_supplier: true,
+      supplier_name: '',
+      supplier_phone: ''
+    },
+    step4: {
+      default_cash: 0
     }
   });
 
-  const totalSteps = computed(() => 3);
+  const totalSteps = computed(() => 4);
 
   const progressPercentage = computed(() => {
     return (currentStep.value / totalSteps.value) * 100;
@@ -93,6 +83,10 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     formData.value.step3 = { ...formData.value.step3, ...data };
   };
 
+  const setStep4Data = (data: Partial<OnboardingStep4Data>) => {
+    formData.value.step4 = { ...formData.value.step4, ...data };
+  };
+
   const setError = (message: string) => {
     error.value = message;
   };
@@ -117,24 +111,18 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     formData.value = {
       step1: {
         store_name: '',
-        ticket_name: ''
+        tax_id: ''
       },
       step2: {
-        excelFile: null,
-        products: [],
-        columnMappings: {
-          name: 'name',
-          sku: 'sku',
-          category: 'category',
-          stock: 'stock',
-          price: 'price',
-          supplier: 'supplier'
-        }
+        niche: ''
       },
       step3: {
-        address: '',
-        phone: '',
-        ticket_message: ''
+        include_supplier: true,
+        supplier_name: '',
+        supplier_phone: ''
+      },
+      step4: {
+        default_cash: 0
       }
     };
   };
@@ -152,6 +140,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     setStep1Data,
     setStep2Data,
     setStep3Data,
+    setStep4Data,
     setError,
     setSuccess,
     clearError,
