@@ -120,7 +120,7 @@ import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/t
 interface CartItem {
   id: string | number;
   name: string;
-  price: number | string;
+  price?: number | string;
   quantity: number;
 }
 
@@ -168,7 +168,7 @@ const printTicket = () => {
     items: props.cart.map(item => ({
       name: item.name,
       quantity: item.quantity,
-      price: item.price,
+      price: item.price ?? 0,
     })),
     total: props.total,
     ticketId: props.saleId,

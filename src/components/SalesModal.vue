@@ -634,6 +634,13 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+interface RevertCartItem {
+  id: string | number;
+  name: string;
+  price?: string | number;
+  quantity: number;
+}
+
 defineProps<{
   isOpen: boolean;
 }>();
@@ -1003,9 +1010,23 @@ const handleCloseSuccess = () => {
   emit('close'); // Close sales modal
 };
 
-const handleRevert = (saleId: string | number, cartItems: { id: string | number; name: string; price: string | number; quantity: number }[]) => {
+const handleRevert = (saleId: string | number, cartItems: RevertCartItem[]) => {
   showSuccessModal.value = false;
-  cart.value = cartItems as CartItem[]; // Cargamos los datos reverted
+  const normalized = cartItems.map((item) => {
+    const product = apiProducts.value.find((p) => String(p.id) === String(item.id));
+    return {
+      ...(product ?? {
+        id: item.id,
+        name: item.name,
+        category: '',
+        sku: '',
+        stock: 0,
+      }),
+      ...item,
+      price: item.price ?? product?.price ?? 0,
+    } as CartItem;
+  });
+  cart.value = normalized;
   syncCartToBackend(); // Sincronizamos al backend para reflejarlo en todos frentes
   emit('sale-reverted', saleId, cartItems);
   emit('close');
