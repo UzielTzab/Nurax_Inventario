@@ -15,8 +15,8 @@
             <AppButton variant="outline" :icon="PlusIcon" @click="handleAddProduct">
               Nuevo Producto
             </AppButton>
-            <AppButton variant="fill" :icon="ShoppingCartIcon" @click="handleQuickSell">
-              Vender
+            <AppButton variant="outline" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">
+              Importar Excel/CSV
             </AppButton>
           </div>
         </div>
@@ -76,17 +76,26 @@
             variant="brand"
           />
           <StatsCard
+            v-if="canViewInventoryValue"
             label="Valor del inventario"
-            :value="formatCurrency(inventoryValue) + ' MXN'"
+            :value="formatCurrency(inventoryValue)"
             :icon="CurrencyDollarIcon"
             icon-type="success"
           />
           <StatsCard
-            label="Productos sin stock"
-            :value="outOfStockProducts.length"
-            :variant="outOfStockProducts.length > 0 ? 'danger' : 'success'"
+            v-else
+            label="Turno actual"
+            :value="'Activo'"
+            :icon="CurrencyDollarIcon"
+            icon-type="success"
+          />
+          <StatsCard
+            label="Alertas de stock"
+            :value="lowStockProducts.length"
+            :variant="lowStockProducts.length > 0 ? 'danger' : 'success'"
             :icon="ExclamationTriangleIcon"
-            :icon-type="outOfStockProducts.length > 0 ? 'danger' : 'success'"
+            :icon-type="lowStockProducts.length > 0 ? 'danger' : 'success'"
+            subtitle="Productos con menos de 5 unidades"
           />
 
           </template>
@@ -121,12 +130,15 @@
           <ProductTable
             :products="products"
             :filters="apiFilters"
+            :suppliers="supplierOptions"
+            :user-role="currentUser?.role"
             :low-stock-count="lowStockProducts.length"
             :out-of-stock-count="outOfStockProducts.length"
             @edit="handleEditProduct"
             @delete="handleDeleteProduct"
             @delete-multiple="handleBulkDelete"
             @restock="handleRestock"
+            @adjust-stock="handleInlineStockAdjustment"
             @update:filters="onFiltersUpdate"
           />
 
@@ -183,21 +195,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import Pusher from 'pusher-js';
 import { 
   CubeIcon, 
   CurrencyDollarIcon, 
   ExclamationTriangleIcon,
+  ArrowUpTrayIcon,
   PlusIcon,
-  ShoppingCartIcon
 } from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import StatsCard from '@/components/dashboard/StatsCard.vue';
-import ProductTable, { type Product } from '@/components/dashboard/ProductTable.vue';
+import ProductTable, { type Product as TableProduct } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
 import FirstProductModal from '@/components/FirstProductModal.vue';
 import RestockModal from '@/components/RestockModal.vue';
@@ -208,6 +220,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useProducts } from '@/composables/useProducts';
 import { useProductStore } from '@/stores/product.store';
 import { useSalesStore } from '@/stores/sales.store';
+import { useSuppliers } from '@/composables/useSuppliers';
 
 // Snackbar
 const { enqueueSnackbar } = useSnackbar();
@@ -229,6 +242,8 @@ const {
   allSkus,
 } = useProducts();
 
+const { suppliers, fetchSuppliers } = useSuppliers();
+
 // Store para operaciones CRUD
 const productStore = useProductStore();
 
@@ -241,6 +256,7 @@ let channel: any = null;
 
 onMounted(async () => {
   await fetchProducts();
+  await fetchSuppliers();
   
   // Mostrar FirstProductModal si no hay productos
   if (pagination.value.count === 0) {
@@ -313,8 +329,8 @@ onUnmounted(() => {
 const showAddProductModal = ref(false);
 const showFirstProductModal = ref(false);
 const showRestockModal = ref(false);
-const selectedProduct = ref<Product | null>(null);
-const selectedProductForRestock = ref<Product | null>(null);
+const selectedProduct = ref<any | null>(null);
+const selectedProductForRestock = ref<any | null>(null);
 const isSubmitting = ref(false);
 
 const confirmationState = ref({
@@ -331,9 +347,25 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
 };
 
+const canViewInventoryValue = computed(() => {
+  const role = (currentUser.value?.role || '').toLowerCase();
+  return ['propietario', 'gerente', 'admin'].includes(role);
+});
+
+const supplierOptions = computed(() => {
+  return suppliers.value.map((supplier) => ({
+    id: supplier.id,
+    name: supplier.name,
+  }));
+});
+
 // Handlers
 const handleQuickSell = () => {
   salesStore.openModal();
+};
+
+const handleOpenImportExcel = () => {
+  window.dispatchEvent(new CustomEvent('open-excel-import'));
 };
 
 // ===== FIRST PRODUCT MODAL HANDLERS =====
@@ -358,7 +390,7 @@ const handleAddProduct = () => {
   showAddProductModal.value = true;
 };
 
-const handleSaveNewProduct = async (newProduct: Product) => {
+const handleSaveNewProduct = async (newProduct: any) => {
   isSubmitting.value = true;
   try {
     const result = await productStore.addProduct(newProduct);
@@ -385,12 +417,12 @@ const handleSaveNewProduct = async (newProduct: Product) => {
   }
 };
 
-const handleEditProduct = (product: Product) => {
+const handleEditProduct = (product: TableProduct) => {
   selectedProduct.value = product;
   showAddProductModal.value = true;
 };
 
-const handleUpdateProduct = async (updatedProduct: Product) => {
+const handleUpdateProduct = async (updatedProduct: any) => {
   isSubmitting.value = true;
   try {
     const result = await productStore.updateProduct(updatedProduct);
@@ -417,7 +449,7 @@ const handleUpdateProduct = async (updatedProduct: Product) => {
   }
 };
 
-const handleDeleteProduct = (product: Product) => {
+const handleDeleteProduct = (product: TableProduct) => {
   confirmationState.value = {
     isOpen: true,
     title: 'Eliminar Producto',
@@ -504,7 +536,7 @@ const handleBulkDelete = (ids: string[]) => {
   };
 };
 
-const handleRestock = (product: Product) => {
+const handleRestock = (product: TableProduct) => {
   selectedProductForRestock.value = product;
   showRestockModal.value = true;
 };
@@ -525,9 +557,60 @@ const handleConfirmation = () => {
   confirmationState.value.onConfirm();
 };
 
+const handleInlineStockAdjustment = async (product: TableProduct, newStock: number) => {
+  const currentStock = Number((product as any).current_stock ?? product.stock ?? 0);
+  const delta = newStock - currentStock;
+
+  if (delta === 0) return;
+
+  const result = await productStore.manualAdjustment(
+    Number(product.id),
+    Math.abs(delta),
+    delta > 0 ? 'in' : 'out',
+    `Ajuste rapido desde tabla (${currentStock} -> ${newStock})`
+  );
+
+  if (result.success) {
+    enqueueSnackbar({
+      type: 'success',
+      title: 'Stock actualizado',
+      message: `Nuevo stock de ${product.name}: ${newStock}`,
+      duration: 2400,
+    });
+    await fetchProducts();
+    return;
+  }
+
+  enqueueSnackbar({
+    type: 'error',
+    title: 'No se pudo ajustar el stock',
+    message: result.error || 'Ocurrio un error al guardar el ajuste',
+    duration: 4000,
+  });
+};
+
 // Actualizar filtros y llamar API
 function onFiltersUpdate(newFilters: any) {
-  applyFilters(newFilters);
+  const mappedFilters: any = {
+    search: newFilters.search ?? '',
+    category: newFilters.category ?? '',
+    supplier: newFilters.supplier ?? '',
+    sku: newFilters.sku ?? '',
+    min_price: newFilters.min_price ?? '',
+    max_price: newFilters.max_price ?? '',
+    ordering: newFilters.ordering ?? '-created_at',
+    stock_status: '',
+  };
+
+  if (newFilters.stockFilter === 'out-of-stock') {
+    mappedFilters.stock_status = 'out_of_stock';
+  } else if (newFilters.stockFilter === 'low-stock') {
+    mappedFilters.stock_status = 'low_stock';
+  } else {
+    mappedFilters.stock_status = newFilters.stock_status ?? '';
+  }
+
+  applyFilters(mappedFilters);
 }
 </script>
 

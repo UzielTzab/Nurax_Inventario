@@ -29,7 +29,7 @@
         <!-- Área derecha topbar -->
         <div class="topbar-right">
           <!-- Botón Vender (Acceso Global) -->
-          <AppButton v-if="currentUser?.role === 'cliente'" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
+          <AppButton v-if="currentUser" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
             Vender
           </AppButton>
 
@@ -53,8 +53,8 @@
             </transition>
           </div>
 
-          <!-- Escaneo Fijo (Continuo) -->
-          <button v-if="currentUser?.role !== 'admin'" class="icon-btn scan-btn-premium" title="Escaneo Fijo - Lecturas continuas" @click="salesStore.openContinuousScanner()" style="color: var(--color-brand-secondary);">
+          <!-- Vincular escaner movil -->
+          <button v-if="currentUser" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary);">
             <QrCodeIcon class="w-5 h-5" />
           </button>
 
@@ -490,6 +490,48 @@
     </Teleport>
 
     <!-- Open Shift Auto-Prompt -->
+    <Teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="showScannerPairingModal" class="profile-modal-backdrop" @click.self="showScannerPairingModal = false">
+          <div class="scanner-modal">
+            <div class="pm-header">
+              <div class="excel-modal-title-wrap">
+                <div class="excel-icon-badge">
+                  <QrCodeIcon class="w-5 h-5" />
+                </div>
+                <h3 class="pm-title">Vincular escaner movil</h3>
+              </div>
+              <button class="pm-close" @click="showScannerPairingModal = false">
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+
+            <div class="scanner-body">
+              <p class="scanner-instructions">
+                Escanea este codigo con tu celular para vincular el escaner a esta sesion.
+              </p>
+
+              <div class="scanner-qr-box">
+                <qrcode-vue
+                  :value="scannerSessionId"
+                  :size="260"
+                  level="M"
+                  render-as="svg"
+                />
+              </div>
+
+              <p class="scanner-session-id">{{ scannerSessionId }}</p>
+            </div>
+
+            <div class="pm-footer">
+              <AppButton variant="outline" @click="showScannerPairingModal = false">Cerrar</AppButton>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
+
+    <!-- Open Shift Auto-Prompt -->
     <OpenShiftModal 
       :is-open="showOpenShiftModal"
       @close="showOpenShiftModal = false"
@@ -517,6 +559,7 @@ import apiClient from '@/services/api';
 import type { UserProfileResponse } from '@/services/auth.service';
 import Pusher from 'pusher-js';
 import * as XLSX from 'xlsx';
+import QrcodeVue from 'qrcode.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 
@@ -545,6 +588,8 @@ const profileWrapperRef = ref<HTMLElement | null>(null);
 
 const showNotifications = ref(false);
 const notificationWrapperRef = ref<HTMLElement | null>(null);
+const showScannerPairingModal = ref(false);
+const scannerSessionId = ref('');
 
 const { currentUser, logout, updateAvatarUrl } = useAuth();
 const router = useRouter();
@@ -841,6 +886,11 @@ const closeExcelModal = () => {
   resetImport();
 };
 
+const openExcelImportModal = () => {
+  excelTab.value = 'import';
+  showExcelModal.value = true;
+};
+
 const resetImport = () => {
   importPreview.value = [];
   importError.value = '';
@@ -973,6 +1023,22 @@ const handleLogout = () => {
   router.push('/auth/login');
 };
 
+const buildScannerSessionId = () => {
+  const userId = currentUser.value?.id || 'anon';
+  const socketId = globalPusher?.connection?.socket_id || 'pending-socket';
+  const ts = Date.now();
+  return `nurax-scan:${userId}:${socketId}:${ts}`;
+};
+
+const openScannerPairingModal = () => {
+  scannerSessionId.value = buildScannerSessionId();
+  showScannerPairingModal.value = true;
+};
+
+const handleOpenExcelImportEvent = () => {
+  openExcelImportModal();
+};
+
 // Cierra el dropdown al hacer click fuera
 const handleClickOutside = (e: MouseEvent) => {
   if (profileWrapperRef.value && !profileWrapperRef.value.contains(e.target as Node)) {
@@ -1046,6 +1112,7 @@ const initPusher = () => {
 
 onMounted(async () => {
   document.addEventListener('mousedown', handleClickOutside);
+  window.addEventListener('open-excel-import', handleOpenExcelImportEvent as EventListener);
 
   // Auto-verificación de caja cerrada (solo para clientes, no para admins)
   if (currentUser.value && currentUser.value.role !== 'admin') {
@@ -1075,6 +1142,7 @@ watch(currentUser, (newUser, oldUser) => {
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside);
+  window.removeEventListener('open-excel-import', handleOpenExcelImportEvent as EventListener);
 
   if (globalPusher) {
     console.log("[Pusher] Desconectando...");
@@ -1142,7 +1210,7 @@ defineEmits(['quickSell']);
 .app-shell {
   display: flex;
   min-height: 100vh;
-  background: var(--color-background);
+  background: rgb(215, 215, 215);
   padding: 0 12px 0 0;
   gap: 16px;
   box-sizing: border-box;
@@ -1463,6 +1531,7 @@ defineEmits(['quickSell']);
   overflow-y: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   min-height: 0;
+  margin-top: 12px;
 }
 
 /* === OVERLAY MÓVIL === */
@@ -1842,7 +1911,7 @@ defineEmits(['quickSell']);
     z-index: 100;
   }
 
-  .content-card { border-radius: 0; box-shadow: none; overflow-x: hidden; }
+  .content-card { border-radius: 0; box-shadow: none; overflow-x: hidden; margin-top: 0; }
   .mobile-menu-btn { display: flex; }
   .search-bar { max-width: none; }
   .topbar-profile-text { display: none; }
@@ -1879,6 +1948,54 @@ defineEmits(['quickSell']);
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+}
+
+.scanner-modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.scanner-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.scanner-instructions {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4b5563;
+  text-align: center;
+}
+
+.scanner-qr-box {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 0.9rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 18px rgba(17, 24, 39, 0.05);
+}
+
+.scanner-session-id {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+  word-break: break-all;
 }
 
 .excel-modal-title-wrap {

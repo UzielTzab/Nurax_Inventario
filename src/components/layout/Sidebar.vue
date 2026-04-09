@@ -124,17 +124,17 @@ watch(() => route.path, (path) => {
   }
 }, { immediate: true });
 
-// Todas las secciones del menú con control de roles
+// Todas las secciones del menú con control de roles (RBAC)
 const allMenuSections: MenuSection[] = [
   {
     label: '',
-    roles: ['cliente'],
+    roles: ['cliente', 'propietario', 'gerente', 'admin'],
     items: [
       {
         id: 'inventory',
         label: 'Inventario',
         route: '/dashboard/inventory',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'],
         iconOutline: CubeOutline,
         iconSolid: CubeSolid,
       },
@@ -142,7 +142,7 @@ const allMenuSections: MenuSection[] = [
         id: 'orders',
         label: 'Historial de ventas',
         route: '/dashboard/sales',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'gerente', 'admin'],
         iconOutline: ShoppingBagOutline,
         iconSolid: ShoppingBagSolid,
       },
@@ -150,7 +150,7 @@ const allMenuSections: MenuSection[] = [
         id: 'suppliers',
         label: 'Proveedores',
         route: '/dashboard/suppliers',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'gerente', 'admin'],
         iconOutline: UsersOutline,
         iconSolid: UsersSolid,
       },
@@ -158,7 +158,7 @@ const allMenuSections: MenuSection[] = [
         id: 'shifts',
         label: 'Corte de Caja',
         route: '/dashboard/shifts',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'],
         iconOutline: BanknotesOutline,
         iconSolid: BanknotesSolid,
       },
@@ -166,7 +166,7 @@ const allMenuSections: MenuSection[] = [
         id: 'expenses',
         label: 'Gastos',
         route: '/dashboard/expenses',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'admin'],
         iconOutline: CurrencyDollarOutline,
         iconSolid: CurrencyDollarSolid,
       },
@@ -174,7 +174,7 @@ const allMenuSections: MenuSection[] = [
         id: 'receivables',
         label: 'Abonos y Créditos',
         route: '/dashboard/receivables',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'],
         iconOutline: WalletOutline,
         iconSolid: WalletSolid,
       },
@@ -182,7 +182,7 @@ const allMenuSections: MenuSection[] = [
         id: 'settings',
         label: 'Configuración',
         route: '/dashboard/settings',
-        roles: ['cliente'],
+        roles: ['cliente', 'propietario', 'admin'],
         iconOutline: Cog6ToothOutline,
         iconSolid: Cog6ToothSolid,
       }
@@ -190,13 +190,13 @@ const allMenuSections: MenuSection[] = [
   },
   {
     label: 'Administración',
-    roles: ['admin'],
+    roles: ['admin', 'propietario'],
     items: [
       {
         id: 'clients',
         label: 'Clientes',
         route: '/dashboard/clients',
-        roles: ['admin'],
+        roles: ['admin', 'propietario'],
         iconOutline: UserGroupOutline,
         iconSolid: UserGroupSolid,
       }
@@ -204,16 +204,24 @@ const allMenuSections: MenuSection[] = [
   }
 ];
 
+const normalizeRole = (role?: string) => {
+  const normalized = (role || '').toLowerCase();
+  if (normalized === 'owner') return 'propietario';
+  if (normalized === 'manager') return 'gerente';
+  if (normalized === 'cashier') return 'cajero';
+  return normalized || 'cliente';
+};
+
 // Menú filtrado según el rol del usuario actual
 const menuSections = computed(() => {
-  const role = currentUser.value?.role ?? 'cliente';
+  const role = normalizeRole(currentUser.value?.role);
   return allMenuSections
-    .filter(s => !s.roles || s.roles.includes(role))
-    .map(s => ({
-      ...s,
-      items: s.items.filter(i => !i.roles || i.roles.includes(role))
+    .filter((section) => !section.roles || section.roles.includes(role))
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.roles || item.roles.includes(role)),
     }))
-    .filter(s => s.items.length > 0);
+    .filter((section) => section.items.length > 0);
 });
 
 const setActive = (item: MenuItem) => {
