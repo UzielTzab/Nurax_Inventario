@@ -37,42 +37,42 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/dashboard/inventory',
     component: Inventory,
-    meta: { title: 'Inventario', roles: ['cliente'] }
+    meta: { title: 'Inventario', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/sales',
     component: SalesHistory,
-    meta: { title: 'Historial de Ventas', roles: ['cliente'] }
+    meta: { title: 'Historial de Ventas', roles: ['cliente', 'propietario', 'gerente', 'admin'] }
   },
   {
     path: '/dashboard/suppliers',
     component: Suppliers,
-    meta: { title: 'Proveedores', roles: ['cliente'] }
+    meta: { title: 'Proveedores', roles: ['cliente', 'propietario', 'gerente', 'admin'] }
   },
   {
     path: '/dashboard/shifts',
     component: Shifts,
-    meta: { title: 'Corte de Caja', roles: ['cliente'] }
+    meta: { title: 'Corte de Caja', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/expenses',
     component: Expenses,
-    meta: { title: 'Gastos', roles: ['cliente'] }
+    meta: { title: 'Gastos', roles: ['cliente', 'propietario', 'admin'] }
   },
   {
     path: '/dashboard/receivables',
     component: AccountsReceivable,
-    meta: { title: 'Cuentas por Cobrar', roles: ['cliente'] }
+    meta: { title: 'Cuentas por Cobrar', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/clients',
     component: AdminClients,
-    meta: { title: 'Clientes', roles: ['admin'] }
+    meta: { title: 'Clientes', roles: ['admin', 'propietario'] }
   },
   {
     path: '/dashboard/settings',
     component: Settings,
-    meta: { title: 'Configuración', roles: ['cliente'] }
+    meta: { title: 'Configuración', roles: ['cliente', 'propietario', 'admin'] }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -88,6 +88,13 @@ const router = createRouter({
 // Guard de navegación
 router.beforeEach(async (to) => {
   const { isAuthenticated, currentUser, initSession } = useAuth()
+  const normalizeRole = (role?: string) => {
+    const normalized = (role || '').toLowerCase()
+    if (normalized === 'owner') return 'propietario'
+    if (normalized === 'manager') return 'gerente'
+    if (normalized === 'cashier') return 'cajero'
+    return normalized
+  }
 
   // Esperar a que se restaure la sesión desde los tokens guardados.
   // initSession() usa un singleton → solo llama al backend UNA vez,
@@ -96,7 +103,8 @@ router.beforeEach(async (to) => {
 
   // Si el usuario ya está logueado e intenta entrar al login, mandarlo directo a su dashboard.
   if (to.path === '/' && isAuthenticated.value) {
-    return currentUser.value?.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
+    const role = normalizeRole(currentUser.value?.role)
+    return role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
   }
 
   // Rutas públicas (landing, etc.) se permiten si no cayeron en el caso de arriba
@@ -123,13 +131,14 @@ router.beforeEach(async (to) => {
 
   // Redirigir la base del dashboard según el rol
   if (to.path === '/dashboard' && currentUser.value) {
-    return currentUser.value.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
+    const role = normalizeRole(currentUser.value.role)
+    return role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
   }
 
   // Verificar roles si la ruta los requiere
   const requiredRoles = to.meta.roles as string[] | undefined
   if (requiredRoles && currentUser.value) {
-    const userRole = currentUser.value.role
+    const userRole = normalizeRole(currentUser.value.role)
     if (!requiredRoles.includes(userRole)) {
       return userRole === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
     }

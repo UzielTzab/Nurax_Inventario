@@ -1,53 +1,27 @@
 <template>
   <div class="product-table-wrapper">
-    <!-- Table Header -->
     <div class="table-section-header">
       <span class="table-section-title">Listado de Productos</span>
       <div class="table-header-right">
-        <!-- Desktop Search -->
         <div class="search-container-header">
           <input
             type="text"
             class="search-input-header"
-            placeholder="Buscar..."
+            placeholder="Buscar por nombre o codigo..."
             :value="localFilters.search"
             @input="onFilterChange('search', ($event.target as HTMLInputElement).value)"
           />
         </div>
-        <!-- View Toggle -->
-        <div class="view-toggle-group">
-          <button class="view-toggle-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'" title="Vista de tabla">
-            <Bars3Icon class="toggle-icon" />
-          </button>
-          <button class="view-toggle-btn" :class="{ active: viewMode === 'cards' }" @click="viewMode = 'cards'" title="Vista de tarjetas">
-            <Squares2X2Icon class="toggle-icon" />
-          </button>
-        </div>
         <button class="btn-filter" @click="toggleFilterPanel" :class="{ active: filterPanelOpen }">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M2.628 1.601C5.028 1.2 7.49 1 10 1s4.973.2 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clip-rule="evenodd" />
-          </svg>
+          <FunnelIcon class="filter-icon" />
           Ver filtros
         </button>
       </div>
     </div>
 
-    <!-- Filter Panel (dropdown) -->
     <Transition name="filter-slide">
       <div v-if="filterPanelOpen" class="filter-panel">
         <div class="filter-panel-inner">
-          <!-- Search filter (mobile only) -->
-          <div class="filter-group filter-group-search">
-            <label class="filter-label">Buscar producto</label>
-            <input
-              type="text"
-              class="filter-input"
-              placeholder="Nombre o SKU..."
-              :value="localFilters.search"
-              @input="onFilterChange('search', ($event.target as HTMLInputElement).value)"
-            />
-          </div>
-          <!-- Stock status filter -->
           <div class="filter-group">
             <label class="filter-label">Estado de stock</label>
             <select
@@ -55,149 +29,110 @@
               :value="localFilters.stockFilter"
               @change="onFilterChange('stockFilter', ($event.target as HTMLSelectElement).value)"
             >
-              <option value="all">Todos los productos ({{ totalCount }})</option>
-              <option value="low-stock">Bajo inventario ({{ lowStockCount }})</option>
-              <option value="out-of-stock">Sin inventario ({{ outOfStockCount }})</option>
+              <option value="all">Todos</option>
+              <option value="low-stock">Alertas de stock (&lt;5)</option>
+              <option value="out-of-stock">Sin stock</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Categoría</label>
+            <label class="filter-label">Categoria</label>
             <select
               class="filter-select"
               :value="localFilters.category"
               @change="onFilterChange('category', ($event.target as HTMLSelectElement).value)"
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Todas</option>
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Rango de precio</label>
+            <label class="filter-label">Proveedor</label>
             <select
               class="filter-select"
-              :value="localFilters.priceRange"
-              @change="onFilterChange('priceRange', ($event.target as HTMLSelectElement).value)"
+              :value="localFilters.supplier"
+              @change="onFilterChange('supplier', ($event.target as HTMLSelectElement).value)"
             >
-              <option value="">Cualquier precio</option>
-              <option value="0-500">$0 – $500</option>
-              <option value="500-1000">$500 – $1,000</option>
-              <option value="1000-5000">$1,000 – $5,000</option>
-              <option value="5000+">Más de $5,000</option>
+              <option value="">Todos</option>
+              <option v-for="supplier in suppliers" :key="String(supplier.id)" :value="String(supplier.id)">
+                {{ supplier.name }}
+              </option>
             </select>
           </div>
-          <button class="btn-clear-filters" @click="clearFilters">
-            Limpiar filtros
-          </button>
+          <button class="btn-clear-filters" @click="clearFilters">Limpiar filtros</button>
         </div>
       </div>
     </Transition>
 
-    <!-- Table View -->
-    <div v-if="viewMode === 'table'" class="product-table-container">
+    <div class="product-table-container">
       <table class="product-table">
         <thead>
           <tr>
             <th class="th-product">PRODUCTO</th>
-            <th class="th-sku">SKU</th>
-            <th class="th-stock">STOCK</th>
+            <th class="th-code">CODIGO</th>
             <th class="th-price">PRECIO</th>
-            <th class="th-status">STATUS</th>
-            <th class="th-actions">
-              <div v-if="selectedIds.length > 0" class="bulk-actions">
-                <button class="btn-bulk-delete" @click="$emit('delete-multiple', selectedIds)">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
-                  </svg>
-                  <span>({{ selectedIds.length }})</span>
-                </button>
-              </div>
-            </th>
+            <th class="th-stock">STOCK</th>
+            <th class="th-packaging">EMPAQUE</th>
+            <th class="th-actions">ACCIONES</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="product in products"
-            :key="product.id"
-            class="product-row"
-            :class="{ 'row-out-of-stock': product.stock === 0 }"
-          >
+          <tr v-for="product in products" :key="product.id" class="product-row">
             <td class="td-product">
-              <div class="product-info">
-                <div class="product-image">
-                  <img v-if="product.image" :src="product.image" :alt="product.name" />
-                  <div v-else class="empty-image">
-                    <PhotoIcon class="empty-icon" />
-                  </div>
-                </div>
-                <div class="product-details">
-                  <div class="product-name">{{ product.name }}</div>
-                  <div class="product-category">{{ (product as any).category_name || product.category }}</div>
-                </div>
+              <div class="product-main-line">{{ product.name }}</div>
+              <div class="product-tags-line">
+                <span class="mini-badge mini-badge-category">{{ getCategoryName(product) }}</span>
+                <span class="mini-badge mini-badge-supplier">{{ getSupplierName(product) }}</span>
               </div>
             </td>
-            <td class="td-sku">
-              <span class="sku-code">{{ product.sku }}</span>
+
+            <td class="td-code">
+              <span class="code-pill">
+                <QrCodeIcon class="code-icon" />
+                {{ getPrimaryCode(product) }}
+              </span>
             </td>
-            <td class="td-stock">
-              <div class="stock-info">
-                <div class="stock-value">{{ product.stock }}</div>
-                <button
-                  v-if="product.stock === 0"
-                  class="btn-restock-sm"
-                  @click="$emit('restock', product)"
-                  title="Reabastecer inventario"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0v2.433l-.31-.31a7 7 0 00-11.712 3.138.75.75 0 001.449.39 5.5 5.5 0 019.201-2.466l.312.312H11.75a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clip-rule="evenodd" />
-                  </svg>
-                  Reabastecer
-                </button>
-              </div>
-            </td>
+
             <td class="td-price">
-              <span class="price">${{ formatPrice(product.price) }} MXN</span>
+              <div class="sale-price">${{ formatPrice(getSalePrice(product)) }}</div>
+              <div v-if="canViewCost" class="cost-price">Costo: ${{ formatPrice(getBaseCost(product)) }}</div>
             </td>
-            <td class="td-status">
-              <Badge :variant="getStatusVariant(product.stock)">
-                {{ getStatusText(product.stock) }}
-              </Badge>
-            </td>
-            <td class="td-actions">
-              <div class="action-menu-wrapper" :ref="el => setMenuRef(el as HTMLElement, product.id)">
+
+            <td class="td-stock">
+              <div class="stock-control-inline">
+                <button class="stock-action-btn" @click="adjustWithButtons(product, -1)" title="Disminuir stock">-</button>
+                <input
+                  v-if="editingProductId === String(product.id)"
+                  v-model.number="draftStock"
+                  class="stock-inline-input"
+                  type="number"
+                  min="0"
+                  @keyup.enter="commitInlineAdjustment(product)"
+                  @keyup.esc="cancelInlineEdit"
+                  @blur="commitInlineAdjustment(product)"
+                />
                 <button
-                  class="btn-dots"
-                  @click.stop="toggleMenu(product.id, $event)"
-                  :class="{ active: openMenuId === product.id }"
-                  title="Acciones"
+                  v-else
+                  class="stock-value-btn"
+                  @click="startInlineEdit(product)"
+                  :class="{ 'stock-alert': getProductStock(product) < 5 }"
+                  title="Click para editar"
                 >
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                  {{ getProductStock(product) }}
                 </button>
-                <Teleport to="body">
-                  <Transition name="menu-pop">
-                    <div 
-                      v-if="openMenuId === product.id" 
-                      class="action-dropdown teleported-dropdown"
-                      :style="{ 
-                        position: 'fixed',
-                        top: dropdownPos.top,
-                        bottom: dropdownPos.bottom,
-                        left: dropdownPos.left,
-                        transformOrigin: dropdownPos.transformOrigin
-                      }"
-                    >
-                      <button class="dropdown-item item-edit" @click="handleEdit(product)">
-                        <PencilSquareIcon class="action-icon" />
-                        Editar
-                      </button>
-                      <button class="dropdown-item item-danger" @click="handleDelete(product)">
-                        <TrashIcon class="action-icon" />
-                        Eliminar
-                      </button>
-                  </div>
-                </Transition>
-              </Teleport>
+                <button class="stock-action-btn" @click="adjustWithButtons(product, 1)" title="Aumentar stock">+</button>
+              </div>
+            </td>
+
+            <td class="td-packaging">{{ getPackagingLabel(product) }}</td>
+
+            <td class="td-actions">
+              <div class="action-row">
+                <button class="btn-icon btn-edit" @click="emit('edit', product)" title="Editar producto">
+                  <PencilSquareIcon class="action-icon" />
+                </button>
+                <button class="btn-icon btn-delete" @click="emit('delete', product)" title="Eliminar producto">
+                  <TrashIcon class="action-icon" />
+                </button>
               </div>
             </td>
           </tr>
@@ -205,47 +140,51 @@
       </table>
 
       <div v-if="products.length === 0" class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-        </svg>
         <h3>No se encontraron productos</h3>
         <p>Ajusta los filtros o agrega un nuevo producto</p>
       </div>
     </div>
-
-    <!-- Card View -->
-    <ProductCardGrid
-      v-else
-      :products="products"
-      @edit="(p) => emit('edit', p)"
-      @delete="(p) => emit('delete', p)"
-      @restock="(p) => emit('restock', p)"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { PhotoIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/vue/24/outline';
-import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/solid';
-import Badge from '../ui/Badge.vue';
-import ProductCardGrid from './ProductCardGrid.vue';
+import { computed, ref, watch } from 'vue';
+import {
+  FunnelIcon,
+  PencilSquareIcon,
+  QrCodeIcon,
+  TrashIcon,
+} from '@heroicons/vue/24/outline';
 
 export interface Product {
   id: string | number;
   name: string;
   category: string | number;
+  category_name?: string;
+  supplier?: string | number | null;
+  supplier_name?: string;
   sku: string;
   stock: number;
+  current_stock?: number;
   price?: string | number;
+  sale_price?: string | number;
+  base_cost?: string | number;
   image?: string | null;
+  primary_code?: string;
+  product_codes?: Array<{ code: string; is_primary?: boolean }>;
+  product_packagings?: Array<{ name?: string; quantity_per_unit?: number }>;
+  packagings?: Array<{ name?: string; quantity_per_unit?: number }>;
+}
+
+export interface SupplierOption {
+  id: string | number;
+  name: string;
 }
 
 export interface Filters {
   search?: string;
   category?: string | number;
   supplier?: string | number;
-  priceRange?: string;
   stockFilter?: string;
   sku?: string;
   stock_status?: string;
@@ -257,37 +196,47 @@ export interface Filters {
 interface Props {
   products: Product[];
   filters?: Filters;
-  lowStockCount?: number;
-  outOfStockCount?: number;
+  suppliers?: SupplierOption[];
+  userRole?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  filters: () => ({ search: '', category: '', supplier: '', priceRange: '', stockFilter: 'all' } as Filters),
-  lowStockCount: 0,
-  outOfStockCount: 0
+  filters: () => ({ search: '', category: '', supplier: '', stockFilter: 'all' } as Filters),
+  suppliers: () => [] as SupplierOption[],
+  userRole: '',
 });
-
-const totalCount = computed(() => props.products.length);
 
 const emit = defineEmits<{
   edit: [product: Product];
   delete: [product: Product];
   'delete-multiple': [ids: string[]];
   restock: [product: Product];
+  'adjust-stock': [product: Product, newStock: number];
   'update:filters': [filters: Filters];
 }>();
 
-// --- Selection ---
-const selectedIds = ref<string[]>([]);
-const viewMode = ref<'table' | 'cards'>(window.innerWidth <= 768 ? 'cards' : 'table');
-
-// --- Filter panel ---
 const filterPanelOpen = ref(false);
 const localFilters = ref<Filters>({ ...props.filters });
+const editingProductId = ref<string | null>(null);
+const draftStock = ref<number>(0);
+
+watch(
+  () => props.filters,
+  (newFilters) => {
+    localFilters.value = { ...localFilters.value, ...newFilters };
+  },
+  { deep: true }
+);
+
+const canViewCost = computed(() => {
+  return ['propietario', 'gerente', 'admin'].includes((props.userRole || '').toLowerCase());
+});
 
 const categories = computed(() => {
-  const cats = new Set(props.products.map(p => (p as any).category_name || String(p.category)));
-  return Array.from(cats).sort();
+  const cats = new Set(
+    props.products.map((p) => p.category_name || String(p.category || 'Sin categoria'))
+  );
+  return Array.from(cats).sort((a, b) => a.localeCompare(b));
 });
 
 const toggleFilterPanel = () => {
@@ -300,120 +249,78 @@ const onFilterChange = (key: keyof Filters, value: string) => {
 };
 
 const clearFilters = () => {
-  localFilters.value = { search: '', category: '', supplier: '', priceRange: '', stockFilter: 'all' };
+  localFilters.value = { search: '', category: '', supplier: '', stockFilter: 'all' };
   emit('update:filters', { ...localFilters.value });
 };
 
-// --- Dots menu ---
-const openMenuId = ref<string | number | null>(null);
-const menuRefs = new Map<string | number, HTMLElement>();
-const dropdownPos = ref({ top: '0px', left: '0px', bottom: 'auto', transformOrigin: 'top right' });
+const getProductStock = (product: Product) => Number(product.current_stock ?? product.stock ?? 0);
 
-const setMenuRef = (el: HTMLElement | null, id: string | number) => {
-  if (el) menuRefs.set(id, el);
-  else menuRefs.delete(id);
-};
+const getSalePrice = (product: Product) => Number(product.sale_price ?? product.price ?? 0);
 
-const toggleMenu = (id: string | number, event: MouseEvent) => {
-  if (openMenuId.value === id) {
-    openMenuId.value = null;
-  } else {
-    openMenuId.value = id;
-    const btn = event.currentTarget as HTMLElement;
-    const rect = btn.getBoundingClientRect();
-    
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const menuHeight = 120; // Approximate menu height
-    
-    if (spaceBelow < menuHeight && rect.top > menuHeight) {
-      // Drop up
-      dropdownPos.value = {
-        top: 'auto',
-        bottom: `${window.innerHeight - rect.top + 6}px`,
-        left: `${rect.right - 150}px`,
-        transformOrigin: 'bottom right'
-      };
-    } else {
-      // Drop down
-      dropdownPos.value = {
-        top: `${rect.bottom + 6}px`,
-        bottom: 'auto',
-        left: `${rect.right - 150}px`,
-        transformOrigin: 'top right'
-      };
-    }
+const getBaseCost = (product: Product) => Number(product.base_cost ?? 0);
+
+const getCategoryName = (product: Product) => product.category_name || String(product.category || 'Sin categoria');
+
+const getSupplierName = (product: Product) => {
+  if (product.supplier_name) return product.supplier_name;
+  if (typeof product.supplier === 'string' && product.supplier.trim()) return product.supplier;
+  if (typeof product.supplier === 'number' || (typeof product.supplier === 'string' && product.supplier)) {
+    return `Proveedor #${product.supplier}`;
   }
+  return 'Sin proveedor';
 };
 
-const handleClickOutside = (e: MouseEvent) => {
-  if (openMenuId.value) {
-    // Si se clica fuera del dropdown y NO fue el propio btn de 3 puntos
-    // NOTA: al usar Teleport, el e.target NO cae dentro del wrapper.
-    const dropdownEl = document.querySelector('.teleported-dropdown');
-    const menuWrapperEl = menuRefs.get(openMenuId.value);
-    
-    // Si clickeó dentro del dropdown flotante, no cerrarlo (a menos que sea handleEdit etc, que ya lo cierran explícitamente)
-    if (dropdownEl && dropdownEl.contains(e.target as Node)) {
-       return;
-    }
-    
-    // Si clickeó en el mismo botón que lo abriò, no hay que hacer toggle dos veces
-    if (menuWrapperEl && menuWrapperEl.contains(e.target as Node)) {
-        return;
-    }
-
-    openMenuId.value = null;
+const getPrimaryCode = (product: Product) => {
+  if (product.primary_code) return product.primary_code;
+  if (product.product_codes?.length) {
+    const primary = product.product_codes.find((code) => code.is_primary);
+    const firstCode = product.product_codes[0];
+    return primary?.code || (firstCode ? firstCode.code : product.sku);
   }
+  return product.sku;
 };
 
-const handleScroll = () => {
-  if (openMenuId.value) {
-    openMenuId.value = null;
+const getPackagingLabel = (product: Product) => {
+  const pack = product.product_packagings?.[0] || product.packagings?.[0];
+  if (!pack) return 'Unidad';
+  if (pack.quantity_per_unit && pack.quantity_per_unit > 1) {
+    return `${pack.name || 'Caja'} x ${pack.quantity_per_unit}`;
   }
+  return pack.name || 'Unidad';
 };
 
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-  window.addEventListener('scroll', handleScroll, true); // capture = true
-});
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
-  window.removeEventListener('scroll', handleScroll, true);
-});
-
-const handleEdit = (product: Product) => {
-  openMenuId.value = null;
-  emit('edit', product);
+const formatPrice = (value: number) => {
+  return value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const handleDelete = (product: Product) => {
-  openMenuId.value = null;
-  emit('delete', product);
+const startInlineEdit = (product: Product) => {
+  editingProductId.value = String(product.id);
+  draftStock.value = getProductStock(product);
 };
 
-// --- Helpers ---
-const formatPrice = (price?: number | string) => {
-  if (price === null || price === undefined || price === '') return '0.00';
-  return Number(price).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const cancelInlineEdit = () => {
+  editingProductId.value = null;
 };
 
-const getStatusVariant = (stock: number): 'success' | 'warning' | 'danger' => {
-  if (stock === 0) return 'danger';
-  if (stock <= 10) return 'warning';
-  return 'success';
+const commitInlineAdjustment = (product: Product) => {
+  const current = getProductStock(product);
+  const nextValue = Math.max(0, Number(draftStock.value));
+
+  editingProductId.value = null;
+
+  if (Number.isNaN(nextValue) || nextValue === current) return;
+  emit('adjust-stock', product, nextValue);
 };
 
-const getStatusText = (stock: number) => {
-  if (stock === 0) return 'Out of Stock';
-  if (stock <= 10) return 'Low Stock';
-  return 'In Stock';
+const adjustWithButtons = (product: Product, delta: number) => {
+  const current = getProductStock(product);
+  const nextValue = Math.max(0, current + delta);
+  if (nextValue === current) return;
+  emit('adjust-stock', product, nextValue);
 };
 </script>
 
 <style scoped>
-/* =====================
-   Wrapper (no outer border/shadow)
-   ===================== */
 .product-table-wrapper {
   background: var(--color-card-fill);
   border-radius: 24px;
@@ -421,35 +328,26 @@ const getStatusText = (stock: number) => {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* =====================
-   Section Header
-   ===================== */
 .table-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--color-card-border);
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .table-section-title {
   font-size: 1rem;
   font-weight: 700;
   color: #111827;
-  letter-spacing: -0.01em;
 }
 
 .table-header-right {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-/* =====================
-   Desktop Search Input
-   ===================== */
-.search-container-header {
-  display: none;
 }
 
 .search-input-header {
@@ -459,14 +357,7 @@ const getStatusText = (stock: number) => {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #111827;
-  cursor: text;
-  transition: border-color 0.15s;
-  min-width: 200px;
-}
-
-.search-input-header::placeholder {
-  color: #d1d5db;
+  min-width: 220px;
 }
 
 .search-input-header:focus {
@@ -475,197 +366,77 @@ const getStatusText = (stock: number) => {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
-/* =====================
-   View Toggle
-   ===================== */
-.view-toggle-group {
-  display: flex;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
+.btn-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.btn-filter.active {
+  border-color: var(--color-brand-main);
+  color: var(--color-brand-main);
+}
+
+.filter-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.filter-panel {
+  border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
 }
 
-.view-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 34px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #9ca3af;
-}
-
-.view-toggle-btn:not(:last-child) {
-  border-right: 1px solid #e5e7eb;
-}
-
-.view-toggle-btn:hover {
-  color: #374151;
-  background: #f3f4f6;
-}
-
-.view-toggle-btn.active {
-  background: var(--color-brand-main);
-  color: white;
-}
-
-.toggle-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* =====================
-   Filter Button
-   ===================== */
-.btn-filter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 1rem;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.btn-filter svg {
-  width: 15px;
-  height: 15px;
-  color: #6b7280;
-  flex-shrink: 0;
-}
-
-.btn-filter:hover,
-.btn-filter.active {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-  color: #111827;
-}
-
-.btn-filter.active svg {
-  color: var(--color-brand-secondary);
-}
-
-/* =====================
-   Filter Panel
-   ===================== */
-.filter-panel {
-  border-bottom: 1px solid var(--color-card-border);
-  background: #fbfcfb;
-}
-
 .filter-panel-inner {
-  display: flex;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 1.125rem 1.5rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.9rem 1.5rem 1.1rem;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  min-width: 180px;
+  gap: 0.35rem;
 }
 
 .filter-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.6px;
 }
 
 .filter-select {
-  appearance: none;
-  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E") no-repeat right 0.625rem center / 16px;
-  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 0.875rem;
-  color: #111827;
-  cursor: pointer;
-  transition: border-color 0.15s;
-  width: 100%;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--color-brand-secondary);
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
-}
-
-.filter-input {
-  appearance: none;
+  padding: 0.45rem 0.6rem;
   background: white;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.875rem;
   color: #111827;
-  cursor: text;
-  transition: border-color 0.15s;
-  width: 100%;
-}
-
-.filter-input::placeholder {
-  color: #d1d5db;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: var(--color-brand-secondary);
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+  font-size: 0.82rem;
 }
 
 .btn-clear-filters {
-  height: 38px;
-  padding: 0 1rem;
-  background: transparent;
-  border: 1px dashed #d1d5db;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #6b7280;
+  background: white;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.7rem;
+  align-self: end;
   cursor: pointer;
-  transition: all 0.18s;
-  white-space: nowrap;
-  align-self: flex-end;
 }
 
-.btn-clear-filters:hover {
-  border-color: var(--color-status-danger);
-  color: var(--color-status-danger);
-  background: #fef2f2;
-}
-
-/* =====================
-   Filter Transition
-   ===================== */
-.filter-slide-enter-active,
-.filter-slide-leave-active {
-  transition: all 0.22s ease;
-  overflow: hidden;
-  max-height: 200px;
-}
-.filter-slide-enter-from,
-.filter-slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-/* =====================
-   Table Container (no outer border)
-   ===================== */
 .product-table-container {
   overflow-x: auto;
 }
@@ -673,454 +444,219 @@ const getStatusText = (stock: number) => {
 .product-table {
   width: 100%;
   border-collapse: collapse;
-  border-spacing: 0;
 }
 
-/* =====================
-   Header Row
-   ===================== */
-thead {
-  background: var(--color-card-fill);
-}
-
-th {
-  padding: 0.875rem 1.5rem;
+.product-table th {
   text-align: left;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #9ca3af;
+  padding: 0.85rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fcfcfd;
+}
+
+.product-row td {
+  padding: 0.9rem 1rem;
   border-bottom: 1px solid #f3f4f6;
-}
-
-.th-product {
-  min-width: 240px;
-}
-
-.th-sku {
-  width: 130px;
-}
-
-.th-stock {
-  width: 100px;
-}
-
-.th-price {
-  width: 130px;
-}
-
-.th-status {
-  width: 130px;
-}
-
-.th-actions {
-  width: 56px;
-  text-align: center;
-}
-
-/* =====================
-   Product Rows
-   ===================== */
-.product-row {
-  transition: background 0.15s;
-}
-
-.product-row + .product-row td {
-  border-top: 1px solid #f3f4f6;
-}
-
-.product-row:hover {
-  background: #fafafa;
-}
-
-td {
-  padding: 1.125rem 1.5rem;
   vertical-align: middle;
 }
 
-.row-out-of-stock {
-  background-color: #FEF2F2;
-}
-
-.row-out-of-stock:hover {
-  background-color: #fee2e2;
-}
-
-/* =====================
-   Product Info
-   ===================== */
-.product-info {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-}
-
-.product-image {
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #f3f4f6;
-  flex-shrink: 0;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.empty-image {
-  width: 100%;
-  height: 100%;
-  background: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-icon {
-  width: 24px;
-  height: 24px;
-  color: #9ca3af;
-}
-
-.product-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.product-name {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.product-category {
-  font-size: 0.8125rem;
-  color: #9ca3af;
-}
-
-/* =====================
-   SKU
-   ===================== */
-.sku-code {
-  font-size: 0.8125rem;
-  color: #6b7280;
-  font-variant-numeric: tabular-nums;
-}
-
-/* =====================
-   Stock
-   ===================== */
-.stock-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.stock-value {
-  font-size: 1rem;
+.product-main-line {
+  font-size: 0.9rem;
   font-weight: 700;
   color: #111827;
 }
 
-.btn-restock-sm {
-  background: white;
-  border: 1px solid #BBF7D0;
-  color: #16A34A;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 24px;
-  cursor: pointer;
+.product-tags-line {
+  margin-top: 0.35rem;
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  transition: all 0.18s;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
-.btn-restock-sm:hover {
-  background: #F0FDF4;
-  border-color: #16A34A;
-}
-
-.btn-restock-sm svg {
-  width: 11px;
-  height: 11px;
-}
-
-/* =====================
-   Price
-   ===================== */
-.price {
-  font-size: 0.9375rem;
+.mini-badge {
+  display: inline-flex;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
   font-weight: 600;
-  white-space: nowrap;
+}
+
+.mini-badge-category {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.mini-badge-supplier {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.code-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.code-icon {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+}
+
+.sale-price {
+  font-size: 0.92rem;
+  font-weight: 700;
   color: #111827;
 }
 
-/* =====================
-   Three-dots action menu
-   ===================== */
-.action-menu-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.btn-dots {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-  padding: 0;
-}
-
-.btn-dots span {
-  display: block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #9ca3af;
-  transition: background 0.15s;
-}
-
-.btn-dots:hover,
-.btn-dots.active {
-  background: #f3f4f6;
-}
-
-.btn-dots:hover span,
-.btn-dots.active span {
-  background: #374151;
-}
-
-/* =====================
-   Action Dropdown
-   ===================== */
-.action-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-  min-width: 150px;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.action-icon {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-
-/* Botón Editar — outline azul → fill en hover/focus */
-.item-edit {
-  background: transparent;
-  color: #3b82f6;
-  border-left: 3px solid #3b82f6;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-}
-
-.item-edit .action-icon {
-  color: #3b82f6;
-  transition: color 0.18s;
-}
-
-.item-edit:hover,
-.item-edit:focus {
-  background: #3b82f6;
-  color: #ffffff;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-  outline: none;
-}
-
-.item-edit:hover .action-icon,
-.item-edit:focus .action-icon {
-  color: #ffffff;
-}
-
-/* Botón Eliminar — outline rojo → fill en hover/focus */
-.item-danger {
-  background: transparent;
-  color: #ef4444;
-  border-left: 3px solid #ef4444;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-}
-
-.item-danger .action-icon {
-  color: #ef4444;
-  transition: color 0.18s;
-}
-
-.item-danger:hover,
-.item-danger:focus {
-  background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-  outline: none;
-}
-
-.item-danger:hover .action-icon,
-.item-danger:focus .action-icon {
-  color: #ffffff;
-}
-
-/* =====================
-   Dropdown Transition
-   ===================== */
-.menu-pop-enter-active,
-.menu-pop-leave-active {
-  transition: all 0.15s ease;
-  transform-origin: top right;
-}
-
-.menu-pop-enter-from,
-.menu-pop-leave-to {
-  opacity: 0;
-  transform: scale(0.92) translateY(-4px);
-}
-
-.action-dropdown.drop-up {
-  top: auto;
-  bottom: calc(100% + 6px);
-}
-
-.action-dropdown.drop-up.menu-pop-enter-active,
-.action-dropdown.drop-up.menu-pop-leave-active {
-  transform-origin: bottom right;
-}
-
-.action-dropdown.drop-up.menu-pop-enter-from,
-.action-dropdown.drop-up.menu-pop-leave-to {
-  transform: scale(0.92) translateY(4px);
-}
-
-/* =====================
-   Empty State
-   ===================== */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
+.cost-price {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
   color: #9ca3af;
 }
 
-.empty-state svg {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 1rem;
+.stock-control-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.empty-state h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #6b7280;
-  margin: 0 0 0.5rem 0;
+.stock-action-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.empty-state p {
-  font-size: 0.875rem;
-  margin: 0;
+.stock-value-btn {
+  min-width: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.25rem 0.35rem;
+  cursor: pointer;
 }
 
-/* =====================
-   Bulk delete
-   ===================== */
-.bulk-actions {
-  display: flex;
+.stock-value-btn.stock-alert {
+  color: #b45309;
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.stock-inline-input {
+  width: 52px;
+  border: 1px solid var(--color-brand-main, #06402b);
+  border-radius: 8px;
+  padding: 0.25rem 0.35rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.stock-inline-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 64, 43, 0.18);
+}
+
+.td-packaging {
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.action-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
 }
 
-.btn-bulk-delete {
-  background: #FEF2F2;
-  color: #EF4444;
-  border: 1px solid #FECACA;
-  border-radius: 6px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  cursor: pointer;
-  transition: all 0.18s;
+.btn-edit:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
 }
 
-.btn-bulk-delete:hover {
-  background: #FEE2E2;
-  border-color: #EF4444;
+.btn-delete:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
-.btn-bulk-delete svg {
-  width: 13px;
-  height: 13px;
+.action-icon {
+  width: 16px;
+  height: 16px;
 }
 
-/* =====================
-   Responsive
-   ===================== */
-@media (min-width: 769px) {
-  .search-container-header {
-    display: block;
-  }
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6b7280;
+}
 
-  .filter-group-search {
-    display: none !important;
+.filter-slide-enter-active,
+.filter-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.filter-slide-enter-from,
+.filter-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (max-width: 1024px) {
+  .filter-panel-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .product-table {
-    min-width: 720px;
-  }
-
-  .filter-panel-inner {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .filter-group {
+  .table-header-right {
     width: 100%;
   }
 
   .search-container-header {
-    display: none;
+    flex: 1;
   }
 
-  .filter-group-search {
-    display: flex;
+  .search-input-header {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-panel-inner {
+    grid-template-columns: 1fr;
   }
 }
 </style>

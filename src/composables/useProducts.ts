@@ -26,6 +26,7 @@ export function useProducts() {
   const filters = ref<ProductFilters>({
     search: '',
     category: '',
+    supplier: '',
     sku: '',
     stock_status: '',
     min_price: '',
@@ -101,6 +102,7 @@ export function useProducts() {
     filters.value = {
       search: '',
       category: '',
+      supplier: '',
       sku: '',
       stock_status: '',
       min_price: '',
@@ -132,24 +134,31 @@ export function useProducts() {
    * Productos con stock bajo (> 0 y <= 10)
    */
   const lowStockProducts = computed(() => {
-    return products.value.filter(p => p.stock > 0 && p.stock <= 10);
+    return products.value.filter(p => {
+      const stock = p.current_stock ?? p.stock ?? 0;
+      return stock > 0 && stock < 5;
+    });
   });
 
   /**
    * Productos sin stock
    */
   const outOfStockProducts = computed(() => {
-    return products.value.filter(p => p.stock === 0);
+    return products.value.filter(p => {
+      const stock = p.current_stock ?? p.stock ?? 0;
+      return stock === 0;
+    });
   });
 
   /**
    * Valor total del inventario
    */
   const inventoryValue = computed(() => {
-    return products.value.reduce(
-      (total, p) => total + parseFloat(String(p.price)) * p.stock,
-      0
-    );
+    return products.value.reduce((total, p) => {
+      const baseCost = Number(p.base_cost ?? p.baseCost ?? 0);
+      const stock = Number(p.current_stock ?? p.stock ?? 0);
+      return total + (baseCost * stock);
+    }, 0);
   });
 
   /**

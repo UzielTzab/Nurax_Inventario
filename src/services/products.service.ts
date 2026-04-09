@@ -19,6 +19,7 @@ export interface Product {
   category: number | string;
   category_name?: string;
   supplier?: number | string | null;
+  supplier_name?: string;
   sku: string;
   stock: number;
   current_stock?: number;
@@ -27,6 +28,9 @@ export interface Product {
   salePrice?: number | string;
   sale_price?: number | string;
   price?: number | string; // legacy support
+  barcode?: string;
+  is_primary_code?: boolean;
+  primary_code?: string;
   image_url?: string | null;
   image?: string | null;
   status?: string;
@@ -48,6 +52,7 @@ export interface PaginationResponse<T> {
 export interface ProductFilters {
   search?: string;
   category?: number | string;
+  supplier?: number | string;
   sku?: string;
   stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock' | string;
   min_price?: number | string;
@@ -82,6 +87,7 @@ class ProductsService {
 
     if (filters?.search) params.search = filters.search;
     if (filters?.category) params.category = filters.category;
+    if (filters?.supplier) params.supplier = filters.supplier;
     if (filters?.sku) params.sku = filters.sku;
     if (filters?.stock_status) params.stock_status = filters.stock_status;
     if (filters?.min_price) params.min_price = filters.min_price;
