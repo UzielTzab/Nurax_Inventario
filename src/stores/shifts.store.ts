@@ -12,6 +12,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { shiftsService, type Shift } from '@/services/shifts.service';
+import { useAuth } from '@/composables/useAuth';
+import apiClient from '@/services/api';
 
 // Re-exportar tipos para conveniencia
 export type { Shift };
@@ -21,6 +23,39 @@ export const useShiftsStore = defineStore('shifts', () => {
   const currentShift = ref<Shift | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const activeStoreId = ref<string | number | null>(null);
+  const { currentUser, initSession } = useAuth();
+
+  const resolveStoreId = async (): Promise<string | number | null> => {
+    if (activeStoreId.value) return activeStoreId.value;
+
+    await initSession();
+    const fromProfile = currentUser.value?.store_profile?.id;
+    if (fromProfile) {
+      activeStoreId.value = fromProfile;
+      return activeStoreId.value;
+    }
+
+    try {
+      const response = await apiClient.get<any>('/v1/accounts/stores/');
+      if (!response.success || !response.data) return null;
+
+      const stores = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray((response.data as any).results)
+          ? (response.data as any).results
+          : [];
+
+      if (!stores.length) return null;
+
+      const activeStore = stores.find((store: any) => store.active) || stores[0];
+      activeStoreId.value = activeStore.id;
+      return activeStoreId.value;
+    } catch (err) {
+      console.error('Error resolving active store for cash shift:', err);
+      return null;
+    }
+  };
 
   /**
    * Obtiene el listado de todos los turnos
@@ -58,7 +93,14 @@ export const useShiftsStore = defineStore('shifts', () => {
     error.value = null;
 
     try {
-      const response = await shiftsService.openShift(starting_cash);
+      const storeId = await resolveStoreId();
+      if (!storeId) {
+        const msg = 'No se pudo determinar la tienda activa para abrir la caja.';
+        error.value = msg;
+        return { success: false, error: msg };
+      }
+
+      const response = await shiftsService.openShift(starting_cash, storeId);
 
       if (response.success && response.data) {
         shifts.value.unshift(response.data);
@@ -81,7 +123,7 @@ export const useShiftsStore = defineStore('shifts', () => {
   /**
    * Cierra un turno abierto
    */
-  const closeShift = async (id: number, expected_cash: number, actual_cash: number) => {
+  const closeShift = async (id: number | string, expected_cash: number, actual_cash: number) => {
     isLoading.value = true;
     error.value = null;
 

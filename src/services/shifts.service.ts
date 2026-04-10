@@ -10,8 +10,10 @@ import apiClient from './api';
 // ════════════════════════════════════════════════════════════════════════════
 
 export interface Shift {
-  id: number;
-  user: number;
+  id: number | string;
+  user?: number;
+  store?: number | string;
+  opened_by?: number | string | null;
   starting_cash: number | string;
   expected_cash: number | string | null;
   actual_cash: number | string | null;
@@ -43,14 +45,17 @@ class ShiftsService {
   /**
    * Abre un nuevo turno con efectivo inicial
    */
-  async openShift(starting_cash: number) {
-    return apiClient.post<Shift>('/v1/expenses/cash-shifts/open/', { starting_cash });
+  async openShift(starting_cash: number, storeId: number | string) {
+    return apiClient.post<Shift>('/v1/expenses/cash-shifts/', {
+      store: storeId,
+      starting_cash,
+    });
   }
 
   /**
    * Cierra un turno abierto
    */
-  async closeShift(id: number, expected_cash: number, actual_cash: number) {
+  async closeShift(id: number | string, expected_cash: number, actual_cash: number) {
     return apiClient.post<Shift>(`/v1/expenses/cash-shifts/${id}/close/`, {
       expected_cash,
       actual_cash,

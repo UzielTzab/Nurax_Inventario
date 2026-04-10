@@ -73,12 +73,20 @@ export function useAuth() {
   };
 
   // ── Logout ────────────────────────────────────────────────────────────────
-  const logout = () => {
-    authService.logout();
+  const logout = async (): Promise<void> => {
+    // Cerrar estado local de inmediato para cortar la UI protegida.
     isAuthenticated.value = false;
     currentUser.value = null;
-    // Reset promise → el próximo login arrancará checkSession de cero
-    sessionPromise = null;
+
+    // Evita que el guard dispare checkSession mientras se invalida la cookie.
+    sessionPromise = Promise.resolve();
+
+    try {
+      await authService.logout();
+    } finally {
+      // Permitir futuras validaciones de sesión (refresh/login nuevo).
+      sessionPromise = null;
+    }
   };
 
   // ── checkSession: valida sesión contra backend (con HttpOnly cookie) ────

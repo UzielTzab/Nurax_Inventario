@@ -504,7 +504,7 @@ const addClient = async () => {
 
 <style scoped>
 .clients-wrapper {
-  flex: 1;
+  flex: 2;
   overflow-y: auto;
   height: 100%;
 }

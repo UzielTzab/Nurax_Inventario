@@ -127,6 +127,19 @@
 
         <!-- Product Table (with integrated filter panel) -->
         <template v-else>
+          <div v-if="pagination.count === 0" class="inventory-empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3 class="empty-state-title">Comienza con tu primer producto</h3>
+            <p class="empty-state-text">
+              Tu inventario está vacío. Puedes crear un producto manualmente o importar un archivo Excel.
+            </p>
+            <div class="empty-state-actions">
+              <AppButton variant="outline" :icon="PlusIcon" @click="handleAddProduct">Crear Producto</AppButton>
+              <AppButton variant="outline" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">Cargar desde Excel</AppButton>
+            </div>
+          </div>
+
+          <template v-else>
           <ProductTable
             :products="products"
             :filters="apiFilters"
@@ -150,6 +163,7 @@
             @update:current-page="goToPage"
             @update:page-size="setPageSize"
           />
+          </template>
         </template>
 
       </div>
@@ -165,13 +179,6 @@
       @close="showAddProductModal = false"
       @product-added="handleSaveNewProduct"
       @product-updated="handleUpdateProduct"
-    />
-
-    <FirstProductModal
-      :is-open="showFirstProductModal"
-      @close="showFirstProductModal = false"
-      @create-product="handleFirstProductCreate"
-      @load-excel="handleFirstProductLoadExcel"
     />
 
     <RestockModal
@@ -211,7 +218,6 @@ import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ProductTable, { type Product as TableProduct } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
-import FirstProductModal from '@/components/FirstProductModal.vue';
 import RestockModal from '@/components/RestockModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -257,11 +263,6 @@ let channel: any = null;
 onMounted(async () => {
   await fetchProducts();
   await fetchSuppliers();
-  
-  // Mostrar FirstProductModal si no hay productos
-  if (pagination.value.count === 0) {
-    showFirstProductModal.value = true;
-  }
   
   await salesStore.fetchSales();
   
@@ -327,7 +328,6 @@ onUnmounted(() => {
 });
 
 const showAddProductModal = ref(false);
-const showFirstProductModal = ref(false);
 const showRestockModal = ref(false);
 const selectedProduct = ref<any | null>(null);
 const selectedProductForRestock = ref<any | null>(null);
@@ -368,23 +368,6 @@ const handleOpenImportExcel = () => {
   window.dispatchEvent(new CustomEvent('open-excel-import'));
 };
 
-// ===== FIRST PRODUCT MODAL HANDLERS =====
-const handleFirstProductCreate = () => {
-  showFirstProductModal.value = false;
-  handleAddProduct();
-};
-
-const handleFirstProductLoadExcel = () => {
-  showFirstProductModal.value = false;
-  // TODO: Abrir modal de carga de Excel
-  enqueueSnackbar({
-    type: 'info',
-    title: 'Excel Import',
-    message: 'Funcionalidad de carga de Excel próximamente',
-    duration: 3000
-  });
-};
-
 const handleAddProduct = () => {
   selectedProduct.value = null; // Clear selected product for new addition
   showAddProductModal.value = true;
@@ -401,7 +384,9 @@ const handleSaveNewProduct = async (newProduct: any) => {
         message: `${newProduct.name} se agregó al inventario exitosamente.`,
         duration: 3000
       });
-      showAddProductModal.value = false;
+      if (!newProduct.saveAndCreateAnother) {
+        showAddProductModal.value = false;
+      }
       // Refrescar lista de productos
       fetchProducts();
     } else {
@@ -635,6 +620,43 @@ function onFiltersUpdate(newFilters: any) {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+.inventory-empty-state {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+}
+
+.empty-state-title {
+  margin: 0;
+  color: #111827;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.empty-state-text {
+  margin: 0;
+  color: #6b7280;
+  max-width: 520px;
+}
+
+.empty-state-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
 }
 
 @media (max-width: 768px) {

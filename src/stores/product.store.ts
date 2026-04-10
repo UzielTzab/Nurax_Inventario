@@ -16,6 +16,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { productsService, type Product, type InventoryTransaction } from '@/services/products.service';
+import { useAuth } from '@/composables/useAuth';
 import apiClient from '@/services/api';
 
 // Re-exportar tipos para conveniencia (InventoryTx mantener por compatibilidad)
@@ -26,6 +27,8 @@ export const useProductStore = defineStore('products', () => {
   const products = ref<Product[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const activeStoreId = ref<string | number | null>(null);
+  const { currentUser, initSession } = useAuth();
 
   const CATEGORY_MAP: Record<number, string> = {
     1: 'Laptop',
@@ -36,6 +39,44 @@ export const useProductStore = defineStore('products', () => {
     6: 'Gaming',
     7: 'Accesorios',
     8: 'Otros',
+  };
+
+  const isUUID = (value: unknown): boolean => {
+    if (value === null || value === undefined) return false;
+    const str = String(value).trim();
+    if (!str) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+  };
+
+  const resolveStoreId = async (): Promise<string | number | null> => {
+    if (activeStoreId.value) return activeStoreId.value;
+
+    await initSession();
+    const fromProfile = currentUser.value?.store_profile?.id;
+    if (fromProfile) {
+      activeStoreId.value = fromProfile;
+      return activeStoreId.value;
+    }
+
+    try {
+      const response = await apiClient.get<any>('/v1/accounts/stores/');
+      if (!response.success || !response.data) return null;
+
+      const stores = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray((response.data as any).results)
+          ? (response.data as any).results
+          : [];
+
+      if (!stores.length) return null;
+
+      const activeStore = stores.find((store: any) => store.active) || stores[0];
+      activeStoreId.value = activeStore.id;
+      return activeStoreId.value;
+    } catch (err) {
+      console.error('Error resolving active store for products:', err);
+      return null;
+    }
   };
 
   /**
@@ -74,35 +115,39 @@ export const useProductStore = defineStore('products', () => {
     error.value = null;
 
     try {
+      const storeId = await resolveStoreId();
+      if (!storeId) {
+        const msg = 'No se pudo determinar la tienda activa para crear el producto.';
+        error.value = msg;
+        return { success: false, error: msg };
+      }
+
       const fd = new FormData();
-      fd.append('name', productData.name);
-      fd.append('sku', productData.sku);
+      fd.append('name', String(productData.name || '').trim());
+      fd.append('store', String(storeId));
       
-      // Usar base_cost y sale_price en lugar de price
-      if (productData.baseCost !== undefined) {
-        fd.append('base_cost', String(productData.baseCost));
-      }
-      if (productData.salePrice !== undefined) {
-        fd.append('sale_price', String(productData.salePrice));
-      }
+      // Campos opcionales para creación rápida
+      const baseCost = Number(productData.baseCost);
+      const hasBaseCost = Number.isFinite(baseCost) && baseCost >= 0;
+      fd.append('base_cost', String(hasBaseCost ? baseCost : 0));
 
-      // Manejo de categoría: convertir string a número si es necesario
-      const catVal = parseInt(String(productData.category), 10);
-      fd.append('category', String(isNaN(catVal) ? '1' : catVal));
+      const salePrice = Number(productData.salePrice);
+      const hasSalePrice = Number.isFinite(salePrice) && salePrice > 0;
+      fd.append('sale_price', String(hasSalePrice ? salePrice : 0.01));
 
-      // Manejo de proveedor
-      if (productData.supplierId || productData.supplier) {
-        fd.append('supplier', String(productData.supplierId || productData.supplier));
-      } else {
-        fd.append('supplier', '');
+      if (isUUID(productData.category)) {
+        fd.append('category', String(productData.category));
       }
 
-      // Stock opcional
+      const supplierValue = productData.supplierId || productData.supplier;
+      if (isUUID(supplierValue)) {
+        fd.append('supplier', String(supplierValue));
+      }
+
       if (productData.stock !== undefined) {
-        fd.append('stock', String(productData.stock));
+        fd.append('current_stock', String(Math.max(0, Number(productData.stock) || 0)));
       }
 
-      // Imagen opcional
       if (productData.imageFile) {
         fd.append('image_file', productData.imageFile);
       }
@@ -112,9 +157,18 @@ export const useProductStore = defineStore('products', () => {
       if (response.success && response.data) {
         const productId = response.data.id;
         
-        // Crear códigos de producto en endpoint separado
-        if (productData.productCodes && Array.isArray(productData.productCodes)) {
-          for (const code of productData.productCodes) {
+        // Crear códigos de producto en endpoint separado (SKU + alternativos)
+        const fallbackCodes: Array<{ codeType: string; code: string }> = [];
+        const skuCode = String(productData.sku || '').trim();
+        if (skuCode) {
+          fallbackCodes.push({ codeType: 'ean13', code: skuCode });
+        }
+        if (Array.isArray(productData.productCodes)) {
+          fallbackCodes.push(...productData.productCodes);
+        }
+
+        if (fallbackCodes.length) {
+          for (const code of fallbackCodes) {
             if (code.code && code.codeType) {
               try {
                 await apiClient.post('/v1/products/codes/', {
@@ -130,7 +184,6 @@ export const useProductStore = defineStore('products', () => {
           }
         }
 
-        // Crear empaques en endpoint separado
         if (productData.packagings && Array.isArray(productData.packagings)) {
           for (const pkg of productData.packagings) {
             if (pkg.name && pkg.quantityPerUnit) {
@@ -188,9 +241,7 @@ export const useProductStore = defineStore('products', () => {
     try {
       const fd = new FormData();
       if (updatedProduct.name) fd.append('name', updatedProduct.name);
-      if (updatedProduct.sku) fd.append('sku', updatedProduct.sku);
       
-      // Usar base_cost y sale_price en lugar de price
       if (updatedProduct.baseCost !== undefined) {
         fd.append('base_cost', String(updatedProduct.baseCost));
       }
@@ -198,18 +249,18 @@ export const useProductStore = defineStore('products', () => {
         fd.append('sale_price', String(updatedProduct.salePrice));
       }
 
-      if (updatedProduct.category) {
-        const updatedCat = parseInt(String(updatedProduct.category), 10);
-        fd.append('category', String(isNaN(updatedCat) ? '1' : updatedCat));
+      if (isUUID(updatedProduct.category)) {
+        fd.append('category', String(updatedProduct.category));
       }
 
-      if (updatedProduct.supplierId || updatedProduct.supplier) {
-        fd.append('supplier', String(updatedProduct.supplierId || updatedProduct.supplier));
+      const updatedSupplierValue = updatedProduct.supplierId || updatedProduct.supplier;
+      if (isUUID(updatedSupplierValue)) {
+        fd.append('supplier', String(updatedSupplierValue));
       } else if (updatedProduct.supplierId === '') {
         fd.append('supplier', '');
       }
 
-      if (updatedProduct.stock !== undefined) fd.append('stock', String(updatedProduct.stock));
+      if (updatedProduct.stock !== undefined) fd.append('current_stock', String(Math.max(0, Number(updatedProduct.stock) || 0)));
 
       if (updatedProduct.imageFile) {
         fd.append('image_file', updatedProduct.imageFile);
