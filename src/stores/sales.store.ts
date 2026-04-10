@@ -15,6 +15,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { salesService, type Sale, type Payment, type SaleItem } from '@/services/sales.service';
+import { useAuth } from '@/composables/useAuth';
+import apiClient from '@/services/api';
 
 // Re-exportar tipos para conveniencia
 export type { Sale, Payment, SaleItem };
@@ -30,6 +32,39 @@ export const useSalesStore = defineStore('sales', () => {
   const pageSize = ref(10);
   const nextPageUrl = ref<string | null>(null);
   const previousPageUrl = ref<string | null>(null);
+  const activeStoreId = ref<string | number | null>(null);
+  const { currentUser, initSession } = useAuth();
+
+  const resolveStoreId = async (): Promise<string | number | null> => {
+    if (activeStoreId.value) return activeStoreId.value;
+
+    await initSession();
+    const fromProfile = currentUser.value?.store_profile?.id;
+    if (fromProfile) {
+      activeStoreId.value = fromProfile;
+      return activeStoreId.value;
+    }
+
+    try {
+      const response = await apiClient.get<any>('/v1/accounts/stores/');
+      if (!response.success || !response.data) return null;
+
+      const stores = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray((response.data as any).results)
+          ? (response.data as any).results
+          : [];
+
+      if (!stores.length) return null;
+
+      const activeStore = stores.find((store: any) => store.active) || stores[0];
+      activeStoreId.value = activeStore.id;
+      return activeStoreId.value;
+    } catch (err) {
+      console.error('Error resolving active store for sales:', err);
+      return null;
+    }
+  };
 
   /**
    * Obtiene el listado de ventas con paginación
@@ -99,21 +134,37 @@ export const useSalesStore = defineStore('sales', () => {
    * Crea una nueva venta
    */
   const addSale = async (saleData: {
-    transaction_id: string;
+    transaction_id?: string;
     items: any[];
-    total: number | string;
-    user: number;
+    total_amount: number | string;
     status: string;
     device_id?: string;
     amount_paid?: number;
-    customer_name?: string;
-    customer_phone?: string;
+    customer?: string | number | null;
+    cash_shift?: string | number | null;
   }) => {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await salesService.createSale(saleData);
+      const storeId = await resolveStoreId();
+      if (!storeId) {
+        const msg = 'No se pudo determinar la tienda activa para registrar la venta.';
+        error.value = msg;
+        return { success: false, error: msg };
+      }
+
+      const normalizedStatus = saleData.status === 'completed'
+        ? 'paid'
+        : saleData.status === 'layaway'
+          ? 'partial'
+          : saleData.status;
+
+      const response = await salesService.createSale({
+        ...saleData,
+        store: storeId,
+        status: normalizedStatus,
+      });
 
       if (response.success && response.data) {
         // Asegurar que sales.value es un array antes de unshift
@@ -233,7 +284,8 @@ export const useSalesStore = defineStore('sales', () => {
       if (date >= startOfWeek) {
         const dayIndex = (date.getDay() + 6) % 7;
         if (dayIndex >= 0 && dayIndex < 7 && data[dayIndex]) {
-          data[dayIndex]!.amount += parseFloat(String(sale.total));
+          const amount = (sale as any).total_amount ?? sale.total;
+          data[dayIndex]!.amount += parseFloat(String(amount));
         }
       }
     });

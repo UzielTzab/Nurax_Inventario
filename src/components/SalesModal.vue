@@ -23,7 +23,7 @@
          <p class="text-gray-500 max-w-sm mt-2">Sincronizando caja, inventario y ventas recientes.</p>
       </div>
 
-      <div v-else-if="shiftsStore.hasOpenShift" class="sale-layout">
+      <div v-else class="sale-layout">
         
         <!-- Left Panel: Search + Grid -->
         <div class="left-panel">
@@ -32,9 +32,11 @@
             <div class="search-input-wrapper">
               <MagnifyingGlassIcon class="search-icon" />
               <input 
+                ref="searchInputRef"
                 v-model="searchQuery"
                 @keyup.enter="handleScanSubmit"
                 type="text" 
+                autofocus
                 placeholder="Escanea o busca por producto/SKU..." 
                 class="search-input"
               />
@@ -45,11 +47,26 @@
             <button class="icon-btn" title="Filtros">
               <FunnelIcon class="w-5 h-5" />
             </button>
+            <div class="pairing-indicator" :class="{ paired: isScannerPaired }">
+              <span class="pairing-dot"></span>
+              <span>{{ scannerPairingLabel }}</span>
+            </div>
+          </div>
+
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner">
+            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
           </div>
 
           <!-- Products List -->
           <div class="products-list">
              <div v-if="filteredProducts.length === 0" class="empty-state">
+               <template v-if="!searchQuery && apiProducts.length === 0">
+                 <div class="pos-empty-cta">
+                   <h3>No hay productos en inventario</h3>
+                   <p>Agrega tu primer producto para comenzar a vender.</p>
+                   <AppButton variant="outline" @click="goToInventory">Ir a Inventario</AppButton>
+                 </div>
+               </template>
                <svg v-if="!searchQuery" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                </svg>
@@ -108,6 +125,22 @@
 
         <!-- Right Panel: Current Sale / Cart -->
         <div class="right-panel">
+
+          <div class="customer-select-block">
+            <label class="customer-select-label">Cliente</label>
+            <input
+              v-model="clientSearch"
+              type="text"
+              class="customer-search-input"
+              placeholder="Venta de Mostrador (General) o buscar cliente"
+            />
+            <select v-model="selectedClientId" class="customer-select-input">
+              <option value="">Venta de Mostrador (General)</option>
+              <option v-for="client in filteredClients" :key="client.id" :value="String(client.id)">
+                {{ client.name }}
+              </option>
+            </select>
+          </div>
           
           <div class="cart-header">
             <div class="cart-title">
@@ -168,28 +201,15 @@
               class="btn-checkout"
               variant="fill"
               fullWidth
-              :disabled="cart.length === 0"
+              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
               :loading="isSubmitting"
-              @click="handleCheckout"
+              @click="handleCheckoutClick"
             >
               IR AL COBRO
               <ArrowRightIcon class="w-5 h-5" />
             </AppButton>
          </div>
         </div>
-      </div>
-
-      <div v-else class="empty-state">
-         <div class="warning-icon-bg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-orange-500">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-         </div>
-         <h2 class="text-2xl font-bold mt-4">Caja Cerrada</h2>
-         <p class="text-gray-500 max-w-sm mt-2">Para poder realizar ventas, primero debes abrir tu turno y registrar tu fondo de caja inicial.</p>
-         <button class="btn-checkout mt-6" style="padding: 1rem 2rem; border-radius: 8px; background: var(--color-brand-main); color: white; cursor: pointer; border: none; font-weight: bold;" @click="goToShifts">
-            Ir a Abrir Turno
-         </button>
       </div>
   </div>
   </div>
@@ -218,7 +238,7 @@
          <p class="text-gray-500 max-w-sm mt-2">Sincronizando caja, inventario y ventas recientes.</p>
       </div>
 
-      <div v-else-if="shiftsStore.hasOpenShift" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+      <div v-else style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
         <!-- Mobile doesn't have grid layout - show products vertically -->
         <div style="flex: 1; overflow-y: auto;">
           <!-- Premium Search Section -->
@@ -226,9 +246,11 @@
             <div class="search-input-wrapper">
               <MagnifyingGlassIcon class="search-icon" />
               <input 
+                ref="searchInputRefMobile"
                 v-model="searchQuery"
                 @keyup.enter="handleScanSubmit"
                 type="text" 
+                autofocus
                 placeholder="Escanea o busca por producto/SKU..." 
                 class="search-input"
               />
@@ -238,9 +260,20 @@
             </button>
           </div>
 
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" style="margin: 0 1rem 1rem 1rem;">
+            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
+          </div>
+
           <!-- Products List -->
           <div class="products-list" style="padding: 0 1rem 1rem 1rem;">
              <div v-if="filteredProducts.length === 0" class="empty-state">
+               <template v-if="!searchQuery && apiProducts.length === 0">
+                 <div class="pos-empty-cta">
+                   <h3>No hay productos en inventario</h3>
+                   <p>Agrega tu primer producto para comenzar a vender.</p>
+                   <AppButton variant="outline" @click="goToInventory">Ir a Inventario</AppButton>
+                 </div>
+               </template>
                <p v-if="!searchQuery">Empieza a escribir para buscar productos</p>
                <p v-else>No se encontraron productos con "{{ searchQuery }}"</p>
              </div>
@@ -314,6 +347,22 @@
             class="mobile-cart-drawer"
             :class="{ 'is-expanded': isCartExpanded }"
           >
+            <div style="padding: 0.75rem 1rem 0;">
+              <label class="customer-select-label">Cliente</label>
+              <input
+                v-model="clientSearch"
+                type="text"
+                class="customer-search-input"
+                placeholder="Venta de Mostrador (General) o buscar cliente"
+              />
+              <select v-model="selectedClientId" class="customer-select-input">
+                <option value="">Venta de Mostrador (General)</option>
+                <option v-for="client in filteredClients" :key="client.id" :value="String(client.id)">
+                  {{ client.name }}
+                </option>
+              </select>
+            </div>
+
             <!-- Cart Items -->
             <div style="flex: 1; overflow-y: auto; padding: 0 1rem;">
               <div v-if="cart.length === 0" style="padding: 1rem 0; text-align: center; color: #6b7280;">
@@ -378,27 +427,14 @@
               class="btn-checkout"
               variant="fill"
               fullWidth
-              :disabled="cart.length === 0"
+              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
               :loading="isSubmitting"
-              @click="handleCheckout"
+              @click="handleCheckoutClick"
             >
               FINALIZAR VENTA
             </AppButton>
           </div>
         </div>
-      </div>
-
-      <div v-else style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-         <div class="warning-icon-bg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-orange-500">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-         </div>
-         <h2 class="text-2xl font-bold mt-4">Caja Cerrada</h2>
-         <p class="text-gray-500 max-w-sm mt-2">Para poder realizar ventas, primero debes abrir tu turno y registrar tu fondo de caja inicial.</p>
-         <button class="btn-checkout mt-6" style="padding: 1rem 2rem; border-radius: 8px; background: var(--color-brand-main); color: white; cursor: pointer; border: none; font-weight: bold;" @click="goToShifts">
-            Ir a Abrir Turno
-         </button>
       </div>
     </div>
   </div>
@@ -496,14 +532,14 @@
            <button 
              style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
              :style="{ background: paymentMethod === 'completed' ? 'white' : 'transparent', color: paymentMethod === 'completed' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
-             @click="paymentMethod = 'completed'"
+             @click="setPaymentMethod('completed')"
            >
              Al Contado
            </button>
            <button 
              style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
              :style="{ background: paymentMethod === 'layaway' ? 'white' : 'transparent', color: paymentMethod === 'layaway' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'layaway' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
-             @click="paymentMethod = 'layaway'"
+             @click="setPaymentMethod('layaway')"
            >
              Abonos/Apartado
            </button>
@@ -543,13 +579,10 @@
          <!-- Layaway Flow -->
          <div v-if="paymentMethod === 'layaway'">
            <div style="margin-bottom: 1rem;">
-             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Nombre del Cliente</label>
-             <input type="text" v-model="customerName" placeholder="Ej. Juan Pérez" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;">
-           </div>
-           
-           <div style="margin-bottom: 1rem;">
-             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Teléfono (Opcional)</label>
-             <input type="text" v-model="customerPhone" placeholder="Ej. 5512345678" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Cliente seleccionado</label>
+             <div style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #374151; font-weight: 600;">
+               {{ selectedClientLabel }}
+             </div>
            </div>
 
            <div style="margin-bottom: 1rem;">
@@ -592,14 +625,21 @@
     @close="handleCloseSuccess"
     @revert="handleRevert"
   />
+
+  <OpenShiftModal
+    :is-open="showOpenShiftModal"
+    @close="showOpenShiftModal = false"
+    @shift-opened="handleShiftOpened"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import Pusher from 'pusher-js';
 import { useAuth } from '@/composables/useAuth';
 import { useProducts } from '@/composables/useProducts';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
+import OpenShiftModal from '@/components/OpenShiftModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
 import { useShiftsStore } from '@/stores/shifts.store';
@@ -634,6 +674,13 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+interface PosClient {
+  id: string | number;
+  name: string;
+  credit_limit?: number | string;
+  active?: boolean;
+}
+
 interface RevertCartItem {
   id: string | number;
   name: string;
@@ -641,21 +688,30 @@ interface RevertCartItem {
   quantity: number;
 }
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
 }>();
 
 const emit = defineEmits(['close', 'sale-completed', 'sale-reverted']);
 
 const searchQuery = ref('');
+const searchInputRef = ref<HTMLInputElement | null>(null);
+const searchInputRefMobile = ref<HTMLInputElement | null>(null);
 const cart = ref<CartItem[]>([]);
 const showSuccessModal = ref(false);
 const showPaymentModal = ref(false);
 const paymentMethod = ref('completed');
 const amountPaid = ref(0);
-const customerName = ref('');
-const customerPhone = ref('');
 const isInitializing = ref(true);
+const showOpenShiftModal = ref(false);
+const pendingCheckoutAfterShift = ref(false);
+
+const clients = ref<PosClient[]>([]);
+const clientSearch = ref('');
+const selectedClientId = ref('');
+
+const scannerPairingLabel = ref('📱 Sin emparejar');
+const isScannerPaired = ref(false);
 
 const quickAmounts = computed(() => {
   const t = total.value;
@@ -674,6 +730,20 @@ const calculateChange = computed(() => {
    return 0; 
 });
 
+const selectedClient = computed(() => {
+  return clients.value.find((client) => String(client.id) === selectedClientId.value) || null;
+});
+
+const selectedClientLabel = computed(() => {
+  return selectedClient.value?.name || 'Venta de Mostrador (General)';
+});
+
+const filteredClients = computed(() => {
+  const query = clientSearch.value.trim().toLowerCase();
+  if (!query) return clients.value;
+  return clients.value.filter((client) => client.name.toLowerCase().includes(query));
+});
+
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 let isRemoteUpdate = false;
 
@@ -686,6 +756,30 @@ const syncCartToBackend = async () => {
     });
   } catch (error) {
     console.error("Error transmitiendo carrito:", error);
+  }
+};
+
+const fetchClients = async () => {
+  try {
+    const response = await apiClient.get<any>('/v1/accounts/clients/');
+    if (!response.success || !response.data) return;
+
+    const list = Array.isArray(response.data)
+      ? response.data
+      : Array.isArray(response.data.results)
+        ? response.data.results
+        : [];
+
+    clients.value = list
+      .filter((client: any) => client?.active !== false)
+      .map((client: any) => ({
+        id: client.id,
+        name: client.name,
+        credit_limit: client.credit_limit,
+        active: client.active,
+      }));
+  } catch (error) {
+    console.warn('No se pudo cargar la lista de clientes para POS:', error);
   }
 };
 
@@ -832,9 +926,9 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
   }
 };
 
-const goToShifts = () => {
+const goToInventory = () => {
   emit('close');
-  router.push('/dashboard/shifts');
+  router.push('/dashboard/inventory');
 };
 
 const filteredProducts = computed(() => {
@@ -938,9 +1032,40 @@ const handleCheckout = () => {
   // Set default values before opening modal
   amountPaid.value = Number(total.value.toFixed(2));
   paymentMethod.value = 'completed';
-  customerName.value = '';
-  customerPhone.value = '';
   showPaymentModal.value = true;
+};
+
+const handleCheckoutClick = () => {
+  if (!shiftsStore.hasOpenShift) {
+    pendingCheckoutAfterShift.value = true;
+    showOpenShiftModal.value = true;
+    return;
+  }
+  handleCheckout();
+};
+
+const handleShiftOpened = async () => {
+  showOpenShiftModal.value = false;
+  await shiftsStore.fetchShifts();
+  if (pendingCheckoutAfterShift.value && cart.value.length > 0) {
+    pendingCheckoutAfterShift.value = false;
+    handleCheckout();
+  }
+};
+
+const setPaymentMethod = (method: 'completed' | 'layaway') => {
+  if (method === 'layaway' && !selectedClientId.value) {
+    enqueueSnackbar({
+      type: 'warning',
+      title: 'Cliente requerido',
+      message: 'Por favor, selecciona o registra un cliente para dar crédito.',
+      duration: 3500,
+    });
+    paymentMethod.value = 'completed';
+    return;
+  }
+
+  paymentMethod.value = method;
 };
 
 const confirmPayment = async () => {
@@ -951,8 +1076,8 @@ const confirmPayment = async () => {
       return;
   }
   
-  if (paymentMethod.value === 'layaway' && !customerName.value.trim()) {
-      enqueueSnackbar({ type: 'warning', title: 'Faltan Datos', message: 'Ingresa el nombre del cliente para el apartado.', duration: 3000 });
+    if (paymentMethod.value === 'layaway' && !selectedClientId.value) {
+      enqueueSnackbar({ type: 'warning', title: 'Cliente requerido', message: 'Por favor, selecciona o registra un cliente para dar crédito.', duration: 3000 });
       return;
   }
   
@@ -969,15 +1094,17 @@ const confirmPayment = async () => {
     // Capturar datos del pago para pasarlos a SaleSuccessModal o backend
     lastAmountPaid.value = Number(amountPaid.value.toFixed(2));
     lastChangeReturned.value = Number(calculateChange.value.toFixed(2));
+    const amountPaidForBackend = paymentMethod.value === 'completed'
+      ? Number(total.value.toFixed(2))
+      : Number(amountPaid.value.toFixed(2));
 
     const result = await salesStore.addSale({
       transaction_id: trxId,
-      user: currentUser.value?.id || 1,
-      status: paymentMethod.value,
-      amount_paid: amountPaid.value,
-      customer_name: customerName.value,
-      customer_phone: customerPhone.value,
-      total: lastTotal.value,
+      status: paymentMethod.value === 'layaway' ? 'partial' : 'paid',
+      amount_paid: amountPaidForBackend,
+      customer: selectedClientId.value || null,
+      total_amount: lastTotal.value,
+      cash_shift: shiftsStore.currentShift?.id || null,
       device_id: localDeviceId,
       items: cart.value.map(item => ({ 
           product: Number(item.id),
@@ -1039,6 +1166,12 @@ let channelName = '';
 const scanState = { isLocal: false };
 let lastScannedSku = ''; // Prevenir procesar el mismo SKU 2 veces
 
+const focusSearchInput = async () => {
+  await nextTick();
+  const input = isMobileOrTablet.value ? searchInputRefMobile.value : searchInputRef.value;
+  input?.focus();
+};
+
 onMounted(async () => {
   isInitializing.value = true;
   try {
@@ -1047,6 +1180,7 @@ onMounted(async () => {
 
     // 2. Cargar productos desde API sin paginación
     await fetchProducts();
+    await fetchClients();
 
     // 3. Cargar el carrito guardado en la Base de Datos (si existe)
     const res = await apiClient.get<any>('/v1/products/products/my-cart/');
@@ -1121,6 +1255,8 @@ onMounted(async () => {
       isRemoteUpdate = true;
       cart.value = nuevoCarrito;
       isRemoteUpdate = false; // Restablecer bandera tras actualización síncrona
+      isScannerPaired.value = true;
+      scannerPairingLabel.value = `📱 Emparejado con ${String(fromDeviceId).slice(0, 10)}`;
       console.log("Carrito sincronizado por actualización remota de otro dispositivo.");
     }
   });
@@ -1193,6 +1329,14 @@ onUnmounted(() => {
   }
   window.removeEventListener('resize', checkDeviceSize);
 });
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (!open) return;
+    focusSearchInput();
+  }
+);
 </script>
 
 <style scoped>
@@ -1312,6 +1456,42 @@ onUnmounted(() => {
   border-radius: 24px;
   flex-shrink: 0;
   padding: 1rem;
+}
+
+.shift-warning-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #facc15;
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pairing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pairing-indicator.paired {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.pairing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .search-input-wrapper {
@@ -1580,6 +1760,65 @@ onUnmounted(() => {
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   height: 100%;
+}
+
+.customer-select-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.customer-select-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.customer-search-input,
+.customer-select-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.52rem 0.65rem;
+  font-size: 0.85rem;
+  color: #1f2937;
+  background: #ffffff;
+}
+
+.customer-search-input:focus,
+.customer-select-input:focus {
+  outline: none;
+  border-color: #06402b;
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.1);
+}
+
+.pos-empty-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1.25rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-bottom: 0.8rem;
+}
+
+.pos-empty-cta h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.pos-empty-cta p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 .cart-header {

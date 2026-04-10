@@ -31,10 +31,11 @@ export interface Payment {
 
 export interface Sale {
   id: number;
-  transaction_id: string;
-  user: number;
+  transaction_id?: string;
+  user?: number;
   status: string; // 'completed', 'pending', 'cancelled', 'credit', 'layaway'
   total: string | number;
+  total_amount?: string | number;
   created_at: string;
   items: SaleItem[];
   payments?: Payment[];
@@ -169,11 +170,14 @@ class SalesService {
    * Backend devuelve el objeto Sale directamente en response.data
    */
   async createSale(saleData: {
-    transaction_id: string;
+    transaction_id?: string;
     items: any[];
-    total: number | string;
-    user: number;
+    total_amount: number | string;
     status: string;
+    customer?: string | number | null;
+    cash_shift?: string | number | null;
+    amount_paid?: number | string;
+    store?: string | number;
   }) {
     try {
       const response = await apiClient.post<Sale>('/v1/sales/sales/', saleData);

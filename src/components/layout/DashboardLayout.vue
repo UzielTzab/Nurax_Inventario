@@ -531,12 +531,6 @@
       </transition>
     </Teleport>
 
-    <!-- Open Shift Auto-Prompt -->
-    <OpenShiftModal 
-      :is-open="showOpenShiftModal"
-      @close="showOpenShiftModal = false"
-      @shift-opened="showOpenShiftModal = false"
-    />
   </div>
 </template>
 
@@ -544,7 +538,6 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import Sidebar from './Sidebar.vue';
 import SalesModal from '@/components/SalesModal.vue';
-import OpenShiftModal from '@/components/OpenShiftModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useProductStore } from '@/stores/product.store';
@@ -583,7 +576,6 @@ const shiftsStore = useShiftsStore();
 const isSidebarOpen = ref(false);
 const showProfileMenu = ref(false);
 const showProfileEdit = ref(false);
-const showOpenShiftModal = ref(false);
 const profileWrapperRef = ref<HTMLElement | null>(null);
 
 const showNotifications = ref(false);
@@ -1017,10 +1009,10 @@ const exportToExcel = () => {
   XLSX.writeFile(wb, `inventario_nurax_${date}.xlsx`);
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
   showProfileMenu.value = false;
-  logout();
-  router.push('/auth/login');
+  await logout();
+  await router.replace('/');
 };
 
 const buildScannerSessionId = () => {
@@ -1113,14 +1105,6 @@ const initPusher = () => {
 onMounted(async () => {
   document.addEventListener('mousedown', handleClickOutside);
   window.addEventListener('open-excel-import', handleOpenExcelImportEvent as EventListener);
-
-  // Auto-verificación de caja cerrada (solo para clientes, no para admins)
-  if (currentUser.value && currentUser.value.role !== 'admin') {
-    await shiftsStore.fetchShifts();
-    if (!shiftsStore.hasOpenShift) {
-      showOpenShiftModal.value = true;
-    }
-  }
 });
 
 // Vigilar al usuario por si la sesión tarda en cargar
