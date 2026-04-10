@@ -29,7 +29,7 @@
         <!-- Área derecha topbar -->
         <div class="topbar-right">
           <!-- Botón Vender (Acceso Global) -->
-          <AppButton v-if="currentUser" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
+          <AppButton v-if="showPosActions" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
             Vender
           </AppButton>
 
@@ -54,7 +54,7 @@
           </div>
 
           <!-- Vincular escaner movil -->
-          <button v-if="currentUser" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary);">
+          <button v-if="showPosActions" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary);">
             <QrCodeIcon class="w-5 h-5" />
           </button>
 
@@ -586,6 +586,11 @@ const scannerSessionId = ref('');
 const { currentUser, logout, updateAvatarUrl } = useAuth();
 const router = useRouter();
 
+const showPosActions = computed(() => {
+  const role = (currentUser.value?.role || '').toLowerCase();
+  return !!currentUser.value && role !== 'admin';
+});
+
 // Formulario de edición de perfil
 const profileForm = reactive({
   name: currentUser.value?.name ?? '',
@@ -1009,10 +1014,10 @@ const exportToExcel = () => {
   XLSX.writeFile(wb, `inventario_nurax_${date}.xlsx`);
 };
 
-const handleLogout = async () => {
+const handleLogout = () => {
   showProfileMenu.value = false;
-  await logout();
-  await router.replace('/');
+  logout();
+  router.push('/auth/login');
 };
 
 const buildScannerSessionId = () => {
