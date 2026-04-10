@@ -128,7 +128,7 @@ watch(() => route.path, (path) => {
 const allMenuSections: MenuSection[] = [
   {
     label: '',
-    roles: ['cliente', 'propietario', 'gerente', 'admin'],
+    roles: ['cliente', 'propietario', 'gerente', 'cajero'],
     items: [
       {
         id: 'inventory',

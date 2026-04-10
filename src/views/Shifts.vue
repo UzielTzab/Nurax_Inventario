@@ -44,53 +44,51 @@
         <span class="badge badge-success">Abierto</span>
       </div>
       <div class="card-body">
-        <div class="stats-grid">
+        <div class="stats-grid turn-kpi-grid">
           <div class="stat-box">
-            <span class="stat-label">Efectivo Inicial</span>
-            <span class="stat-value">${{ currentShift?.starting_cash }}</span>
+            <span class="stat-label">Fondo Inicial</span>
+            <span class="stat-value">${{ formatMoney(turnKpis.startingCash) }}</span>
           </div>
           <div class="stat-box">
-            <span class="stat-label">Apertura</span>
-            <span class="stat-value date-value">{{ formatDate(currentShift?.opened_at) }}</span>
+            <span class="stat-label">Entradas (+)</span>
+            <span class="stat-value text-success">${{ formatMoney(turnKpis.entries) }}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Salidas (-)</span>
+            <span class="stat-value text-warning">${{ formatMoney(turnKpis.exits) }}</span>
+          </div>
+          <div class="stat-box expected-box">
+            <div class="expected-label-row">
+              <span class="stat-label">Efectivo Esperado (=)</span>
+              <button
+                v-if="isBlindCutRole"
+                class="blind-toggle"
+                type="button"
+                @click="showExpectedForBlindCut = !showExpectedForBlindCut"
+                :title="showExpectedForBlindCut ? 'Ocultar esperado' : 'Revelar esperado'"
+              >
+                <EyeSlashIcon v-if="!showExpectedForBlindCut" class="w-4 h-4" />
+                <EyeIcon v-else class="w-4 h-4" />
+              </button>
+            </div>
+            <span v-if="!isBlindCutRole || showExpectedForBlindCut" class="stat-value stat-value-emphasis">
+              ${{ formatMoney(turnKpis.expectedCash) }}
+            </span>
+            <span v-else class="stat-value stat-value-hidden">••••••</span>
           </div>
         </div>
+        <p class="help-text open-time-text">Apertura: {{ formatDate(currentShift?.opened_at) }}</p>
         
         <div class="close-shift-action mt-6">
           <h3>Realizar Corte (Cerrar Caja)</h3>
           <p class="help-text text-sm">
             <strong>⚠️ Alerta:</strong> Sólo realiza esta acción al finalizar tu día de trabajo o terminar tu turno. Necesitarás contar el dinero de tu caja.
           </p>
-          <div v-if="!intendeClose" class="mt-4">
-             <AppButton @click="intendeClose = true" variant="fill">
+          <div class="mt-4">
+             <AppButton @click="showCloseShiftModal = true" variant="fill">
                Terminar turno y cerrar caja
              </AppButton>
           </div>
-          <form v-else @submit.prevent="handleCloseShift" class="form-grid border-t pt-4 mt-2">
-            <h4 class="font-bold text-gray-700">Por favor confirma tus saldos:</h4>
-            <div class="form-group">
-              <label>Cantidad Esperada (Cálculo del Sistema Automático):</label>
-              <input type="number" step="0.01" :value="computedExpectedCash" readonly class="input bg-gray-100 font-bold text-gray-700 cursor-not-allowed" />
-            </div>
-            <div class="form-group">
-              <label>Cantidad Realmente en Caja (Conteo Físico):</label>
-              <input type="number" step="0.01" v-model.number="closeForm.actual_cash" required class="input border-indigo-500 bg-indigo-50" placeholder="Cuenta tu cajón y escribe el monto" />
-            </div>
-            <div class="difference-alert" :class="differenceClass" v-if="calculatedDifference !== null">
-              Diferencia: <strong>${{ calculatedDifference.toFixed(2) }}</strong> 
-              <span v-if="calculatedDifference < 0">(Faltante)</span>
-              <span v-else-if="calculatedDifference > 0">(Sobrante)</span>
-              <span v-else>(Cuadre Exacto)</span>
-            </div>
-            <div class="flex gap-4 mt-6">
-               <AppButton variant="outline" class="flex-1" type="button" @click="intendeClose = false">
-                 Cancelar Transacción
-               </AppButton>
-               <AppButton variant="fill" style="background-color: #ef4444; border-color: #ef4444;" class="flex-1 flex justify-center w-full" type="submit" :loading="shiftsStore.isLoading">
-                 <span v-if="!shiftsStore.isLoading">Terminar Jornada y Cerrar Caja</span>
-                 <span v-else>Cerrando...</span>
-               </AppButton>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -162,7 +160,7 @@
               </tr>
             </template>
             <template v-else>
-              <tr v-for="shift in paginatedShifts" :key="shift.id">
+              <tr v-for="shift in paginatedShifts" :key="shift.id" class="clickable-row" @click="openShiftDetail(shift)">
                 <td>#{{ shift.id }}</td>
                 <td>{{ formatDate(shift.opened_at) }}</td>
                 <td>{{ shift.closed_at ? formatDate(shift.closed_at) : 'N/A' }}</td>
@@ -170,14 +168,16 @@
                 <td>{{ shift.expected_cash ? '$'+shift.expected_cash : '-' }}</td>
                 <td>{{ shift.actual_cash ? '$'+shift.actual_cash : '-' }}</td>
                 <td>
-                  <span v-if="shift.difference" :class="Number(shift.difference) < 0 ? 'text-danger' : (Number(shift.difference) > 0 ? 'text-success' : 'text-muted')">
+                  <span v-if="shift.difference !== null && shift.difference !== undefined" :class="differenceToneClass(shift)">
+                    <span v-if="Number(shift.difference) < 0">▼</span>
+                    <span v-else-if="Number(shift.difference) > 0">▲</span>
                     ${{ shift.difference }}
                   </span>
                   <span v-else>-</span>
                 </td>
                 <td>
-                  <span class="badge" :class="shift.closed_at === null ? 'badge-success' : 'badge-neutral'">
-                    {{ shift.closed_at === null ? 'Abierto' : 'Cerrado' }}
+                  <span class="badge" :class="statusBadgeClass(shift)">
+                    {{ statusBadgeText(shift) }}
                   </span>
                 </td>
               </tr>
@@ -198,27 +198,121 @@
     </div>
   </div>
   </div>
+
+  <!-- Modal Arqueo de Caja -->
+  <teleport to="body">
+    <transition name="modal-fade">
+      <div v-if="showCloseShiftModal" class="modal-overlay" @click.self="closeArqueoModal">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 class="modal-title">Arqueo de Caja</h3>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Dinero contado</label>
+              <input
+                type="number"
+                step="0.01"
+                v-model.number="closeForm.actual_cash"
+                class="input input-lg"
+                placeholder="$ 0.00"
+              />
+            </div>
+
+            <div v-if="closeForm.actual_cash !== null" class="difference-alert" :class="differenceClass">
+              <template v-if="(calculatedDifference ?? 0) > 0">
+                Tienes un sobrante de ${{ Math.abs(calculatedDifference || 0).toFixed(2) }}
+              </template>
+              <template v-else-if="(calculatedDifference ?? 0) < 0">
+                Tienes un faltante de -${{ Math.abs(calculatedDifference || 0).toFixed(2) }}. ¿Estás seguro de continuar?
+              </template>
+              <template v-else>
+                Caja cuadrada perfectamente
+              </template>
+            </div>
+
+            <div class="modal-actions">
+              <AppButton variant="outline" type="button" @click="closeArqueoModal">Cancelar</AppButton>
+              <AppButton
+                variant="fill"
+                type="button"
+                style="background-color: #991b1b; border-color: #991b1b;"
+                :loading="shiftsStore.isLoading"
+                @click="handleCloseShift"
+              >
+                Confirmar Cierre de Turno
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+
+  <!-- Drawer detalle de corte -->
+  <teleport to="body">
+    <transition name="drawer-slide">
+      <div v-if="showShiftDetailDrawer" class="drawer-backdrop" @click.self="showShiftDetailDrawer = false">
+        <aside class="drawer-panel">
+          <header class="drawer-header">
+            <h3>Detalle de Corte</h3>
+            <button class="drawer-close" @click="showShiftDetailDrawer = false">✕</button>
+          </header>
+
+          <div class="drawer-body" v-if="selectedShiftDetail">
+            <div class="drawer-kpis">
+              <div><strong>Ventas:</strong> {{ selectedShiftSales.length }}</div>
+              <div><strong>Gastos:</strong> {{ selectedShiftExpenses.length }}</div>
+              <div><strong>Entradas:</strong> ${{ formatMoney(selectedShiftEntries) }}</div>
+              <div><strong>Salidas:</strong> ${{ formatMoney(selectedShiftExits) }}</div>
+            </div>
+
+            <section class="drawer-section">
+              <h4>Gastos del turno</h4>
+              <ul v-if="selectedShiftExpenses.length > 0" class="drawer-list">
+                <li v-for="expense in selectedShiftExpenses" :key="expense.id">
+                  <span>{{ expense.description || 'Gasto operativo' }}</span>
+                  <strong>${{ formatMoney(Number(expense.amount || 0)) }}</strong>
+                </li>
+              </ul>
+              <p v-else class="text-muted">No hay gastos registrados para este turno.</p>
+            </section>
+
+            <section class="drawer-section">
+              <h4>Ventas del turno</h4>
+              <ul v-if="selectedShiftSales.length > 0" class="drawer-list">
+                <li v-for="sale in selectedShiftSales" :key="sale.id">
+                  <span>#{{ sale.id }} · {{ formatDate(sale.created_at) }}</span>
+                  <strong>${{ formatMoney(Number(sale.total_amount ?? sale.total ?? 0)) }}</strong>
+                </li>
+              </ul>
+              <p v-else class="text-muted">No hay ventas registradas para este turno.</p>
+            </section>
+          </div>
+        </aside>
+      </div>
+    </transition>
+  </teleport>
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import AppButton from '@/components/ui/AppButton.vue';
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline';
+import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import { useShiftsStore } from '@/stores/shifts.store';
-import { useSalesStore } from '@/stores/sales.store';
-import { useExpensesStore } from '@/stores/expenses.store';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useAuth } from '@/composables/useAuth';
+import apiClient from '@/services/api';
 import Pagination from '@/components/ui/Pagination.vue';
 
 const router = useRouter();
 
 const shiftsStore = useShiftsStore();
-const salesStore = useSalesStore();
-const expensesStore = useExpensesStore();
+const { currentUser, initSession } = useAuth();
 const { enqueueSnackbar } = useSnackbar();
 
 const currentShift = computed(() => shiftsStore.currentShift);
@@ -233,7 +327,26 @@ const paginatedShifts = computed(() => {
   return completedShifts.value.slice(start, end);
 });
 
-const intendeClose = ref(false);
+const showCloseShiftModal = ref(false);
+const showShiftDetailDrawer = ref(false);
+const selectedShiftDetail = ref<any | null>(null);
+const selectedShiftSales = ref<any[]>([]);
+const selectedShiftExpenses = ref<any[]>([]);
+const selectedShiftEntries = ref(0);
+const selectedShiftExits = ref(0);
+
+const turnKpis = ref({
+  startingCash: 0,
+  entries: 0,
+  exits: 0,
+  expectedCash: 0,
+});
+
+const showExpectedForBlindCut = ref(false);
+const isBlindCutRole = computed(() => {
+  const role = String(currentUser.value?.role || '').toLowerCase();
+  return role === 'cajero' || role === 'cashier';
+});
 
 const openForm = ref({
   starting_cash: null as number | null
@@ -244,38 +357,96 @@ const closeForm = ref({
   actual_cash: null as number | null
 });
 
-onMounted(() => {
-  shiftsStore.fetchShifts();
-  salesStore.fetchSales();
-  expensesStore.fetchExpenses();
+onMounted(async () => {
+  await initSession();
+  await shiftsStore.fetchShifts();
+  await loadCurrentShiftKpis();
 });
 
-const computedExpectedCash = computed(() => {
-  if (!shiftsStore.currentShift) return 0;
-  let total = Number(shiftsStore.currentShift.starting_cash);
-  
-  if (shiftsStore.currentShift.opened_at) {
-    const openedAt = new Date(shiftsStore.currentShift.opened_at).getTime();
-    
-    // Sumar ventas completadas desde que se abrió el turno
-    salesStore.sales.forEach(sale => {
-      const saleTime = new Date(sale.created_at).getTime();
-      if (sale.status === 'completed' && saleTime >= openedAt) {
-        total += Number(sale.total);
-      }
-    });
-    
-    // Restar gastos del turno
-    expensesStore.expenses.forEach(expense => {
-      const expenseTime = new Date(expense.created_at).getTime();
-      if (expenseTime >= openedAt) {
-        total -= Number(expense.amount);
-      }
-    });
+watch(
+  () => currentShift.value?.id,
+  async () => {
+    await loadCurrentShiftKpis();
   }
-  
-  return total;
-});
+);
+
+const normalizeList = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+};
+
+const toNumber = (value: unknown): number => {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const formatMoney = (value: unknown): string => toNumber(value).toFixed(2);
+
+const loadShiftFinancialData = async (shiftId: string | number) => {
+  const [movementsRes, salesRes, expensesRes] = await Promise.all([
+    apiClient.get<any>('/v1/expenses/cash-movements/', { params: { cash_shift: String(shiftId) } }),
+    apiClient.get<any>('/v1/sales/sales/', { params: { cash_shift: String(shiftId), page_size: 200 } }),
+    apiClient.get<any>('/v1/expenses/expenses/', { params: { cash_shift: String(shiftId), page_size: 200 } }),
+  ]);
+
+  const movements = normalizeList(movementsRes.data);
+  const sales = normalizeList(salesRes.data);
+  const expenses = normalizeList(expensesRes.data);
+
+  const movementIn = movements
+    .filter((m) => m.movement_type === 'in')
+    .reduce((acc, m) => acc + toNumber(m.amount), 0);
+
+  const movementOut = movements
+    .filter((m) => m.movement_type === 'out')
+    .reduce((acc, m) => acc + toNumber(m.amount), 0);
+
+  const salesCashIn = sales
+    .filter((sale) => ['paid', 'partial', 'completed'].includes(String(sale.status || '').toLowerCase()))
+    .reduce((acc, sale) => {
+      const paid = sale.amount_paid ?? sale.total_amount ?? sale.total ?? 0;
+      return acc + toNumber(paid);
+    }, 0);
+
+  const expensesCashOut = expenses
+    .filter((expense) => !expense.payment_method || String(expense.payment_method).toLowerCase() === 'cash')
+    .reduce((acc, expense) => acc + toNumber(expense.amount), 0);
+
+  return {
+    sales,
+    expenses,
+    entries: movementIn + salesCashIn,
+    exits: movementOut + expensesCashOut,
+  };
+};
+
+const loadCurrentShiftKpis = async () => {
+  if (!currentShift.value) {
+    turnKpis.value = {
+      startingCash: 0,
+      entries: 0,
+      exits: 0,
+      expectedCash: 0,
+    };
+    return;
+  }
+
+  try {
+    const financialData = await loadShiftFinancialData(currentShift.value.id);
+    const startingCash = toNumber(currentShift.value.starting_cash);
+    const expectedCash = startingCash + financialData.entries - financialData.exits;
+
+    turnKpis.value = {
+      startingCash,
+      entries: financialData.entries,
+      exits: financialData.exits,
+      expectedCash,
+    };
+  } catch (error) {
+    console.error('Error loading shift KPI data:', error);
+  }
+};
 
 const handleOpenShift = async () => {
   if (openForm.value.starting_cash === null || openForm.value.starting_cash < 0) {
@@ -288,6 +459,7 @@ const handleOpenShift = async () => {
   if (result.success) {
     enqueueSnackbar({ type: 'success', title: 'Turno Abierto', message: '¡Que tengas una excelente jornada!' });
     openForm.value.starting_cash = null;
+    await loadCurrentShiftKpis();
   } else {
     enqueueSnackbar({ type: 'error', title: 'Error al abrir turno', message: result.error });
   }
@@ -302,7 +474,7 @@ const handleCloseShift = async () => {
 
   const result = await shiftsStore.closeShift(
     shiftsStore.currentShift.id, 
-    computedExpectedCash.value, 
+    turnKpis.value.expectedCash,
     closeForm.value.actual_cash
   );
 
@@ -310,14 +482,21 @@ const handleCloseShift = async () => {
     enqueueSnackbar({ type: 'success', title: 'Turno Cerrado', message: 'El corte de caja finalizó exitosamente.' });
     closeForm.value.expected_cash = null;
     closeForm.value.actual_cash = null;
+    showCloseShiftModal.value = false;
+    await shiftsStore.fetchShifts();
   } else {
     enqueueSnackbar({ type: 'error', title: 'Error', message: result.error });
   }
 };
 
+const closeArqueoModal = () => {
+  showCloseShiftModal.value = false;
+  closeForm.value.actual_cash = null;
+};
+
 const calculatedDifference = computed(() => {
   if (closeForm.value.actual_cash !== null) {
-    return closeForm.value.actual_cash - computedExpectedCash.value;
+    return closeForm.value.actual_cash - turnKpis.value.expectedCash;
   }
   return null;
 });
@@ -328,6 +507,49 @@ const differenceClass = computed(() => {
   if (calculatedDifference.value > 0) return 'text-success font-bold';
   return 'text-muted';
 });
+
+const differenceToneClass = (shift: any) => {
+  const diff = toNumber(shift.difference);
+  if (diff < 0) return 'text-danger font-bold';
+  if (diff > 0) return 'text-success font-bold';
+  return 'text-muted';
+};
+
+const statusBadgeText = (shift: any) => {
+  if (!shift.closed_at) return 'Abierto';
+  const diff = Math.abs(toNumber(shift.difference));
+  return diff < 0.01 ? 'Cuadrada' : 'Con Diferencia';
+};
+
+const statusBadgeClass = (shift: any) => {
+  if (!shift.closed_at) return 'badge-success';
+  const diff = Math.abs(toNumber(shift.difference));
+  return diff < 0.01 ? 'badge-success' : 'badge-warning';
+};
+
+const openShiftDetail = async (shift: any) => {
+  selectedShiftDetail.value = shift;
+  showShiftDetailDrawer.value = true;
+  selectedShiftSales.value = [];
+  selectedShiftExpenses.value = [];
+  selectedShiftEntries.value = 0;
+  selectedShiftExits.value = 0;
+
+  try {
+    const financialData = await loadShiftFinancialData(shift.id);
+    selectedShiftSales.value = financialData.sales;
+    selectedShiftExpenses.value = financialData.expenses;
+    selectedShiftEntries.value = financialData.entries;
+    selectedShiftExits.value = financialData.exits;
+  } catch (error) {
+    console.error('Error loading shift detail:', error);
+    enqueueSnackbar({
+      type: 'warning',
+      title: 'Detalle incompleto',
+      message: 'No se pudieron cargar todos los datos del turno seleccionado.',
+    });
+  }
+};
 
 const formatDate = (dateStr: string | undefined | null) => {
   if(!dateStr) return '';
@@ -396,9 +618,34 @@ const formatDate = (dateStr: string | undefined | null) => {
   border-radius: 8px;
   border: 1px solid #e2e8f0;
 }
+.turn-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .stat-box {
   display: flex;
   flex-direction: column;
+}
+.expected-box {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+.expected-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.blind-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.2rem;
+  color: #334155;
 }
 .stat-label {
   font-size: 0.875rem;
@@ -411,6 +658,16 @@ const formatDate = (dateStr: string | undefined | null) => {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0f172a;
+}
+.stat-value-emphasis {
+  color: #166534;
+}
+.stat-value-hidden {
+  letter-spacing: 0.2rem;
+  color: #64748b;
+}
+.open-time-text {
+  margin-top: -0.75rem;
 }
 .date-value {
   font-size: 1rem;
@@ -496,8 +753,10 @@ const formatDate = (dateStr: string | undefined | null) => {
 }
 .badge-success { background: #d1fae5; color: #065f46; }
 .badge-neutral { background: #e5e7eb; color: #374151; }
+.badge-warning { background: #fef3c7; color: #92400e; }
 .text-danger { color: #dc2626; }
 .text-success { color: #059669; }
+.text-warning { color: #d97706; }
 .text-muted { color: #9ca3af; }
 .text-center { text-align: center; }
 
@@ -518,5 +777,155 @@ const formatDate = (dateStr: string | undefined | null) => {
 .data-table td {
   color: #111827;
   font-size: 0.875rem;
+}
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover {
+  background: #f8fafc;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+.modal-card {
+  width: min(560px, 95vw);
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.28);
+}
+.modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.modal-body {
+  padding: 1.25rem;
+}
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.2);
+  z-index: 990;
+}
+.drawer-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: min(460px, 96vw);
+  background: #ffffff;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -8px 0 25px -14px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.drawer-close {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  color: #475569;
+}
+.drawer-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.drawer-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+.drawer-section h4 {
+  margin: 0 0 0.5rem;
+}
+.drawer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.drawer-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+  transition: all 0.22s ease;
+}
+.drawer-slide-enter-from .drawer-panel,
+.drawer-slide-leave-to .drawer-panel {
+  transform: translateX(100%);
+}
+
+@media (max-width: 1024px) {
+  .turn-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .shifts-container {
+    padding: 1rem;
+  }
+  .stats-grid {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .turn-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem;
+  }
 }
 </style>
