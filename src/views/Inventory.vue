@@ -57,7 +57,7 @@
         </div> -->
 
         <!-- Stats Cards -->
-        <div class="stats-grid">
+        <!-- <div class="stats-grid">
           <template v-if="isLoading">
             <div v-for="i in 3" :key="'sk-stat-'+i" class="skeleton-stat-card">
               <AppSkeleton width="44px" height="44px" radius="10px" />
@@ -99,7 +99,7 @@
           />
 
           </template>
-        </div>
+        </div> -->
 
         <!-- Skeleton: Product Table -->
         <template v-if="isLoading">
@@ -613,6 +613,8 @@ function onFiltersUpdate(newFilters: any) {
   min-height: 100vh;
   margin: 0 auto;
   padding: 1.75rem 2rem;
+  border: none;
+  box-shadow: none;
 }
 
 .stats-grid {
