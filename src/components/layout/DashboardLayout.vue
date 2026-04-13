@@ -118,33 +118,13 @@
                 <div class="dropdown-divider"></div>
 
                 <!-- Opciones -->
-                <div class="dropdown-menu">
-                  <button class="dropdown-item" @click="openProfileEdit">
-                    <UserCircleIcon class="w-5 h-5" />
-                    <span>Editar perfil</span>
-                  </button>                  
-                </div>
-
-                <!-- Excel Import/Export -->
-                <!-- <div class="dropdown-menu"> -->
-                  <!-- usar el botón appButton que es un componente, usar el varian fill -->
-                  <!-- <AppButton
-                    variant="outline"
-                    color="primary"
-                    size="sm"
-                    @click="openExcelModal"
-                  >
-                    <TableCellsIcon class="w-5 h-5" />
-                    <span>Importar / Exportar Excel</span>
-                  </AppButton> -->
-                <!-- </div> -->
-
-                <!-- Cerrar sesión -->
-                <div class="dropdown-menu">
-                  <button class="dropdown-item dropdown-item-danger" @click="handleLogout">
-                    <ArrowRightOnRectangleIcon class="w-5 h-5" />
-                    <span>Cerrar sesión</span>
-                  </button>
+                <div class="dropdown-buttons-container">
+                  <AppButton variant="outline" :icon="UserCircleIcon" @click="openProfileEdit" size="sm">
+                    Editar perfil
+                  </AppButton>
+                  <AppButton variant="danger" :icon="ArrowRightOnRectangleIcon" @click="handleLogout" size="sm" full-width>
+                    Cerrar sesión
+                  </AppButton>
                 </div>
               </div>
             </transition>
@@ -1498,6 +1478,17 @@ defineEmits(['quickSell']);
 .dropdown-item-danger svg { color: #fef2f2; }
 .dropdown-item-danger:hover { background: #be2020; }
 .dropdown-item-danger:hover svg { color: #fef2f2; }
+
+.dropdown-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.dropdown-buttons-container .app-button {
+  width: 100%;
+}
 
 /* Dropdown animation */
 .dropdown-enter-active {

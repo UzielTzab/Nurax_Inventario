@@ -68,7 +68,7 @@ import type { Component } from 'vue';
 
 interface Props {
   type?:          'button' | 'submit' | 'reset';
-  variant?:       'fill' | 'outline' | 'pill' | 'ghost';
+  variant?:       'fill' | 'outline' | 'pill' | 'ghost' | 'danger';
   size?:          'sm' | 'md' | 'lg';
   disabled?:      boolean;
   fullWidth?:     boolean;
@@ -353,8 +353,34 @@ const handleClick = (event: MouseEvent) => {
   color: rgba(0, 0, 0, 0.26);
 }
 
+/* Variante: Danger (Botones destructivos - Rojo) */
+.app-button--danger {
+  color: #fff;
+  background: #dc2626;
+  border-radius: 6px;
+  box-shadow: none;
+}
 
-/* ── Ondas (Ripple Effect) Animaciones ── */
+.app-button--danger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.app-button--danger:hover::before {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.app-button--danger:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
 .app-btn-ripple-container {
   position: absolute;
   inset: 0;

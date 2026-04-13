@@ -186,7 +186,7 @@
             <div class="modal-header">
               <div class="modal-title-row">
                 <!-- Ícono contextual -->
-                <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-success'">
+                <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-warn'">
                   <svg v-if="toggleTarget.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                   </svg>
@@ -217,7 +217,7 @@
               <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
                 Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
               </p>
-              <p v-else class="toggle-msg toggle-msg-success">
+              <p v-else class="toggle-msg toggle-msg-warn">
                 Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
               </p>
               <div class="modal-footer">
