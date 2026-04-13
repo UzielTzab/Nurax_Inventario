@@ -19,42 +19,6 @@
           </div>
         </div>
 
-        <!-- Stats -->
-        <div class="stats-grid">
-          <template v-if="isLoading">
-            <div v-for="i in 3" :key="i" class="skeleton-stat-card">
-              <AppSkeleton width="44px" height="44px" radius="10px" />
-              <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-                <AppSkeleton width="90px" height="0.75rem" />
-                <AppSkeleton width="50px" height="1.75rem" />
-              </div>
-            </div>
-          </template>
-          <template v-else>
-          <StatsCard
-            label="Total Clientes"
-            :value="clients.length"
-            :icon="UsersIcon"
-            icon-type="brand"
-            variant="brand"
-          />
-          <StatsCard
-            label="Activos"
-            :value="activeClients"
-            :icon="CheckCircleIcon"
-            icon-type="success"
-            :variant="activeClients > 0 ? 'success' : 'default'"
-          />
-          <StatsCard
-            label="Inactivos"
-            :value="clients.length - activeClients"
-            :icon="ExclamationTriangleIcon"
-            :icon-type="(clients.length - activeClients) > 0 ? 'danger' : 'success'"
-            :variant="(clients.length - activeClients) > 0 ? 'danger' : 'default'"
-          />
-          </template>
-        </div>
-
         <!-- Search + Filter -->
         <div class="toolbar">
           <div class="search-wrapper">
@@ -298,9 +262,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import StatsCard from '@/components/dashboard/StatsCard.vue';
-import AppSkeleton from '@/components/ui/AppSkeleton.vue';
-import { UsersIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
 
@@ -348,8 +309,6 @@ const newClient = ref({
   company: '',
   plan: 'basico',
 });
-
-const activeClients = computed(() => clients.value.filter(c => c.is_active).length);
 
 const filteredClients = computed(() => {
   let list = [...clients.value];
@@ -576,13 +535,6 @@ const addClient = async () => {
   box-shadow: 0 4px 12px rgba(6, 64, 43, 0.25);
 }
 
-/* Stats */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
 /* Toolbar */
 .toolbar {
   display: flex;
@@ -711,8 +663,8 @@ const addClient = async () => {
 }
 
 .client-name {
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #0284c7;
   margin: 0;
   font-size: 0.9375rem;
 }
@@ -738,7 +690,7 @@ const addClient = async () => {
 }
 
 .plan-básico   { background: #eff6ff; color: #1d4ed8; }
-.plan-pro      { background: #f0fdf4; color: #15803d; }
+.plan-pro      { background: #fef08a; color: #ca8a04; }
 .plan-enterprise { background: #faf5ff; color: #7c3aed; }
 
 /* Status badge */
