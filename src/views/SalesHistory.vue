@@ -10,7 +10,7 @@
 
 
       <!-- Stats Cards -->
-      <div class="stats-grid">
+      <!-- <div class="stats-grid">
         <template v-if="salesStore.isLoading">
           <div v-for="i in 2" :key="'sk-s-'+i" class="skeleton-stat-card">
             <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
@@ -32,7 +32,7 @@
           subtitle=""
         />
         </template>
-      </div>
+      </div> -->
 
       <!-- Charts Grid -->
       <div class="charts-grid-section" v-if="!salesStore.isLoading">

@@ -1199,7 +1199,7 @@ defineEmits(['quickSell']);
 .app-shell {
   display: flex;
   min-height: 100vh;
-  background: rgb(215, 215, 215);
+  background: var(--color-card-stats-fill);
   padding: 0 12px 0 0;
   gap: 16px;
   box-sizing: border-box;
@@ -1516,9 +1516,9 @@ defineEmits(['quickSell']);
 .content-card {
   flex: 1;
   background: var(--color-card-stats-fill);
-  border-radius: 20px;
+  border-radius: 0;
   overflow-y: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
   min-height: 0;
   margin-top: 12px;
 }
