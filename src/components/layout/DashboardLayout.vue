@@ -1229,8 +1229,8 @@ defineEmits(['quickSell']);
 
 /* === TOPBAR CARD === */
 .topbar-card {
-  background: var(--color-card-stats-fill);
-  border-radius: 16px;
+  background: var(--color-card-fill);
+  border-radius: 0;
   padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
@@ -1238,8 +1238,11 @@ defineEmits(['quickSell']);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
   position: sticky;
-  top: 12px;
+  top: 0;
   z-index: 100;
+  width: calc(100% + 1.25rem);
+  margin: 0 -1.25rem 0 -1rem;
+  box-sizing: border-box;
 }
 
 .mobile-menu-btn {
@@ -1898,6 +1901,8 @@ defineEmits(['quickSell']);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     padding: 0.75rem 1rem;
     z-index: 100;
+    width: calc(100% + 1rem);
+    margin: 0 -1rem 0 0;
   }
 
   .content-card { border-radius: 0; box-shadow: none; overflow-x: hidden; margin-top: 0; }

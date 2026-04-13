@@ -14,16 +14,14 @@
 
         <form class="panel-form" @submit.prevent="handleSubmit">
           <div class="panel-body">
-            <section class="form-section">
-              <h3 class="section-title">Lo Esencial</h3>
-
+            <AppFormSection title="Lo Esencial">
               <div class="image-upload-section">
                 <label class="image-dropzone" :class="{ 'has-image': imagePreview }" for="image-main">
                   <div v-if="!imagePreview" class="dropzone-content">
                     <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    <span class="dropzone-text">Arrastra imagen o toca para seleccionar</span>
+                    <span class="dropzone-text">Añadir imagen</span>
                   </div>
                   <img v-else :src="imagePreview" alt="Preview" class="preview-img" />
                   <input
@@ -48,18 +46,13 @@
               />
 
               <div class="field-block">
-                <label class="field-label">Categoria</label>
-                <input
-                  v-model="categorySearch"
-                  type="text"
-                  class="form-input"
-                  placeholder="Buscar categoria..."
+                <AppSelect
+                  v-model="formData.category"
+                  label="Categoría"
+                  :options="filteredCategories"
+                  placeholder="Selecciona categoría"
                 />
-                <div class="category-select-row">
-                  <select v-model="formData.category" class="form-input">
-                    <option value="">Selecciona categoria</option>
-                    <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                  </select>
+                <div class="category-select-row" style="margin-top: 0.5rem;">
                   <AppButton
                     type="button"
                     variant="outline"
@@ -67,15 +60,14 @@
                     :icon="PlusIcon"
                     iconOnly
                     class="square-icon-button"
-                    title="Agregar categoria"
+                    title="Agregar categoría"
                     @click="showCategoryModal = true"
                   />
                 </div>
               </div>
-            </section>
+            </AppFormSection>
 
-            <section class="form-section">
-              <h3 class="section-title">Finanzas</h3>
+            <AppFormSection title="Finanzas">
 
               <div class="grid-two">
                 <AppInput
@@ -85,6 +77,7 @@
                   label="Costo base ($)"
                   min="0"
                   placeholder="0.00"
+                  required
                   @input="onBaseCostInput"
                 />
                 <AppInput
@@ -94,6 +87,7 @@
                   label="Precio de venta ($)"
                   min="0"
                   placeholder="0.00"
+                  required
                   @input="onSalePriceInput"
                 />
               </div>
@@ -108,10 +102,9 @@
                 hint="Campo bidireccional: costo + margen recalcula precio"
                 @input="onMarginInput"
               />
-            </section>
+            </AppFormSection>
 
-            <section class="form-section">
-              <h3 class="section-title">Codigos y Escaner</h3>
+            <AppFormSection title="Códigos y Escaneo">
 
               <div class="field-block">
                 <label class="field-label">Codigo principal</label>
@@ -145,43 +138,39 @@
                   Agregar otro codigo
                 </AppButton>
               </div>
-            </section>
+            </AppFormSection>
 
-            <section class="form-section">
-              <h3 class="section-title">Inventario y Proveedor</h3>
+            <AppFormSection title="Inventario y Proveedor">
 
               <div class="field-block">
-                <label class="field-label">Stock fisico actual</label>
+                <label class="field-label">
+                  Stock físico actual
+                  <span class="field-required">*</span>
+                </label>
                 <div class="stock-input-wrapper">
                   <button type="button" class="btn-adjust" @click="adjustStock(-1)" :disabled="formData.stock <= 0">-</button>
-                  <input v-model.number="formData.stock" class="form-input stock-input" type="number" min="0" />
+                  <input v-model.number="formData.stock" class="form-input stock-input" type="number" min="0" required />
                   <button type="button" class="btn-adjust" @click="adjustStock(1)">+</button>
                 </div>
               </div>
 
               <div class="field-block">
                 <label class="field-label">Proveedor</label>
-                <input
-                  v-model="supplierSearch"
-                  type="text"
-                  class="form-input"
-                  placeholder="Buscar proveedor..."
-                />
                 <div class="supplier-row">
-                  <select v-model="formData.supplierId" class="form-input supplier-select">
-                    <option value="">Ninguno</option>
-                    <option v-for="s in filteredSuppliers" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                  </select>
+                  <AppSelect
+                    v-model="formData.supplierId"
+                    :options="filteredSuppliers"
+                    placeholder="Ninguno"
+                  />
                   <button type="button" class="btn-new-supplier" @click="showAddSupplierModal = true" title="Crear proveedor">
                     <PlusIcon style="width: 14px; height: 14px" />
                     <span>Nuevo</span>
                   </button>
                 </div>
               </div>
-            </section>
+            </AppFormSection>
 
-            <section class="form-section">
-              <h3 class="section-title">Como se vende</h3>
+            <AppFormSection title="Cómo se vende">
 
               <AppInput
                 id="baseUnit"
@@ -205,7 +194,7 @@
                   Agregar empaque mayorista
                 </AppButton>
               </div>
-            </section>
+            </AppFormSection>
           </div>
 
           <footer class="panel-footer">
@@ -289,6 +278,8 @@ import {
 import { QrcodeStream } from 'vue-qrcode-reader';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import AppSelect from '@/components/ui/AppSelect.vue';
+import AppFormSection from '@/components/ui/AppFormSection.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
 import { useAuth } from '@/composables/useAuth';
@@ -330,21 +321,11 @@ const categoryError = ref('');
 const activeStoreId = ref<string | null>(null);
 
 const categoriesList = ref<Array<{ id: number | string; name: string }>>([]);
-const categorySearch = ref('');
-const supplierSearch = ref('');
 const saveAndCreateAnother = ref(false);
 
-const filteredCategories = computed(() => {
-  const q = categorySearch.value.trim().toLowerCase();
-  if (!q) return categoriesList.value;
-  return categoriesList.value.filter((cat) => cat.name.toLowerCase().includes(q));
-});
+const filteredCategories = computed(() => categoriesList.value);
 
-const filteredSuppliers = computed(() => {
-  const q = supplierSearch.value.trim().toLowerCase();
-  if (!q) return suppliers.value;
-  return suppliers.value.filter((supplier) => supplier.name.toLowerCase().includes(q));
-});
+const filteredSuppliers = computed(() => suppliers.value);
 
 const isScanning = ref(false);
 const scanTarget = ref<{ type: 'principal' | 'alt'; index?: number }>({ type: 'principal' });
@@ -798,9 +779,9 @@ watch(showCategoryModal, (open) => {
 }
 
 .close-btn {
-  border: 1px solid #e5e7eb;
+  border: 1.5px solid #d1d5db;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   width: 34px;
   height: 34px;
   display: inline-flex;
@@ -821,30 +802,12 @@ watch(showCategoryModal, (open) => {
 }
 
 .panel-body {
+  background: var(--color-card-stats-fill);
   padding: 1rem 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   overflow-y: auto;
-}
-
-.form-section {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 0.9rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 0.86rem;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: #6b7280;
-  font-weight: 700;
 }
 
 .field-block {
@@ -868,8 +831,8 @@ watch(showCategoryModal, (open) => {
 .form-input {
   width: 100%;
   padding: 0.62rem 0.72rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
   background: #fff;
   font-size: 0.9rem;
   box-sizing: border-box;
@@ -890,7 +853,7 @@ watch(showCategoryModal, (open) => {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 2px dashed #d1d5db;
   background-color: #f9fafb;
   display: flex;
@@ -910,17 +873,19 @@ watch(showCategoryModal, (open) => {
   align-items: center;
   text-align: center;
   gap: 0.5rem;
-  color: #6b7280;
+  color: var(--color-brand-main);
   padding: 0.8rem;
 }
 
 .upload-icon {
   width: 28px;
   height: 28px;
+  color: var(--color-brand-main);
 }
 
 .dropzone-text {
   font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .preview-img {
@@ -960,7 +925,7 @@ watch(showCategoryModal, (open) => {
 }
 
 :deep(.square-icon-button) {
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   width: 40px;
   height: 40px;
   min-width: 40px !important;
@@ -976,7 +941,7 @@ watch(showCategoryModal, (open) => {
 .btn-scan {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1.5px solid #22c55e;
   background: #f0fdf4;
   color: #16a34a;
@@ -989,7 +954,7 @@ watch(showCategoryModal, (open) => {
 .btn-scan.small {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .list-block {
@@ -1015,8 +980,8 @@ watch(showCategoryModal, (open) => {
 .btn-remove {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
-  border: 1px solid #fecaca;
+  border-radius: 6px;
+  border: 1.5px solid #fca5a5;
   background: #fef2f2;
   color: #dc2626;
   display: inline-flex;
@@ -1040,8 +1005,8 @@ watch(showCategoryModal, (open) => {
 .btn-adjust {
   width: 36px;
   height: 36px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
   background: #fff;
   color: #374151;
   font-size: 1rem;
@@ -1061,10 +1026,10 @@ watch(showCategoryModal, (open) => {
 }
 
 .btn-new-supplier {
-  border: 1px solid rgba(6, 64, 43, 0.25);
+  border: 1.5px solid rgba(6, 64, 43, 0.35);
   background: rgba(6, 64, 43, 0.08);
   color: #06402b;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.6rem 0.72rem;
@@ -1103,7 +1068,7 @@ watch(showCategoryModal, (open) => {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.56);
-  z-index: 1050;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1111,7 +1076,7 @@ watch(showCategoryModal, (open) => {
 
 .scan-modal {
   background: white;
-  border-radius: 14px;
+  border-radius: 6px;
   width: 92%;
   max-width: 420px;
   padding: 1rem;
@@ -1130,7 +1095,7 @@ watch(showCategoryModal, (open) => {
 .scan-frame {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
   background: #000;
   position: relative;
@@ -1160,7 +1125,7 @@ watch(showCategoryModal, (open) => {
   width: 92%;
   max-width: 420px;
   background: white;
-  border-radius: 12px;
+  border-radius: 6px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
@@ -1204,6 +1169,11 @@ watch(showCategoryModal, (open) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.field-required {
+  color: #ef4444;
+  margin-left: 0.125rem;
 }
 
 @media (max-width: 1024px) {

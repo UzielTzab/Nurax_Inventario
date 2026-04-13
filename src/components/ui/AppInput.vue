@@ -145,8 +145,8 @@ const containerClass = computed(() => ({
   position: relative;
   display: flex;
   align-items: center;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
   background: #ffffff;
   transition: border-color 0.2s, box-shadow 0.2s;
 }

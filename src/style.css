@@ -10,7 +10,7 @@
   --color-brand-main-gradient:#eddf64;      */
 
   /* Marca - Nueva Paleta */
-  --color-brand-main: #00ad8b;       
+  --color-brand-main: #e6ab17;       
   --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     
   --color-brand-secondary: #06402B;  
   --color-brand-contrast: #06402B;   
@@ -43,6 +43,7 @@
   --color-pill-inactive-text: #6b7280;
   --color-pill-inactive-bg: #f3f4f6;
   --color-pill-inactive-border: #d1d5db;
+  
   --color-pill-active-text: #ffffff;
   --color-pill-active-bg: #227d52;
   --color-pill-active-border: #227d52;
