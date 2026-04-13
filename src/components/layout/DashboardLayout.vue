@@ -1014,10 +1014,10 @@ const exportToExcel = () => {
   XLSX.writeFile(wb, `inventario_nurax_${date}.xlsx`);
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
   showProfileMenu.value = false;
-  logout();
-  router.push('/auth/login');
+  await logout();
+  await router.push('/auth/login');
 };
 
 const buildScannerSessionId = () => {
