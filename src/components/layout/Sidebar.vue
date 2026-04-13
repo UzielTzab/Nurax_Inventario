@@ -242,6 +242,10 @@ defineProps<{
 
 <style scoped>
 .sidebar {
+  --nav-item-hover-bg: #4c5663;
+  --nav-item-focus-bg: rgba(0, 0, 0, 0.35);
+  --nav-item-default-bg: rgba(100, 100, 100, 0.08);
+  --nav-item-text-color: rgba(255, 255, 255, 0.5);
   width: 100%;
   background: var(--color-text-main);
   color: var(--color-background);
@@ -400,20 +404,25 @@ defineProps<{
   color: var(--color-background);
   text-decoration: none;
   font-size: 1rem;
-  font-weight: 300;
+  font-weight: 600;
   position: relative;
   transition: color 0.35s ease, background 0.35s ease;
+  background: var(--nav-item-default-bg);
 }
 
-.nav-item:hover {
-  background: rgba(58, 66, 63, 0.05);
+.nav-item:hover:not(.nav-item-active) {
+  background: var(--nav-item-hover-bg);
   color: var(--color-brand-main);
   cursor: pointer;
 }
 
+.nav-item:hover:not(.nav-item-active) .nav-text {
+  color: #ffffff;
+}
+
 /* ═══════ Active state with animated pill ═══════ */
 .nav-item-active {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--nav-item-focus-bg);
 }
 
 /* Pill indicator — slides in from left */
@@ -442,17 +451,16 @@ defineProps<{
   }
 }
 
-.nav-item-active:hover {
-  background: rgba(6, 64, 43, 0.06);
-}
+/* No hay efecto hover cuando está en foco */
 
 /* Text transitions */
 .nav-text {
   transition: color 0.35s ease;
+  color: var(--nav-item-text-color);
 }
 
 .nav-item-active .nav-text {
-  color: #ffffff;
+  color: var(--color-status-success);
   font-weight: 700;
 }
 
@@ -470,7 +478,7 @@ defineProps<{
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  color: var(--color-status-success);
+  color: var(--nav-item-text-color);
   transition: color 0.35s ease;
 }
 
