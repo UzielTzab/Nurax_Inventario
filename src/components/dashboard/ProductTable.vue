@@ -63,77 +63,78 @@
       </div>
     </Transition>
 
+    <!-- Barra de Acciones para Seleccionados -->
+    <Transition name="slide-down">
+      <div v-if="selectedProducts.size > 0" class="selection-actions-bar">
+        <div class="selection-info">
+          <span class="selection-count">{{ selectedProducts.size }} producto(s) seleccionado(s)</span>
+        </div>
+        <div class="selection-buttons">
+          <button class="btn-action btn-delete-selected" @click="deleteSelectedProducts">
+            <TrashIcon class="action-icon" />
+            Eliminar seleccionados
+          </button>
+          <button class="btn-action btn-clear-selection" @click="clearSelection">
+            Limpiar selección
+          </button>
+        </div>
+      </div>
+    </Transition>
+
     <div class="product-table-container">
       <table class="product-table">
         <thead>
           <tr>
+            <th class="th-checkbox">
+              <input 
+                type="checkbox" 
+                class="checkbox-select-all"
+                :checked="allProductsSelected"
+                :indeterminate="someProductsSelected && !allProductsSelected"
+                @change="toggleSelectAll"
+              />
+            </th>
             <th class="th-product">PRODUCTO</th>
-            <th class="th-code">CODIGO</th>
-            <th class="th-price">PRECIO</th>
+            <th class="th-category">CATEGORÍA</th>
             <th class="th-stock">STOCK</th>
-            <th class="th-packaging">EMPAQUE</th>
-            <th class="th-actions">ACCIONES</th>
+            <th class="th-price">PRECIO</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in products" :key="product.id" class="product-row">
+          <tr v-for="product in products" :key="product.id" class="product-row" :class="{ 'row-selected': selectedProducts.has(String(product.id)) }">
+            <td class="td-checkbox">
+              <input 
+                type="checkbox" 
+                class="checkbox-product"
+                :checked="selectedProducts.has(String(product.id))"
+                @change="toggleProductSelection(product.id)"
+              />
+            </td>
             <td class="td-product">
-              <div class="product-main-line">{{ product.name }}</div>
-              <div class="product-tags-line">
-                <span class="mini-badge mini-badge-category">{{ getCategoryName(product) }}</span>
-                <span class="mini-badge mini-badge-supplier">{{ getSupplierName(product) }}</span>
+              <div class="product-with-image">
+                <img v-if="product.image" :src="product.image" :alt="product.name" class="product-image-small" />
+                <div v-else class="product-image-placeholder">
+                  <PhotoIcon class="placeholder-icon" />
+                </div>
+                <div class="product-info">
+                  <div class="product-name">{{ product.name }}</div>
+                </div>
               </div>
             </td>
 
-            <td class="td-code">
-              <span class="code-pill">
-                <QrCodeIcon class="code-icon" />
-                {{ getPrimaryCode(product) }}
+            <td class="td-category">
+              <span class="category-badge">{{ getCategoryName(product) }}</span>
+            </td>
+
+            <td class="td-stock">
+              <span class="stock-badge">
+                {{ getProductStock(product) }} {{ getProductStock(product) === 1 ? 'unidad' : 'unidades' }}
               </span>
             </td>
 
             <td class="td-price">
               <div class="sale-price">${{ formatPrice(getSalePrice(product)) }}</div>
               <div v-if="canViewCost" class="cost-price">Costo: ${{ formatPrice(getBaseCost(product)) }}</div>
-            </td>
-
-            <td class="td-stock">
-              <div class="stock-control-inline">
-                <button class="stock-action-btn" @click="adjustWithButtons(product, -1)" title="Disminuir stock">-</button>
-                <input
-                  v-if="editingProductId === String(product.id)"
-                  v-model.number="draftStock"
-                  class="stock-inline-input"
-                  type="number"
-                  min="0"
-                  @keyup.enter="commitInlineAdjustment(product)"
-                  @keyup.esc="cancelInlineEdit"
-                  @blur="commitInlineAdjustment(product)"
-                />
-                <button
-                  v-else
-                  class="stock-value-btn"
-                  @click="startInlineEdit(product)"
-                  :class="{ 'stock-alert': getProductStock(product) < 5 }"
-                  title="Click para editar"
-                >
-                  {{ getProductStock(product) }}
-                </button>
-                <button class="stock-action-btn" @click="adjustWithButtons(product, 1)" title="Aumentar stock">+</button>
-              </div>
-            </td>
-
-            <td class="td-packaging">{{ getPackagingLabel(product) }}</td>
-
-            <td class="td-actions">
-              <div class="action-row">
-                <button class="btn-icon btn-edit" @click="emit('edit', product)" title="Editar producto">
-                  <PencilSquareIcon class="action-icon" />
-                </button>
-                <button class="btn-icon btn-delete" @click="emit('delete', product)" title="Eliminar producto">
-                  <TrashIcon class="action-icon" />
-                </button>
-              </div>
             </td>
           </tr>
         </tbody>
@@ -152,7 +153,7 @@ import { computed, ref, watch } from 'vue';
 import {
   FunnelIcon,
   PencilSquareIcon,
-  QrCodeIcon,
+  PhotoIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline';
 
@@ -219,6 +220,7 @@ const filterPanelOpen = ref(false);
 const localFilters = ref<Filters>({ ...props.filters });
 const editingProductId = ref<string | null>(null);
 const draftStock = ref<number>(0);
+const selectedProducts = ref<Set<string>>(new Set());
 
 watch(
   () => props.filters,
@@ -318,12 +320,52 @@ const adjustWithButtons = (product: Product, delta: number) => {
   if (nextValue === current) return;
   emit('adjust-stock', product, nextValue);
 };
+
+// Selection methods
+const toggleProductSelection = (productId: string | number) => {
+  const id = String(productId);
+  if (selectedProducts.value.has(id)) {
+    selectedProducts.value.delete(id);
+  } else {
+    selectedProducts.value.add(id);
+  }
+};
+
+const toggleSelectAll = () => {
+  if (allProductsSelected.value) {
+    selectedProducts.value.clear();
+  } else {
+    selectedProducts.value.clear();
+    props.products.forEach((product) => {
+      selectedProducts.value.add(String(product.id));
+    });
+  }
+};
+
+const clearSelection = () => {
+  selectedProducts.value.clear();
+};
+
+const deleteSelectedProducts = async () => {
+  if (selectedProducts.value.size === 0) return;
+  const ids = Array.from(selectedProducts.value);
+  selectedProducts.value.clear();
+  emit('delete-multiple', ids);
+};
+
+const allProductsSelected = computed(() => {
+  return props.products.length > 0 && selectedProducts.value.size === props.products.length;
+});
+
+const someProductsSelected = computed(() => {
+  return selectedProducts.value.size > 0 && !allProductsSelected.value;
+});
 </script>
 
 <style scoped>
 .product-table-wrapper {
   background: var(--color-card-fill);
-  border-radius: 24px;
+  border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
@@ -443,7 +485,8 @@ const adjustWithButtons = (product: Product, delta: number) => {
 
 .product-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
 }
 
 .product-table th {
@@ -460,8 +503,22 @@ const adjustWithButtons = (product: Product, delta: number) => {
 
 .product-row td {
   padding: 0.9rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
+  background: white;
+}
+
+.product-row td:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.product-row td:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.product-row {
+  border-radius: 6px;
 }
 
 .product-main-line {
@@ -618,6 +675,69 @@ const adjustWithButtons = (product: Product, delta: number) => {
   height: 16px;
 }
 
+.product-with-image {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.product-image-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.product-image-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.placeholder-icon {
+  width: 24px;
+  height: 24px;
+  color: #9ca3af;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.product-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-product-name);
+}
+
+.category-badge {
+  display: inline-block;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.stock-badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background: #ecfdf3;
+  color: #166534;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
 .empty-state {
   text-align: center;
   padding: 2rem 1rem;
@@ -633,6 +753,107 @@ const adjustWithButtons = (product: Product, delta: number) => {
 .filter-slide-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+/* Selection Styles */
+.selection-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 1rem;
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selection-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.selection-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-selected {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.btn-delete-selected:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.btn-clear-selection {
+  color: #6b7280;
+}
+
+.btn-clear-selection:hover {
+  background: #f3f4f6;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-select-all,
+.checkbox-product {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-brand-main);
+}
+
+.th-checkbox {
+  width: 50px;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.td-checkbox {
+  width: 50px;
+  padding: 0.9rem 1rem;
+  text-align: center;
+}
+
+.product-row.row-selected td {
+  background: #f9fafb;
+}
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 @media (max-width: 1024px) {
@@ -657,6 +878,21 @@ const adjustWithButtons = (product: Product, delta: number) => {
 
   .filter-panel-inner {
     grid-template-columns: 1fr;
+  }
+  
+  .selection-actions-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selection-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    flex: 1;
+    min-width: 140px;
   }
 }
 </style>

@@ -231,11 +231,9 @@ const handleClick = (event: MouseEvent) => {
 /* Variante: Fill (MUI Contained Button adaptado) */
 .app-button--fill {
   color: #fff;
-  background: var(--color-brand-main-gradient, #06402B);
-  /* MUI Elevation 2 (En reposo) */
-  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 
-              0px 2px 2px 0px rgba(0,0,0,0.14), 
-              0px 1px 5px 0px rgba(0,0,0,0.12);
+  background: var(--color-brand-main);
+  border-radius: 6px;
+  box-shadow: none;
 }
 
 /* Pseudo-overlay para estado Hover (porque no se transiciona bien un degradado css) */
@@ -256,17 +254,11 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--fill:hover {
-  /* MUI Elevation 4 */
-  box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2), 
-              0px 4px 5px 0px rgba(0,0,0,0.14), 
-              0px 1px 10px 0px rgba(0,0,0,0.12);
+  /* Sin sombra */
 }
 
 .app-button--fill:active {
-  /* MUI Elevation 8 */
-  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 
-              0px 8px 10px 1px rgba(0,0,0,0.14), 
-              0px 3px 14px 2px rgba(0,0,0,0.12);
+  /* Sin sombra */
 }
 
 .app-button--fill:disabled {
@@ -277,14 +269,15 @@ const handleClick = (event: MouseEvent) => {
 
 /* Variante: Outline (MUI Outlined Button) */
 .app-button--outline {
-  color: var(--color-brand-main, #06402B);
-  background: transparent;
-  border: 1px solid rgba(6, 64, 43, 0.5);
+  color: #000000;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
 }
 
 .app-button--outline:hover {
-  border-color: var(--color-brand-main, #06402B);
-  background-color: rgba(6, 64, 43, 0.04); /* Tinte verde súper ligero */
+  border-color: #9ca3af;
+  background-color: #f9fafb;
 }
 
 .app-button--outline:disabled {

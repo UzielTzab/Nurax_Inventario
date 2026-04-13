@@ -349,7 +349,7 @@ defineProps<{
   background: var(--color-brand-main);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 6px;
   font-weight: 700;
   font-size: 3rem;
   cursor: pointer;
@@ -400,7 +400,7 @@ defineProps<{
   gap: 0.75rem;
   padding: 0.7rem 1.25rem;
   margin: 0 0.5rem;
-  border-radius: 24px;
+  border-radius: 6px;
   color: var(--color-background);
   text-decoration: none;
   font-size: 1rem;
@@ -435,8 +435,8 @@ defineProps<{
   transform: translateY(-50%);
   width: 10px;
   height: 100%;
-  background: var(--color-status-success);
-  border-radius: 0 10px 10px 0;
+  background: var(--color-brand-main);
+  border-radius: 0 6px 6px 0;
   animation: pillSlideIn 0.9s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
@@ -460,7 +460,7 @@ defineProps<{
 }
 
 .nav-item-active .nav-text {
-  color: var(--color-status-success);
+  color: var(--color-brand-main);
   font-weight: 700;
 }
 
@@ -484,7 +484,7 @@ defineProps<{
 
 .nav-item-active .nav-icon,
 .nav-item-active .nav-icon svg {
-  color: var(--color-status-success);
+  color: var(--color-brand-main);
 }
 
 /* Icon swap transition — scale bounce */
@@ -601,7 +601,7 @@ defineProps<{
 
 .profile-modal-card {
   background: white;
-  border-radius: 20px;
+  border-radius: 6px;
   width: 100%;
   max-width: 420px;
   box-shadow: 0 25px 60px rgba(0,0,0,0.15);
@@ -626,7 +626,7 @@ defineProps<{
 .profile-modal-close {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
   background: #f3f4f6;
   color: #6b7280;
@@ -688,7 +688,7 @@ defineProps<{
   background: var(--color-brand-main);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -703,7 +703,7 @@ defineProps<{
   background: transparent;
   color: #dc2626;
   border: 1px solid #fecaca;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -748,7 +748,7 @@ defineProps<{
   background: #f3f4f6;
   color: #374151;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -762,7 +762,7 @@ defineProps<{
   background: var(--color-brand-main);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
