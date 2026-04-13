@@ -10,7 +10,7 @@
   --color-brand-main-gradient:#eddf64;      */
 
   /* Marca - Nueva Paleta */
-  --color-brand-main: #227d52;       
+  --color-brand-main: #00ad8b;       
   --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     
   --color-brand-secondary: #06402B;  
   --color-brand-contrast: #06402B;   
@@ -24,6 +24,7 @@
   /* Textos - Nuevos */
   --color-text-main: #1f2937;        
   --color-text-secondary: #6b7280;
+  --color-text-product-name: #0285c7;
   
   /* Estados */
   --color-status-success: #22c55e;

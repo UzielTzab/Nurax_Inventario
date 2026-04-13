@@ -20,86 +20,6 @@
             </AppButton>
           </div>
         </div>
-        <!-- Welcome Card -->
-        <!-- <div class="welcome-card">
-          <div class="welcome-card-content">
-            <h2 class="welcome-title">Buenos días, {{ userName }}</h2>
-            <p class="welcome-subtitle">Tu negocio está creciendo. Los niveles de stock son estables y tienes pedidos pendientes por surtir.</p>
-            <div class="welcome-tags">
-              <span class="status-tag tag-warning">
-                <span class="status-dot"></span>
-                <span>{{ lowStockProducts.length }} BAJO STOCK</span>
-              </span>
-              <span class="status-tag tag-danger">
-                <span class="status-dot"></span>
-                <span>{{ outOfStockProducts.length }} SIN STOCK</span>
-              </span>
-            </div>
-          </div>
-          <div class="welcome-card-action">
-             <div class="action-icon-wrapper">
-                <div class="action-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-             </div>
-             <h3>¿Listo para realizar una venta?</h3>
-             <p>Procesa transacciones en segundos.</p>
-             <button class="btn-start-sale" @click="handleQuickSell">
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 1.05.328 2.032.891 2.845a4.502 4.502 0 005.157 1.155A4.502 4.502 0 0013.5 19.5a4.502 4.502 0 00.99-9H6.18l-.51-1.912A1.984 1.984 0 003.886 6.75H2.25zM13.5 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                  <path d="M7.34 6.75L7.85 8.654h13.9a.75.75 0 00.58-1.218 5.755 5.755 0 00-4.08-1.921 7.252 7.252 0 00-4.755 0 5.755 5.755 0 00-4.08 1.921.75.75 0 00-.58 1.218z" />
-               </svg>
-               Nueva Venta
-             </button>
-          </div>
-        </div> -->
-
-        <!-- Stats Cards -->
-        <!-- <div class="stats-grid">
-          <template v-if="isLoading">
-            <div v-for="i in 3" :key="'sk-stat-'+i" class="skeleton-stat-card">
-              <AppSkeleton width="44px" height="44px" radius="10px" />
-              <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-                <AppSkeleton width="110px" height="0.75rem" />
-                <AppSkeleton width="60px" height="1.75rem" />
-              </div>
-            </div>
-          </template>
-          <template v-else>
-          <StatsCard
-            label="Productos totales"
-            :value="pagination.count"
-            :icon="CubeIcon"
-            icon-type="brand"
-            variant="brand"
-          />
-          <StatsCard
-            v-if="canViewInventoryValue"
-            label="Valor del inventario"
-            :value="formatCurrency(inventoryValue)"
-            :icon="CurrencyDollarIcon"
-            icon-type="success"
-          />
-          <StatsCard
-            v-else
-            label="Turno actual"
-            :value="'Activo'"
-            :icon="CurrencyDollarIcon"
-            icon-type="success"
-          />
-          <StatsCard
-            label="Alertas de stock"
-            :value="lowStockProducts.length"
-            :variant="lowStockProducts.length > 0 ? 'danger' : 'success'"
-            :icon="ExclamationTriangleIcon"
-            :icon-type="lowStockProducts.length > 0 ? 'danger' : 'success'"
-            subtitle="Productos con menos de 5 unidades"
-          />
-
-          </template>
-        </div> -->
 
         <!-- Skeleton: Product Table -->
         <template v-if="isLoading">
@@ -172,7 +92,7 @@
     <!-- SalesModal removed (handled by layout) -->
     
     <AddProductModal
-      :is-open="showAddProductModal"
+      :isOpen="showAddProductModal"
       :product-to-edit="selectedProduct"
       :existing-skus="allSkus"
       :loading="isSubmitting"
@@ -205,9 +125,6 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import Pusher from 'pusher-js';
 import { 
-  CubeIcon, 
-  CurrencyDollarIcon, 
-  ExclamationTriangleIcon,
   ArrowUpTrayIcon,
   PlusIcon,
 } from '@heroicons/vue/24/outline';
@@ -215,7 +132,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 
 // import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
-import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ProductTable, { type Product as TableProduct } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
 import RestockModal from '@/components/RestockModal.vue';

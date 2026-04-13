@@ -419,6 +419,7 @@ const generateSKU = () => {
   let maxNumber = 0;
   if (props.existingSkus?.length) {
     props.existingSkus.forEach((sku) => {
+      if (!sku) return; // Validación: ignorar valores undefined/null
       const match = sku.match(/\d+$/);
       if (!match) return;
       const num = parseInt(match[0], 10);
@@ -752,7 +753,7 @@ watch(showCategoryModal, (open) => {
   backdrop-filter: blur(2px);
   display: flex;
   justify-content: flex-end;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .side-panel {
