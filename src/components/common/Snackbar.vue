@@ -97,54 +97,54 @@ const handleAction = () => {
 
 /* Success Style */
 .snackbar-success {
-  background: var(--color-brand-secondary);
-  border-left: 4px solid #10b981;
+  background: var(--color-text-main);
+  border-left: 4px solid #fbbf24;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-success .snackbar-icon {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399; /* emerald-400 */
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d; /* amber-300 */
 }
 
 /* Info Style */
 .snackbar-info {
-  background: var(--color-brand-secondary);
-  border-left: 4px solid #3b82f6;
+  background: var(--color-text-main);
+  border-left: 4px solid #fbbf24;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-info .snackbar-icon {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa; /* blue-400 */
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d; /* amber-300 */
 }
 
 /* Warning Style */
 .snackbar-warning {
-  background: var(--color-brand-secondary);
-  border-left: 4px solid #f59e0b;
+  background: var(--color-text-main);
+  border-left: 4px solid #fbbf24;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-warning .snackbar-icon {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24; /* amber-400 */
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d; /* amber-300 */
 }
 
 /* Error Style */
 .snackbar-error {
-  background: var(--color-brand-secondary);
-  border-left: 4px solid #ef4444;
+  background: var(--color-text-main);
+  border-left: 4px solid #fbbf24;
   color: white;
   backdrop-filter: blur(10px);
 }
 
 .snackbar-error .snackbar-icon {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171; /* red-400 */
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d; /* amber-300 */
 }
 
 .snackbar-icon {
