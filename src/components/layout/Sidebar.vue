@@ -244,7 +244,7 @@ defineProps<{
 .sidebar {
   --nav-item-hover-bg: #4c5663;
   --nav-item-focus-bg: rgba(0, 0, 0, 0.35);
-  --nav-item-default-bg: rgba(100, 100, 100, 0.08);
+  --nav-item-default-bg: var(--color-text-main);
   --nav-item-text-color: rgba(255, 255, 255, 0.5);
   width: 100%;
   background: var(--color-text-main);
