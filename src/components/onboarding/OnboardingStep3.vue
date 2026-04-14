@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="wizard-header">
-      <h2>Proveedor Principal</h2>
-      <p>Opcional, pero recomendado para acelerar tus compras.</p>
-    </div>
+    <WizardHeader
+      title="Proveedor Principal"
+      description="Opcional, pero recomendado para acelerar tus compras."
+    />
 
-    <div class="wizard-body">
+    <WizardBody>
       <div v-if="errors.length > 0" class="error-banner">
         <div v-for="(error, idx) in errors" :key="idx">
           {{ error.message }}
@@ -37,7 +37,7 @@
           Saltar este paso
         </AppButton>
       </div>
-    </div>
+    </WizardBody>
   </div>
 </template>
 
@@ -45,6 +45,8 @@
 import { ref } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import WizardHeader from './WizardHeader.vue';
+import WizardBody from './WizardBody.vue';
 import { validateStep3 } from '@/utils/onboarding.schemas';
 
 interface Props {
@@ -102,9 +104,4 @@ defineExpose({
 
 <style scoped>
 @import '@/styles/onboarding.css';
-
-.wizard-actions-row {
-  display: flex;
-  justify-content: flex-end;
-}
 </style>

@@ -213,7 +213,7 @@ const onSuccess = (wizardResponse: any) => {
 <style scoped>
 .wizard-container {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--color-brand-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,9 +225,9 @@ const onSuccess = (wizardResponse: any) => {
   grid-template-columns: 280px 1fr;
   gap: 0;
   background: white;
-  border-radius: 24px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   max-width: 1000px;
   min-height: 600px;
 }
@@ -237,7 +237,7 @@ const onSuccess = (wizardResponse: any) => {
 /* ──────────────────────────────────── */
 
 .wizard-sidebar {
-  background: linear-gradient(to bottom, #227d52, #13452d);
+  background: #1f2937;
   color: white;
   padding: 2rem 1.5rem;
   display: flex;
@@ -298,8 +298,8 @@ const onSuccess = (wizardResponse: any) => {
 }
 
 .step-item--active .step-number {
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  background: var(--color-brand-main);
+  box-shadow: 0 0 0 3px rgba(230, 171, 23, 0.2);
 }
 
 .step-item--completed .step-number {

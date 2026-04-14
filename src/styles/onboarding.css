@@ -4,15 +4,15 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --color-wizard-bg: var(--color-brand-main, #227d52);
+  --color-wizard-bg: var(--color-brand-main, #e6ab17);
   --color-wizard-card: #ffffff;
-  --color-wizard-text-dark: #1a1a1a;
-  --color-wizard-text-grey: #666666;
-  --color-wizard-accent: #1a4d2e;
-  --color-wizard-border: #e5e7eb;
+  --color-wizard-text-dark: #1f2937;
+  --color-wizard-text-grey: #6b7280;
+  --color-wizard-accent: #1f2937;
+  --color-wizard-border: #d1d5db;
   --color-wizard-error: #ef4444;
   --color-wizard-success: #10b981;
-  --wizard-rounded: 24px;
+  --wizard-rounded: 8px;
 }
 
 .wizard-container {

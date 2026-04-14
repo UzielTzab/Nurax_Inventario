@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="wizard-header">
-      <h2>El Acelerador (Nicho de Negocio)</h2>
-      <p>Elige tu giro para crear categorias listas para vender.</p>
-    </div>
+    <WizardHeader
+      title="El Acelerador (Nicho de Negocio)"
+      description="Elige tu giro para crear categorias listas para vender."
+    />
 
-    <div class="wizard-body">
+    <WizardBody>
       <div v-if="errors.length > 0" class="error-banner">
         <div v-for="(error, idx) in errors" :key="idx">
           {{ error.message }}
@@ -26,12 +26,14 @@
           <span class="niche-subtitle">{{ option.subtitle }}</span>
         </button>
       </div>
-    </div>
+    </WizardBody>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import WizardHeader from './WizardHeader.vue';
+import WizardBody from './WizardBody.vue';
 import { validateStep2 } from '@/utils/onboarding.schemas';
 
 interface Props {
@@ -92,8 +94,8 @@ defineExpose({
 }
 
 .niche-card {
-  border: 1.5px solid #e5e7eb;
-  border-radius: 16px;
+  border: 1.5px solid var(--color-wizard-border);
+  border-radius: 12px;
   padding: 1.25rem;
   background: #ffffff;
   text-align: left;
@@ -106,12 +108,12 @@ defineExpose({
 
 .niche-card:hover {
   border-color: var(--color-brand-main);
-  box-shadow: 0 8px 20px rgba(34, 125, 82, 0.12);
+  box-shadow: 0 8px 20px rgba(230, 171, 23, 0.12);
 }
 
 .niche-card.active {
   border-color: var(--color-brand-main);
-  background: rgba(34, 125, 82, 0.07);
+  background: rgba(230, 171, 23, 0.07);
 }
 
 .niche-icon {

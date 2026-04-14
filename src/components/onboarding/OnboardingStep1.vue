@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="wizard-header">
-      <h2>Identidad de tu Tienda</h2>
-      <p>Define tu nombre comercial y, si quieres, tu identificador fiscal.</p>
-    </div>
+    <WizardHeader
+      title="Identidad de tu Tienda"
+      description="Define tu nombre comercial y, si quieres, tu identificador fiscal."
+    />
 
-    <div class="wizard-body">
+    <WizardBody>
       <div v-if="errors.length > 0" class="error-banner">
         <div v-for="(error, idx) in errors" :key="idx">
           {{ error.message }}
@@ -38,7 +38,7 @@
         />
         <p class="form-hint">Lo puedes completar despues si aun no lo tienes.</p>
       </div>
-    </div>
+    </WizardBody>
   </div>
 </template>
 
@@ -46,6 +46,8 @@
 import { computed, ref } from 'vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AppButton from '@/components/ui/AppButton.vue';
+import WizardHeader from './WizardHeader.vue';
+import WizardBody from './WizardBody.vue';
 import { useAuth } from '@/composables/useAuth';
 import { validateStep1 } from '@/utils/onboarding.schemas';
 
@@ -132,5 +134,12 @@ defineExpose({
   border-radius: 12px;
   font-size: 0.85rem;
   color: #475569;
+}
+
+.form-hint {
+  font-size: 0.8125rem;
+  color: var(--color-wizard-text-grey);
+  margin-top: 0.25rem;
+  line-height: 1.4;
 }
 </style>
