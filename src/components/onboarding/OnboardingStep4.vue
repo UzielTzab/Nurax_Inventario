@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="wizard-header">
-      <h2>Configuracion de la Caja</h2>
-      <p>Define el fondo inicial sugerido para abrir la caja.</p>
-    </div>
+    <WizardHeader
+      title="Configuracion de la Caja"
+      description="Define el fondo inicial sugerido para abrir la caja."
+    />
 
-    <div class="wizard-body">
+    <WizardBody>
       <div v-if="error" class="error-banner">
         {{ error }}
       </div>
@@ -28,7 +28,7 @@
         <div class="spinner"></div>
         <p>Configurando tu tienda...</p>
       </div>
-    </div>
+    </WizardBody>
 
     <div class="wizard-footer">
       <div class="footer-actions">
@@ -48,6 +48,8 @@
 import { ref, watch } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import WizardHeader from './WizardHeader.vue';
+import WizardBody from './WizardBody.vue';
 import { onboardingService } from '@/services/onboarding.service';
 import { validateStep4 } from '@/utils/onboarding.schemas';
 
@@ -167,7 +169,7 @@ const finalize = async () => {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 4px solid rgba(34, 125, 82, 0.1);
+  border: 4px solid rgba(230, 171, 23, 0.1);
   border-top-color: var(--color-brand-main);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -176,5 +178,21 @@ const finalize = async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.wizard-footer {
+  padding: 2rem;
+  border-top: 1px solid var(--color-wizard-border);
+  background: #f9fafb;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 </style>
