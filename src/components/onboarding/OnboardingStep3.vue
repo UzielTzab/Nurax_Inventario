@@ -1,7 +1,7 @@
 <template>
   <div>
     <WizardHeader
-      title="Proveedor Principal"
+      title="¿Quién es tu proveedor principal?"
       description="Opcional, pero recomendado para acelerar tus compras."
     />
 
@@ -31,19 +31,12 @@
           :disabled="!form.include_supplier"
         />
       </div>
-
-      <div class="wizard-actions-row">
-        <AppButton variant="outline" size="sm" @click="skipStep">
-          Saltar este paso
-        </AppButton>
-      </div>
     </WizardBody>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppButton from '@/components/ui/AppButton.vue';
+import { ref, watch } from 'vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import WizardHeader from './WizardHeader.vue';
 import WizardBody from './WizardBody.vue';
@@ -62,6 +55,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'update', data: any): void;
   (e: 'validate'): boolean;
+  (e: 'skip'): void;
 }>();
 
 const form = ref({
@@ -71,6 +65,15 @@ const form = ref({
 });
 
 const errors = ref<any[]>([]);
+
+// Sincronizar cambios con el padre EN TIEMPO REAL
+watch(
+  () => form.value,
+  (newForm) => {
+    emit('update', { ...newForm });
+  },
+  { deep: true }
+);
 
 const hasError = (field: string) => errors.value.some(err => err.field === field);
 const getError = (field: string) => errors.value.find(err => err.field === field)?.message || '';
@@ -84,6 +87,7 @@ const skipStep = () => {
   form.value.supplier_phone = '';
   errors.value = [];
   emit('update', { ...form.value });
+  emit('skip');
 };
 
 const validateForm = () => {
@@ -93,12 +97,14 @@ const validateForm = () => {
     return false;
   }
   errors.value = [];
-  emit('update', validation.data);
+  emit('update', { ...form.value });
   return true;
 };
 
 defineExpose({
-  validateForm
+  validateForm,
+  skipStep,
+  form
 });
 </script>
 

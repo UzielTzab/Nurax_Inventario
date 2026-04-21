@@ -1,8 +1,8 @@
 <template>
   <div>
     <WizardHeader
-      title="Configuracion de la Caja"
-      description="Define el fondo inicial sugerido para abrir la caja."
+      title="Prepara tu caja registradora"
+      description="¿Con cuánto dinero en efectivo sueles abrir tu caja para dar cambio?"
     />
 
     <WizardBody>
@@ -11,12 +11,16 @@
       </div>
 
       <div class="form-group">
-        <AppInput
-          v-model.number="form.default_cash"
-          type="number"
-          label="Fondo inicial sugerido"
-          placeholder="Ej: 500"
-        />
+        <label class="form-label">Fondo inicial</label>
+        <div class="currency-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <AppInput
+            v-model.number="form.default_cash"
+            type="number"
+            placeholder="0.00"
+            class="currency-input"
+          />
+        </div>
         <div class="quick-buttons">
           <AppButton variant="outline" size="sm" @click="setAmount(500)">$500</AppButton>
           <AppButton variant="outline" size="sm" @click="setAmount(1000)">$1000</AppButton>
@@ -26,7 +30,7 @@
 
       <div v-if="isProcessing" class="processing-box">
         <div class="spinner"></div>
-        <p>Configurando tu tienda...</p>
+        <p>Preparando tu tienda...</p>
       </div>
     </WizardBody>
 
@@ -37,7 +41,7 @@
         </AppButton>
         <AppButton variant="fill" size="md" @click="finalize" :disabled="isProcessing">
           <span v-if="!isProcessing">¡Comenzar a vender!</span>
-          <span v-else>Procesando...</span>
+          <span v-else>Preparando tu tienda...</span>
         </AppButton>
       </div>
     </div>
@@ -154,6 +158,25 @@ const finalize = async () => {
 <style scoped>
 @import '@/styles/onboarding.css';
 
+.currency-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-wizard-text-dark);
+  pointer-events: none;
+}
+
+:deep(.currency-input input) {
+  padding-left: 2.5rem;
+}
+
 .quick-buttons {
   display: flex;
   gap: 0.5rem;
@@ -178,6 +201,13 @@ const finalize = async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.form-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-wizard-text-dark);
+  letter-spacing: 0.2px;
 }
 
 .wizard-footer {

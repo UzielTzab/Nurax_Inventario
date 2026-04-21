@@ -63,6 +63,17 @@
                     v-model="settings.storeName"
                     label="Nombre del Negocio"
                     placeholder="Escribe el nombre de tu negocio"
+                    :disabled="isReadOnly"
+                  />
+                </div>
+
+                <!-- RFC/NIT -->
+                <div class="input-group">
+                  <AppInput
+                    v-model="settings.taxId"
+                    label="Identificador Fiscal (RFC/NIT)"
+                    placeholder="Ej. ABC123456XYZ"
+                    :disabled="isReadOnly"
                   />
                 </div>
 
@@ -248,7 +259,7 @@
               </div>
 
               <!-- Ticket Simulation -->
-              <div class="ticket-simulation">
+              <div class="ticket-simulation" :class="`ticket-width-${paperWidth}`">
                 <div class="ticket-header">
                   <!-- Show uploaded logo or fallback letter -->
                   <div class="ticket-logo" :class="{ 'ticket-logo-img': settings.logoUrl }">
@@ -270,17 +281,9 @@
                     <span class="left-col">CANT. ARTICULO</span>
                     <span class="right-col">TOTAL</span>
                   </div>
-                  <div class="ticket-tr">
-                    <span class="left-col">1x Cappuccino Grande</span>
-                    <span class="right-col">$65.00</span>
-                  </div>
-                  <div class="ticket-tr">
-                    <span class="left-col">2x Galleta Avena</span>
-                    <span class="right-col">$40.00</span>
-                  </div>
-                  <div class="ticket-tr">
-                    <span class="left-col">1x Sandwich Pavo</span>
-                    <span class="right-col">$85.00</span>
+                  <div v-for="(product, idx) in ticketProducts" :key="idx" class="ticket-tr">
+                    <span class="left-col">{{ product.quantity }}x {{ product.name }}</span>
+                    <span class="right-col">{{ product.price }}</span>
                   </div>
                 </div>
 
@@ -289,15 +292,15 @@
                 <div class="ticket-total-section">
                   <div class="ticket-total-row">
                     <span>TOTAL</span>
-                    <span>$190.00</span>
+                    <span>{{ '$' + ticketSubtotal.toFixed(2) }}</span>
                   </div>
                   <div class="ticket-subInfo">
                     <span>Efectivo</span>
-                    <span>$200.00</span>
+                    <span>$300.00</span>
                   </div>
                   <div class="ticket-subInfo">
                     <span>Cambio</span>
-                    <span>$10.00</span>
+                    <span>{{ '$' + ticketChange.toFixed(2) }}</span>
                   </div>
                 </div>
 
@@ -352,17 +355,96 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useAuth } from '@/composables/useAuth';
 import { HomeModernIcon } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { getStoredPaperWidth, savePaperWidth, type PaperWidth } from '@/utils/ticketBuilder';
 
 const { enqueueSnackbar } = useSnackbar();
+const { currentUser } = useAuth();
+
+// ── RBAC: Solo Propietario/Gerente/Admin pueden acceder ────────────────────
+const canAccessSettings = computed(() => {
+  const role = (currentUser.value?.role || '').toLowerCase();
+  const normalizedRole = 
+    role === 'owner' ? 'propietario' :
+    role === 'manager' ? 'gerente' :
+    role === 'cashier' ? 'cajero' : role;
+  
+  return ['propietario', 'gerente', 'admin', 'cliente'].includes(normalizedRole);
+});
+
+const isReadOnly = computed(() => {
+  const role = (currentUser.value?.role || '').toLowerCase();
+  const normalizedRole = 
+    role === 'owner' ? 'propietario' :
+    role === 'manager' ? 'gerente' :
+    role === 'cashier' ? 'cajero' : role;
+  
+  // Solo Propietario puede editar (full write)
+  // Gerente/Admin solo lectura en ciertos campos críticos
+  return !['propietario', 'owner'].includes(normalizedRole);
+});
+
+// ── Mock Products por Nicho ────────────────────────────────────────────────
+const mockProductsByNiche: Record<string, {name: string; price: string}[]> = {
+  'Electrónica': [
+    { name: 'Cable USB-C 2m', price: '$150.00' },
+    { name: 'Audífonos Bluetooth V5', price: '$450.00' },
+    { name: 'Cargador Rápido 65W', price: '$280.00' },
+  ],
+  'Abarrotes': [
+    { name: 'Leche Entera 1L', price: '$28.50' },
+    { name: 'Pan de Caja', price: '$32.00' },
+    { name: 'Café Molido Premium', price: '$85.00' },
+  ],
+  'Farmacia': [
+    { name: 'Vitamina C Tabletas x30', price: '$95.00' },
+    { name: 'Analgésico Ibuprofeno 400mg', price: '$45.00' },
+    { name: 'Protector Solar FPS 50', price: '$120.00' },
+  ],
+  'Ferretería': [
+    { name: 'Taladro Percutor 800W', price: '$1,200.00' },
+    { name: 'Juego de Brocas x21', price: '$89.00' },
+    { name: 'Nivel Digital 60cm', price: '$350.00' },
+  ],
+  'default': [
+    { name: 'Producto de Ejemplo 1', price: '$99.99' },
+    { name: 'Producto de Ejemplo 2', price: '$149.99' },
+    { name: 'Producto de Ejemplo 3', price: '$199.99' },
+  ]
+};
+
+const currentMockProducts = computed(() => {
+  const niche = settings.value.niche || '';
+  return (mockProductsByNiche[niche] || mockProductsByNiche['default']) || [];
+});
+
+const ticketProducts = computed(() => {
+  const products = currentMockProducts.value || [];
+  return products.map((p, i) => ({
+    quantity: i + 1,
+    ...p
+  }));
+});
+
+const ticketSubtotal = computed(() => {
+  return ticketProducts.value.reduce((sum, p) => {
+    const price = parseFloat(p.price.replace(/[^\d.]/g, ''));
+    return sum + (isNaN(price) ? 0 : price * p.quantity);
+  }, 0);
+});
+
+const ticketChange = computed(() => {
+  const cash = 300; // Mock efectivo
+  return Math.max(0, cash - ticketSubtotal.value);
+});
 
 // Ref for the hidden file input and selected logo file
 const logoInputRef = ref<HTMLInputElement | null>(null);
@@ -371,6 +453,8 @@ const logoFile = ref<File | null>(null);
 // Form Data — populated from backend on mount
 const settings = ref({
   storeName: '',
+  taxId: '', // RFC / NIT (from Wizard Step 1)
+  niche: '', // Nicho/Giro (from Wizard Step 2)
   currency: '$ MXN',
   address: '',
   countryCode: '+52',
@@ -396,12 +480,29 @@ const onPaperWidthChange = () => {
 const isLoading = ref(true);
 
 onMounted(async () => {
+  // Verificar RBAC
+  if (!canAccessSettings.value) {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Acceso Denegado',
+      message: 'Solo propietarios y gerentes pueden acceder a esta sección.',
+      duration: 4000,
+    });
+    // Redirect after brief delay
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 2000);
+    return;
+  }
+
   isLoading.value = true;
   try {
     const res = await apiClient.get<any>('/v1/accounts/store-profiles/');
     if (res.success && res.data) {
       const d = res.data;
       settings.value.storeName      = d.store_name      ?? '';
+      settings.value.taxId          = d.identificador_fiscal ?? d.tax_id ?? ''; // From Wizard Step 1
+      settings.value.niche          = d.nicho ?? d.niche ?? ''; // From Wizard Step 2
       settings.value.currency       = d.currency_symbol ?? '$ MXN';
       settings.value.address        = d.address         ?? '';
       settings.value.phone          = d.phone           ?? '';
@@ -415,6 +516,22 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+// ── Watch for real-time preview updates ────────────────────────────────────
+watch(
+  () => ({
+    address: settings.value.address,
+    thankYouMessage: settings.value.thankYouMessage,
+    niche: settings.value.niche,
+    phone: settings.value.phone,
+    storeName: settings.value.storeName,
+    logoUrl: settings.value.logoUrl,
+  }),
+  () => {
+    // Trigger a re-render of the preview (computed properties update)
+  },
+  { deep: true }
+);
 
 // ── Logo file handling ────────────────────────────────────────────────────────
 const onLogoFile = (e: Event) => {
@@ -458,6 +575,8 @@ const saveSettings = async () => {
   try {
     const formData = new FormData();
     formData.append('store_name',      settings.value.storeName);
+    formData.append('identificador_fiscal', settings.value.taxId);
+    formData.append('nicho',           settings.value.niche);
     formData.append('currency_symbol', settings.value.currency);
     formData.append('address',         settings.value.address);
     formData.append('phone',           settings.value.phone);
@@ -607,7 +726,7 @@ const saveSettings = async () => {
 
 .settings-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 6px;
   padding: 1.75rem 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -675,7 +794,7 @@ const saveSettings = async () => {
   padding: 0.875rem 1rem;
   background: #f9fafb;
   border: 1px solid transparent;
-  border-radius: 30px;
+  border-radius: 6px;
   font-size: 0.95rem;
   color: #374151;
   font-family: inherit;
@@ -725,7 +844,7 @@ const saveSettings = async () => {
   padding: 0.875rem 2.5rem 0.875rem 1rem;
   background: #f9fafb;
   border: 1px solid transparent;
-  border-radius: 30px;
+  border-radius: 6px;
   font-size: 0.95rem;
   color: #374151;
   font-family: inherit;
@@ -764,7 +883,7 @@ textarea {
   padding: 0.875rem 1rem;
   background: #f9fafb;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: 6px;
   font-size: 0.95rem;
   color: #374151;
   font-family: inherit;
@@ -785,7 +904,7 @@ textarea:focus {
   width: 100%;
   height: 120px;
   border: 2px dashed #d1d5db;
-  border-radius: 16px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -829,7 +948,7 @@ textarea:focus {
   max-height: 90px;
   max-width: 100%;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .dropzone-remove {
@@ -884,7 +1003,7 @@ textarea:focus {
 /* RIGHT COLUMN - Preview */
 .preview-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 6px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -927,7 +1046,7 @@ textarea:focus {
 .ticket-simulation {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 1.5rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
   font-family: inherit;
@@ -1108,7 +1227,7 @@ textarea:focus {
   gap: 0.25rem;
   padding: 0.875rem 1.25rem;
   border: 1.5px solid #E5E7EB;
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   background: #F9FAFB;
   transition: all 0.2s;
@@ -1150,5 +1269,25 @@ textarea:focus {
 
 .full-width-btn {
   width: 100%;
+}
+
+/* ── Dynamic Paper Width for Ticket Preview ─────────────────────────────────── */
+.ticket-simulation {
+  margin-left: auto;
+  margin-right: auto;
+  transition: width 0.3s ease;
+}
+
+.ticket-width-58mm {
+  width: 230px;
+}
+
+.ticket-width-80mm {
+  width: 320px;
+}
+
+.ticket-width-A4 {
+  width: 100%;
+  max-width: 800px;
 }
 </style>

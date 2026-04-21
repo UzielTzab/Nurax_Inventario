@@ -1872,7 +1872,7 @@ defineEmits(['quickSell']);
     position: fixed;
     top: 0; left: 0;
     height: 100vh;
-    border-radius: 0 20px 20px 0;
+    border-radius: 0;
     transform: translateX(-100%);
     z-index: 1000;
   }
