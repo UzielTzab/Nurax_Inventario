@@ -1103,7 +1103,8 @@ watch(currentUser, (newUser, oldUser) => {
       // (clientes se cargan en AdminClients.vue cuando navega allá)
     } else if (newUser.role === 'cliente') {
       // Cliente: cargar datos necesarios para vender y gestionar inventario
-      productStore.fetchProducts();
+      // NOTA: productos se cargan en cada vista (Inventory.vue, etc) con paginación
+      // para evitar duplicar peticiones GET
       shiftsStore.fetchShifts();
     }
   }
