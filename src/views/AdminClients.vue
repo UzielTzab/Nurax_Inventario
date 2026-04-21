@@ -105,14 +105,20 @@
                       class="toggle-switch"
                       :class="{ 'toggle-on': client.is_active, 'toggle-off': !client.is_active }"
                       @click="confirmToggle(client)"
-                      :title="client.is_active ? 'Desactivar cuenta' : 'Activar cuenta'"
+                      :title="isCurrentAdminUser(client.id) ? 'No puedes cambiar el estado de tu propia cuenta' : (client.is_active ? 'Desactivar cuenta' : 'Activar cuenta')"
                       role="switch"
                       :aria-checked="client.is_active"
+                      :disabled="isCurrentAdminUser(client.id)"
                     >
                       <span class="toggle-thumb"></span>
                     </button>
                     <!-- Eliminar -->
-                    <button class="action-btn action-delete" @click="confirmDelete(client)" title="Eliminar">
+                    <button
+                      class="action-btn action-delete"
+                      @click="confirmDelete(client)"
+                      :title="isCurrentAdminUser(client.id) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'"
+                      :disabled="isCurrentAdminUser(client.id)"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd"/>
                       </svg>
@@ -264,8 +270,10 @@ import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useAuth } from '@/composables/useAuth';
 
 const { enqueueSnackbar } = useSnackbar();
+const { currentUser } = useAuth();
 
 interface Client {
   id: string | number;
@@ -324,8 +332,26 @@ const filteredClients = computed(() => {
   return list;
 });
 
+/**
+ * Verifica si un cliente es el usuario actual (admin)
+ * Si es verdad, no se puede desactivar ni eliminar
+ */
+const isCurrentAdminUser = (clientId: string | number): boolean => {
+  return clientId === currentUser.value?.id && currentUser.value?.role === 'admin';
+};
+
 // Abre el modal de confirmación para cambiar el estado
 const confirmToggle = (client: Client) => {
+  // No permitir desactivar/activar la cuenta del admin actual
+  if (isCurrentAdminUser(client.id)) {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Acción no permitida',
+      message: 'No puedes cambiar el estado de tu propia cuenta.',
+      duration: 3000
+    });
+    return;
+  }
   toggleTarget.value = client;
 };
 
@@ -360,6 +386,16 @@ const applyToggle = async () => {
 };
 
 const confirmDelete = (client: Client) => {
+  // No permitir eliminar la cuenta del admin actual
+  if (isCurrentAdminUser(client.id)) {
+    enqueueSnackbar({
+      type: 'error',
+      title: 'Acción no permitida',
+      message: 'No puedes eliminar tu propia cuenta.',
+      duration: 3000
+    });
+    return;
+  }
   deleteTarget.value = client;
 };
 
@@ -788,6 +824,27 @@ const addClient = async () => {
 
 .action-delete { color: #6b7280; }
 .action-delete:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+
+/* Disabled state */
+.toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.toggle-switch:disabled .toggle-thumb {
+  box-shadow: none;
+}
+
+.action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.action-btn:disabled:hover {
+  background: white;
+  border-color: #e5e7eb;
+  color: #6b7280;
+}
 
 /* Empty state */
 .empty-state {
