@@ -195,7 +195,7 @@ async function handleSubmit() {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1100;
+  z-index: 10000;
   padding: 1rem;
   backdrop-filter: blur(6px);
 }
