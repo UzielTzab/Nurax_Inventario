@@ -1,8 +1,8 @@
 <template>
   <div>
     <WizardHeader
-      title="El Acelerador (Nicho de Negocio)"
-      description="Elige tu giro para crear categorias listas para vender."
+      title="¿Cuál es el giro de tu negocio?"
+      description="Selecciona tu giro para pre-cargar categorías listas para vender."
     />
 
     <WizardBody>
@@ -24,6 +24,7 @@
           <span class="niche-icon">{{ option.icon }}</span>
           <span class="niche-title">{{ option.label }}</span>
           <span class="niche-subtitle">{{ option.subtitle }}</span>
+          <span v-if="form.niche === option.value" class="niche-check">✓</span>
         </button>
       </div>
     </WizardBody>
@@ -31,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import WizardHeader from './WizardHeader.vue';
 import WizardBody from './WizardBody.vue';
 import { validateStep2 } from '@/utils/onboarding.schemas';
@@ -55,6 +56,15 @@ const form = ref({
 
 const errors = ref<any[]>([]);
 
+// Sincronizar cambios con el padre EN TIEMPO REAL
+watch(
+  () => form.value,
+  (newForm) => {
+    emit('update', { ...newForm });
+  },
+  { deep: true }
+);
+
 const nicheOptions = [
   { value: 'ELECTRONICA', label: 'Electronica', icon: '📱', subtitle: 'Cables, cargadores, audio' },
   { value: 'ABARROTES', label: 'Abarrotes', icon: '🛒', subtitle: 'Snacks, bebidas, despensa' },
@@ -65,7 +75,6 @@ const nicheOptions = [
 const selectNiche = (value: any) => {
   form.value.niche = value;
   errors.value = [];
-  emit('update', { niche: value });
 };
 
 const validateForm = () => {
@@ -75,12 +84,13 @@ const validateForm = () => {
     return false;
   }
   errors.value = [];
-  emit('update', validation.data);
+  emit('update', { ...form.value });
   return true;
 };
 
 defineExpose({
-  validateForm
+  validateForm,
+  form
 });
 </script>
 
@@ -104,6 +114,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
 }
 
 .niche-card:hover {
@@ -112,8 +123,25 @@ defineExpose({
 }
 
 .niche-card.active {
-  border-color: var(--color-brand-main);
+  border: 2px solid var(--color-brand-main);
   background: rgba(230, 171, 23, 0.07);
+  box-shadow: 0 8px 20px rgba(230, 171, 23, 0.15);
+}
+
+.niche-check {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-brand-main);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .niche-icon {

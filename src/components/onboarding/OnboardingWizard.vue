@@ -58,6 +58,7 @@
             :initial-data="store.formData.step3"
             @update="updateStep3"
             @validate="validateStep3"
+            @skip="skipStep3"
           />
 
           <!-- Step 4: Caja -->
@@ -76,6 +77,15 @@
           <div v-if="store.currentStep !== 4" class="wizard-footer">
             <div class="footer-actions">
               <AppButton
+                v-if="store.currentStep === 3"
+                variant="ghost"
+                size="md"
+                @click="skipStep3"
+              >
+                Saltar este paso
+              </AppButton>
+              <div style="flex: 1;"></div>
+              <AppButton
                 variant="outline"
                 size="md"
                 @click="goBack"
@@ -87,7 +97,7 @@
                 variant="fill"
                 size="md"
                 @click="goNext"
-                :disabled="isProcessing"
+                :disabled="isProcessing || !canProceed"
               >
                 <span v-if="!isProcessing">Siguiente</span>
                 <span v-else><div class="spinner"></div></span>
@@ -101,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 import { useOnboardingStore } from '@/stores/onboarding.store';
@@ -121,7 +131,7 @@ const isProcessing = ref(false);
 
 const stepTitles: Array<{ title: string; subtitle: string }> = [
   { title: 'Identidad', subtitle: 'Nombre y fiscal' },
-  { title: 'Acelerador', subtitle: 'Nicho de negocio' },
+  { title: 'Giro Comercial', subtitle: 'Elige tu rubro' },
   { title: 'Proveedor', subtitle: 'Opcional' },
   { title: 'Caja', subtitle: 'Fondo inicial' }
 ];
@@ -143,44 +153,81 @@ const updateStep4 = (data: any) => {
 };
 
 const validateStep1 = () => {
-  return step1Ref.value?.validateForm() || false;
+  // Validación ultra-simple: solo requiere nombre de tienda no vacío
+  const storeName = step1Ref.value?.form?.store_name?.trim();
+  return !!storeName;
 };
 
 const validateStep2 = () => {
-  return step2Ref.value?.validateForm() || false;
+  // Validación ultra-simple: solo requiere seleccionar un giro
+  const niche = step2Ref.value?.form?.niche;
+  return !!niche;
 };
 
 const validateStep3 = () => {
-  return step3Ref.value?.validateForm() || false;
+  // Paso opcional, siempre válido
+  return true;
 };
 
 const goNext = () => {
+  // Step 1: validar nombre
   if (store.currentStep === 1) {
-    if (!validateStep1()) {
+    const isValid = validateStep1();
+    if (!isValid) {
+      console.warn('⚠️ Paso 1: Nombre de tienda requerido');
       return;
     }
   }
 
+  // Step 2: validar giro
   if (store.currentStep === 2) {
-    if (!validateStep2()) {
+    const isValid = validateStep2();
+    if (!isValid) {
+      console.warn('⚠️ Paso 2: Giro requerido');
       return;
     }
   }
 
+  // Step 3: opcional, siempre avanzar
   if (store.currentStep === 3) {
-    if (!validateStep3()) {
-      return;
-    }
+    // Saltar sin validar
   }
 
+  // Avanzar al siguiente step
   if (store.currentStep < store.totalSteps) {
     store.nextStep();
   }
 };
 
+const canProceed = computed(() => {
+  // Paso 1: Validar nombre de tienda directamente del componente
+  if (store.currentStep === 1) {
+    return !!step1Ref.value?.form?.store_name?.trim();
+  }
+  
+  // Paso 2: Validar giro directamente del componente
+  if (store.currentStep === 2) {
+    return !!step2Ref.value?.form?.niche;
+  }
+  
+  // Paso 3: Siempre habilitado (paso opcional)
+  if (store.currentStep === 3) {
+    return true;
+  }
+  
+  return true;
+});
+
 const goBack = () => {
   if (store.currentStep > 1) {
     store.prevStep();
+  }
+};
+
+const skipStep3 = () => {
+  step3Ref.value?.skipStep();
+  if (store.currentStep < store.totalSteps) {
+    store.nextStep();
   }
 };
 
@@ -358,6 +405,17 @@ const onSuccess = (wizardResponse: any) => {
   gap: 1rem;
   align-items: center;
   justify-content: flex-end;
+  width: 100%;
+}
+
+.footer-actions :deep(.app-button--ghost) {
+  font-size: 0.9375rem;
+  color: var(--color-wizard-text-grey);
+}
+
+.footer-actions :deep(.app-button--ghost:hover:not(:disabled)) {
+  color: var(--color-wizard-text-dark);
+  background: transparent;
 }
 
 /* Spinner */
