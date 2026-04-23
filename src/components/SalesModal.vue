@@ -134,12 +134,17 @@
               class="customer-search-input"
               placeholder="Venta de Mostrador (General) o buscar cliente"
             />
-            <select v-model="selectedClientId" class="customer-select-input">
-              <option value="">Venta de Mostrador (General)</option>
-              <option v-for="client in filteredClients" :key="client.id" :value="String(client.id)">
-                {{ client.name }}
-              </option>
-            </select>
+            <AppSelect
+              v-model="selectedClientId"
+              placeholder="Venta de Mostrador (General)"
+              :options="[
+                { value: '', label: 'Venta de Mostrador (General)' },
+                ...filteredClients.map((client) => ({
+                  value: String(client.id),
+                  label: client.name
+                }))
+              ]"
+            />
           </div>
           
           <div class="cart-header">
@@ -355,12 +360,17 @@
                 class="customer-search-input"
                 placeholder="Venta de Mostrador (General) o buscar cliente"
               />
-              <select v-model="selectedClientId" class="customer-select-input">
-                <option value="">Venta de Mostrador (General)</option>
-                <option v-for="client in filteredClients" :key="client.id" :value="String(client.id)">
-                  {{ client.name }}
-                </option>
-              </select>
+              <AppSelect
+                v-model="selectedClientId"
+                placeholder="Venta de Mostrador (General)"
+                :options="[
+                  { value: '', label: 'Venta de Mostrador (General)' },
+                  ...filteredClients.map((client) => ({
+                    value: String(client.id),
+                    label: client.name
+                  }))
+                ]"
+              />
             </div>
 
             <!-- Cart Items -->
@@ -644,7 +654,7 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
 import { useShiftsStore } from '@/stores/shifts.store';
 import { useRouter } from 'vue-router';
-import Pagination from '@/components/ui/Pagination.vue';
+import { Pagination, AppButton, AppSelect } from '@/components/ui';
 import {
   MagnifyingGlassIcon,
   QrCodeIcon,

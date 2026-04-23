@@ -89,21 +89,21 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Categoría *
                   </label>
-                  <select 
-                    v-model="formData.category" 
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent form-input custom-select"
-                  >
-                    <option value="">Seleccione una categoría</option>
-                    <option :value="1">Laptop</option>
-                    <option :value="2">Smartphone</option>
-                    <option :value="3">Audio</option>
-                    <option :value="4">Wearable</option>
-                    <option :value="5">Fotografía</option>
-                    <option :value="6">Gaming</option>
-                    <option :value="7">Accesorios</option>
-                    <option :value="8">Otros</option>
-                  </select>
+                  <AppSelect
+                    v-model="formData.category"
+                    placeholder="Seleccione una categoría"
+                    :options="[
+                      { value: '', label: 'Seleccione una categoría' },
+                      { value: '1', label: 'Laptop' },
+                      { value: '2', label: 'Smartphone' },
+                      { value: '3', label: 'Audio' },
+                      { value: '4', label: 'Wearable' },
+                      { value: '5', label: 'Fotografía' },
+                      { value: '6', label: 'Gaming' },
+                      { value: '7', label: 'Accesorios' },
+                      { value: '8', label: 'Otros' }
+                    ]"
+                  />
                 </div>
 
                 <div>
@@ -243,6 +243,7 @@ import { ref, watch } from 'vue';
 import { XMarkIcon, PencilSquareIcon, CheckIcon } from '@heroicons/vue/24/outline';
 import QrcodeVue from 'qrcode.vue';
 import KardexModal from './KardexModal.vue';
+import { AppSelect } from '@/components/ui';
 import { computed } from 'vue';
 
 interface Product {

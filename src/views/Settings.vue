@@ -79,17 +79,16 @@
 
                 <!-- Simbolo de moneda -->
                 <div class="input-group">
-                  <label>Símbolo de Moneda</label>
-                  <div class="select-wrapper">
-                    <select v-model="settings.currency">
-                      <option value="$ MXN">$ MXN (Peso Mexicano)</option>
-                      <option value="$ USD">$ USD (Dólar Estadounidense)</option>
-                      <option value="€ EUR">€ EUR (Euro)</option>
-                    </select>
-                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </div>
+                  <AppSelect
+                    v-model="settings.currency"
+                    label="Símbolo de Moneda"
+                    placeholder="Selecciona moneda"
+                    :options="[
+                      { value: '$ MXN', label: '$ MXN (Peso Mexicano)' },
+                      { value: '$ USD', label: '$ USD (Dólar Estadounidense)' },
+                      { value: '€ EUR', label: '€ EUR (Euro)' }
+                    ]"
+                  />
                 </div>
 
                 <!-- Dirección Física -->
@@ -105,15 +104,16 @@
                 <div class="input-group full-width">
                   <label>WhatsApp de Contacto</label>
                   <div class="phone-input-group">
-                    <div class="select-wrapper country-code">
-                      <select v-model="settings.countryCode">
-                        <option value="+52">🇲🇽 México (+52)</option>
-                        <option value="+1">🇺🇸 USA (+1)</option>
-                        <option value="+34">🇪🇸 España (+34)</option>
-                      </select>
-                      <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                      </svg>
+                    <div class="country-code-select">
+                      <AppSelect
+                        v-model="settings.countryCode"
+                        placeholder="Selecciona país"
+                        :options="[
+                          { value: '+52', label: '🇲🇽 México (+52)' },
+                          { value: '+1', label: '🇺🇸 USA (+1)' },
+                          { value: '+34', label: '🇪🇸 España (+34)' }
+                        ]"
+                      />
                     </div>
                     <div class="phone-number-field">
                       <AppInput
@@ -357,9 +357,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import AppButton from '@/components/ui/AppButton.vue';
-import AppInput from '@/components/ui/AppInput.vue';
-import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import { AppButton, AppInput, AppSkeleton, AppSelect } from '@/components/ui';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
 import { HomeModernIcon } from '@heroicons/vue/24/outline';

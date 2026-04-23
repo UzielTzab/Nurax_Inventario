@@ -23,40 +23,42 @@
       <div v-if="filterPanelOpen" class="filter-panel">
         <div class="filter-panel-inner">
           <div class="filter-group">
-            <label class="filter-label">Estado de stock</label>
-            <select
-              class="filter-select"
-              :value="localFilters.stockFilter"
-              @change="onFilterChange('stockFilter', ($event.target as HTMLSelectElement).value)"
-            >
-              <option value="all">Todos</option>
-              <option value="low-stock">Alertas de stock (&lt;5)</option>
-              <option value="out-of-stock">Sin stock</option>
-            </select>
+            <AppSelect
+              v-model="localFilters.stockFilter"
+              :model-value="localFilters.stockFilter"
+              label="Estado de stock"
+              placeholder="Selecciona estado"
+              :options="[
+                { value: 'all', label: 'Todos' },
+                { value: 'low-stock', label: 'Alertas de stock (<5)' },
+                { value: 'out-of-stock', label: 'Sin stock' }
+              ]"
+              @update:model-value="onFilterChange('stockFilter', $event)"
+            />
           </div>
           <div class="filter-group">
-            <label class="filter-label">Categoria</label>
-            <select
-              class="filter-select"
-              :value="localFilters.category"
-              @change="onFilterChange('category', ($event.target as HTMLSelectElement).value)"
-            >
-              <option value="">Todas</option>
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
+            <AppSelect
+              :model-value="localFilters.category"
+              label="Categoría"
+              placeholder="Selecciona categoría"
+              :options="[
+                { value: '', label: 'Todas' },
+                ...categories.map((cat) => ({ value: cat, label: cat }))
+              ]"
+              @update:model-value="onFilterChange('category', $event)"
+            />
           </div>
           <div class="filter-group">
-            <label class="filter-label">Proveedor</label>
-            <select
-              class="filter-select"
-              :value="localFilters.supplier"
-              @change="onFilterChange('supplier', ($event.target as HTMLSelectElement).value)"
-            >
-              <option value="">Todos</option>
-              <option v-for="supplier in suppliers" :key="String(supplier.id)" :value="String(supplier.id)">
-                {{ supplier.name }}
-              </option>
-            </select>
+            <AppSelect
+              :model-value="localFilters.supplier"
+              label="Proveedor"
+              placeholder="Selecciona proveedor"
+              :options="[
+                { value: '', label: 'Todos' },
+                ...suppliers.map((supplier) => ({ value: String(supplier.id), label: supplier.name }))
+              ]"
+              @update:model-value="onFilterChange('supplier', $event)"
+            />
           </div>
           <button class="btn-clear-filters" @click="clearFilters">Limpiar filtros</button>
         </div>
@@ -150,6 +152,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { AppSelect } from '@/components/ui';
 import {
   FunnelIcon,
   PencilSquareIcon,

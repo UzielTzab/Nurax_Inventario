@@ -10,7 +10,7 @@
             <p class="page-subtitle">Gestión de cuentas de clientes del sistema</p>
           </div>
           <div class="header-actions">
-            <AppButton variant="outline" @click="showAddModal = true">
+            <AppButton variant="fill" @click="showAddModal = true">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
               </svg>
@@ -32,11 +32,14 @@
               class="search-input"
             />
           </div>
-          <select v-model="statusFilter" class="filter-select">
-            <option value="all">Todos los estados</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
-          </select>
+          <AppSelect
+            v-model="statusFilter"
+            :options="[
+              { value: 'all', label: 'Todos los estados' },
+              { value: 'active', label: 'Activos' },
+              { value: 'inactive', label: 'Inactivos' }
+            ]"
+          />
         </div>
 
         <!-- Table -->
@@ -169,10 +172,14 @@
               </div>
               <div class="modal-field">
                 <label class="modal-label">Plan</label>
-                <select v-model="newClient.plan" class="modal-input">
-                  <option value="basico">Básico</option>
-                  <option value="pro">Pro</option>
-                </select>
+                <AppSelect
+                  v-model="newClient.plan"
+                  placeholder="Selecciona un plan"
+                  :options="[
+                    { value: 'basico', label: 'Básico' },
+                    { value: 'pro', label: 'Pro' }
+                  ]"
+                />
               </div>
               <div class="modal-footer">
                 <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
@@ -268,6 +275,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import { AppButton, AppSelect } from '@/components/ui';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
@@ -612,24 +620,6 @@ const addClient = async () => {
   outline: none;
   border-color: var(--color-brand-main);
   box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.08);
-}
-
-.filter-select {
-  padding: 0.625rem 1rem;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  background: white;
-  color: #374151;
-  cursor: pointer;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  min-width: 180px;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--color-brand-main);
 }
 
 /* Table */
