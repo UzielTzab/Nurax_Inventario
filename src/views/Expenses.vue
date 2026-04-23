@@ -74,13 +74,17 @@
           </div>
           
           <div class="form-group">
-            <label>Categoría</label>
-            <select v-model="form.category" required class="input">
-              <option value="servicios">Servicios (Luz, Agua, Internet)</option>
-              <option value="nomina">Nómina / Sueldos</option>
-              <option value="proveedores">Pago a Proveedores</option>
-              <option value="varios">Varios / Otros</option>
-            </select>
+            <AppSelect
+              v-model="form.category"
+              label="Categoría"
+              placeholder="Selecciona una categoría"
+              :options="[
+                { value: 'servicios', label: 'Servicios (Luz, Agua, Internet)' },
+                { value: 'nomina', label: 'Nómina / Sueldos' },
+                { value: 'proveedores', label: 'Pago a Proveedores' },
+                { value: 'varios', label: 'Varios / Otros' }
+              ]"
+            />
           </div>
           
           <div class="form-group">
@@ -112,8 +116,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import AppButton from '@/components/ui/AppButton.vue';
-import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import { AppButton, AppSkeleton, AppSelect } from '@/components/ui';
 import { useExpensesStore } from '@/stores/expenses.store';
 import { useSnackbar } from '@/composables/useSnackbar';
 

@@ -26,12 +26,16 @@
                 </div>
               </template>
               <!-- Si no, mostrar selector -->
-              <select v-else id="product" v-model="form.product_id" class="form-select">
-                <option value="">Selecciona un producto...</option>
-                <option v-for="p in products" :key="p.id" :value="p.id">
-                  {{ p.name }} (Stock: {{ p.stock }})
-                </option>
-              </select>
+              <AppSelect
+                v-else
+                v-model="form.product_id"
+                label="Producto"
+                placeholder="Selecciona un producto..."
+                :options="products.map((p) => ({
+                  value: p.id,
+                  label: `${p.name} (Stock: ${p.stock})`
+                }))"
+              />
             </div>
 
             <!-- Cantidad -->
@@ -69,13 +73,18 @@
 
             <!-- Proveedor -->
             <div class="form-group">
-              <label for="supplier">Proveedor (Opcional)</label>
-              <select id="supplier" v-model="form.supplier_id" class="form-select">
-                <option value="">Sin proveedor</option>
-                <option v-for="s in suppliers" :key="s.id" :value="s.id">
-                  {{ s.name }}
-                </option>
-              </select>
+              <AppSelect
+                v-model="form.supplier_id"
+                label="Proveedor (Opcional)"
+                placeholder="Sin proveedor"
+                :options="[
+                  { value: '', label: 'Sin proveedor' },
+                  ...suppliers.map((s) => ({
+                    value: s.id,
+                    label: s.name
+                  }))
+                ]"
+              />
             </div>
 
             <!-- Notas -->
@@ -123,8 +132,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import AppButton from '@/components/ui/AppButton.vue';
-import AppInput from '@/components/ui/AppInput.vue';
+import { AppButton, AppInput, AppSelect } from '@/components/ui';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useProducts } from '@/composables/useProducts';
 import { useSuppliers } from '@/composables/useSuppliers';

@@ -5,9 +5,12 @@
       <span class="pagination-info">
         {{ rangeStart }}–{{ rangeEnd }} de {{ total }}
       </span>
-      <select class="page-size-select" :value="pageSize" @change="onPageSizeChange">
-        <option v-for="s in pageSizes" :key="s" :value="s">{{ s }} por página</option>
-      </select>
+      <AppSelect
+        :model-value="String(pageSize)"
+        placeholder="Por página"
+        :options="pageSizes.map(s => ({ value: String(s), label: `${s} por página` }))"
+        @update:model-value="onPageSizeChange"
+      />
     </div>
 
     <!-- Right: page buttons -->
@@ -39,6 +42,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import AppSelect from './AppSelect.vue'
 
 const props = withDefaults(defineProps<{
   currentPage: number
@@ -82,8 +86,8 @@ const goTo = (page: number) => {
   emit('update:currentPage', page)
 }
 
-const onPageSizeChange = (e: Event) => {
-  const size = Number((e.target as HTMLSelectElement).value)
+const onPageSizeChange = (value: string | number) => {
+  const size = Number(value)
   emit('update:pageSize', size)
   emit('update:currentPage', 1)
 }
@@ -98,7 +102,7 @@ const onPageSizeChange = (e: Event) => {
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   margin-top: 1rem;
-  border-radius: 24px;
+  border-radius:6px;
   border-top: 1px solid var(--color-card-border, #e5e7eb);
   background: var(--color-card-fill, #fff);
 }
@@ -114,19 +118,6 @@ const onPageSizeChange = (e: Event) => {
   color: #6b7280;
   white-space: nowrap;
 }
-
-.page-size-select {
-  font-size: 0.8125rem;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0.3rem 0.6rem;
-  background: #fff;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.page-size-select:focus { border-color: var(--color-brand-main, #227d52); }
 
 .pagination-right {
   display: flex;
