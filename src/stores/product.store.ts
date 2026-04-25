@@ -94,7 +94,7 @@ export const useProductStore = defineStore('products', () => {
           ...p,
           category_name:
             (p as any).category_name || CATEGORY_MAP[Number(p.category)] || `Categoría ${p.category}`,
-          image: p.image_url || p.image || null,
+          image: p.image_url || null,
         }));
       } else {
         error.value = response.error || 'No se pudieron obtener los productos';
@@ -157,29 +157,25 @@ export const useProductStore = defineStore('products', () => {
       if (response.success && response.data) {
         const productId = response.data.id;
         
-        // Crear códigos de producto en endpoint separado (SKU + alternativos)
-        const fallbackCodes: Array<{ codeType: string; code: string }> = [];
-        const skuCode = String(productData.sku || '').trim();
-        if (skuCode) {
-          fallbackCodes.push({ codeType: 'ean13', code: skuCode });
-        }
-        if (Array.isArray(productData.productCodes)) {
-          fallbackCodes.push(...productData.productCodes);
-        }
+        // Crear códigos de producto en endpoint separado.
+        // productData.productCodes ya incluye el SKU principal + alternativos
+        // (construido por buildProductCodesPayload en el modal), por eso NO
+        // se agrega el SKU por separado para evitar violar unique_together.
+        const codesToCreate: Array<{ codeType: string; code: string }> = Array.isArray(productData.productCodes)
+          ? productData.productCodes
+          : [];
 
-        if (fallbackCodes.length) {
-          for (const code of fallbackCodes) {
-            if (code.code && code.codeType) {
-              try {
-                await apiClient.post('/v1/products/codes/', {
-                  product: productId,
-                  code: code.code,
-                  code_type: code.codeType,
-                });
-              } catch (err) {
-                console.warn('Error creating product code:', err);
-                // No fallar el proceso completo si falla un código
-              }
+        for (const code of codesToCreate) {
+          if (code.code && code.codeType) {
+            try {
+              await apiClient.post('/v1/products/codes/', {
+                product: productId,
+                code: code.code,
+                code_type: code.codeType,
+              });
+            } catch (err) {
+              console.warn('Error creating product code:', err);
+              // No fallar el proceso completo si falla un código
             }
           }
         }
@@ -210,7 +206,7 @@ export const useProductStore = defineStore('products', () => {
               (updatedResponse.data as any).category_name ||
               CATEGORY_MAP[Number(updatedResponse.data.category)] ||
               `Categoría ${updatedResponse.data.category}`,
-            image: updatedResponse.data.image_url || updatedResponse.data.image || null,
+            image: updatedResponse.data.image_url || null,
           };
           products.value.push(newData);
           return { success: true, data: newData };
@@ -316,7 +312,7 @@ export const useProductStore = defineStore('products', () => {
               (updatedResponse.data as any).category_name ||
               CATEGORY_MAP[Number(updatedResponse.data.category)] ||
               `Categoría ${updatedResponse.data.category}`,
-            image: updatedResponse.data.image_url || updatedResponse.data.image || null,
+            image: updatedResponse.data.image_url || null,
           };
           const index = products.value.findIndex(p => p.id === updatedProduct.id);
           if (index !== -1) {
@@ -330,7 +326,7 @@ export const useProductStore = defineStore('products', () => {
               (response.data as any).category_name ||
               CATEGORY_MAP[Number(response.data.category)] ||
               `Categoría ${response.data.category}`,
-            image: response.data.image_url || response.data.image || null,
+            image: response.data.image_url || null,
           };
           const index = products.value.findIndex(p => p.id === updatedProduct.id);
           if (index !== -1) {
@@ -386,7 +382,7 @@ export const useProductStore = defineStore('products', () => {
 
     try {
       // Intentar con endpoint bulk_delete si existe
-      const response = await apiClient.post<any>('/products/bulk_delete/', { ids });
+      const response = await apiClient.post<any>('/v1/products/products/bulk_delete/', { ids });
 
       if (response.success) {
         products.value = products.value.filter(p => !ids.includes(p.id));
