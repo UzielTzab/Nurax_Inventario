@@ -1,6 +1,6 @@
 <template>
   <Transition name="panel-fade">
-    <div v-if="isOpen" class="panel-overlay" @click.self="$emit('close')">
+    <div v-if="isOpen" class="panel-overlay">
       <aside class="side-panel">
         <header class="panel-header">
           <div class="header-title">

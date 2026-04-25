@@ -52,7 +52,7 @@ export function useProducts() {
         const { results, count, next, previous } = response.data;
         products.value = results.map(p => ({
           ...p,
-          image: p.image_url || p.image || null,
+          image: p.image_url || null,
         }));
 
         pagination.value.count = count;
