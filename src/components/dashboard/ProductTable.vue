@@ -119,7 +119,7 @@
                   <PhotoIcon class="placeholder-icon" />
                 </div>
                 <div class="product-info">
-                  <div class="product-name">{{ product.name }}</div>
+                  <div class="product-name product-name-link" @click.stop="emit('view-detail', product)">{{ product.name }}</div>
                 </div>
               </div>
             </td>
@@ -217,6 +217,7 @@ const emit = defineEmits<{
   restock: [product: Product];
   'adjust-stock': [product: Product, newStock: number];
   'update:filters': [filters: Filters];
+  'view-detail': [product: Product];
 }>();
 
 const filterPanelOpen = ref(false);
@@ -720,6 +721,16 @@ const someProductsSelected = computed(() => {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--color-text-product-name);
+}
+
+.product-name-link {
+  cursor: pointer;
+  transition: color .15s;
+}
+
+.product-name-link:hover {
+  color: #06402b;
+  text-decoration: underline;
 }
 
 .category-badge {

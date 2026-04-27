@@ -73,6 +73,7 @@
             @restock="handleRestock"
             @adjust-stock="handleInlineStockAdjustment"
             @update:filters="onFiltersUpdate"
+            @view-detail="handleViewDetail"
           />
 
           <!-- Pagination -->
@@ -99,6 +100,14 @@
       @close="showAddProductModal = false"
       @product-added="handleSaveNewProduct"
       @product-updated="handleUpdateProduct"
+    />
+
+    <ProductDetailDrawer
+      :is-open="showDetailDrawer"
+      :product-id="detailProductId"
+      @close="showDetailDrawer = false"
+      @saved="handleDetailSaved"
+      @deleted="handleDetailDeleted"
     />
 
     <RestockModal
@@ -130,10 +139,9 @@ import {
 } from '@heroicons/vue/24/outline';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
-
-// import DashboardOverview from '@/components/dashboard/DashboardOverview.vue';  // TODO: Uncomment when ready
 import ProductTable, { type Product as TableProduct } from '@/components/dashboard/ProductTable.vue';
 import AddProductModal from '@/components/AddProductModal.vue';
+import ProductDetailDrawer from '@/components/ProductDetailDrawer.vue';
 import RestockModal from '@/components/RestockModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -245,6 +253,8 @@ onUnmounted(() => {
 
 const showAddProductModal = ref(false);
 const showRestockModal = ref(false);
+const showDetailDrawer = ref(false);
+const detailProductId = ref<string | number | null>(null);
 const selectedProduct = ref<any | null>(null);
 const selectedProductForRestock = ref<any | null>(null);
 const isSubmitting = ref(false);
@@ -321,6 +331,32 @@ const handleSaveNewProduct = async (newProduct: any) => {
 const handleEditProduct = (product: TableProduct) => {
   selectedProduct.value = product;
   showAddProductModal.value = true;
+};
+
+const handleViewDetail = (product: TableProduct) => {
+  detailProductId.value = product.id;
+  showDetailDrawer.value = true;
+};
+
+const handleDetailSaved = async (updatedProduct: any) => {
+  enqueueSnackbar({
+    type: 'success',
+    title: 'Producto Actualizado',
+    message: `${updatedProduct?.name || 'El producto'} ha sido actualizado correctamente.`,
+    duration: 3000
+  });
+  showDetailDrawer.value = false;
+  await fetchProducts();
+};
+
+const handleDetailDeleted = async (id: string | number) => {
+  enqueueSnackbar({
+    type: 'success',
+    title: 'Producto Eliminado',
+    message: 'El producto ha sido eliminado del inventario.',
+    duration: 3000
+  });
+  await fetchProducts();
 };
 
 const handleUpdateProduct = async (updatedProduct: any) => {
