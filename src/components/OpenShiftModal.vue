@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <transition name="modal-fade">
-      <div v-if="isOpen" class="profile-modal-backdrop" style="z-index: 9999" @click.self="$emit('close')">
+      <div v-if="isOpen" class="profile-modal-backdrop" style="z-index: 10020;" @click.self="$emit('close')">
         <div class="profile-modal" style="max-width: 450px;">
           <!-- Header -->
           <div class="pm-header">
@@ -112,7 +112,7 @@ const handleOpenShift = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 10020;
   animation: fadeIn 0.2s ease;
 }
 

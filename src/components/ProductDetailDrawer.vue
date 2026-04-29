@@ -173,6 +173,7 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppSelect from '@/components/ui/AppSelect.vue';
 import apiClient from '@/services/api';
 import { useSuppliers } from '@/composables/useSuppliers';
+import { useAuth } from '@/composables/useAuth';
 
 interface Movement {
   id: string;
@@ -195,7 +196,8 @@ const emit = defineEmits<{
   deleted: [id: string | number];
 }>();
 
-const { suppliers } = useSuppliers();
+const { suppliers, fetchSuppliers } = useSuppliers();
+const { currentUser, initSession } = useAuth();
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -206,6 +208,7 @@ const movements = ref<Movement[]>([]);
 const imagePreview = ref('');
 const rawImageFile = ref<File | null>(null);
 const categoriesList = ref<Array<{ id: string; name: string }>>([]);
+const activeStoreId = ref<string | null>(null);
 
 const form = ref({
   name: '',
@@ -219,6 +222,33 @@ const form = ref({
 const supplierOptions = computed(() =>
   suppliers.value.map((s: any) => ({ id: String(s.id), name: s.name }))
 );
+
+/**
+ * Resuelve el store_id activo del usuario — mismo patrón que AddProductModal.
+ * Primero intenta desde el perfil en caché, luego hace fetch a /accounts/stores/.
+ */
+const resolveStoreId = async (): Promise<string | null> => {
+  if (activeStoreId.value) return activeStoreId.value;
+
+  const fromUser = currentUser.value?.store_profile?.id;
+  if (fromUser) {
+    activeStoreId.value = String(fromUser);
+    return activeStoreId.value;
+  }
+
+  try {
+    const storesRes = await apiClient.get<any>('/v1/accounts/stores/');
+    if (storesRes.success && Array.isArray(storesRes.data) && storesRes.data.length > 0) {
+      const active = storesRes.data.find((s: any) => s.active) || storesRes.data[0];
+      activeStoreId.value = String(active.id);
+      return activeStoreId.value;
+    }
+  } catch (e) {
+    console.error('[ProductDetailDrawer] Error resolving store id:', e);
+  }
+
+  return null;
+};
 
 const fetchProduct = async (id: string | number) => {
   isLoading.value = true;
@@ -257,18 +287,29 @@ const fetchMovements = async (id: string | number) => {
 
 const fetchCategories = async () => {
   try {
-    const res = await apiClient.get<any>('/v1/products/categories/');
+    // Resolvemos el store_id primero — igual que AddProductModal
+    const storeId = await resolveStoreId();
+    const res = await apiClient.get<any>('/v1/products/categories/', {
+      params: storeId ? { store_id: storeId } : undefined,
+    });
     if (res.success && res.data) {
       categoriesList.value = res.data.results || res.data;
     }
-  } catch {}
+  } catch (e) {
+    console.error('[ProductDetailDrawer] Error fetching categories:', e);
+  }
 };
 
 watch(
   () => [props.isOpen, props.productId],
   async ([open, id]) => {
     if (!open || !id) return;
-    await fetchCategories();
+    // Aseguramos sesión y datos de referencia antes de cargar el producto
+    await initSession();
+    await Promise.all([
+      fetchCategories(),
+      fetchSuppliers(),
+    ]);
     await fetchProduct(id as string);
     await fetchMovements(id as string);
   },

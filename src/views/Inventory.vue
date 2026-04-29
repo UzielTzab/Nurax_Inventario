@@ -93,6 +93,7 @@
     <!-- SalesModal removed (handled by layout) -->
     
     <AddProductModal
+      ref="addProductModalRef"
       :isOpen="showAddProductModal"
       :product-to-edit="selectedProduct"
       :existing-skus="allSkus"
@@ -251,6 +252,7 @@ onUnmounted(() => {
   }
 });
 
+const addProductModalRef = ref<any>(null);
 const showAddProductModal = ref(false);
 const showRestockModal = ref(false);
 const showDetailDrawer = ref(false);
@@ -306,12 +308,15 @@ const handleSaveNewProduct = async (newProduct: any) => {
     if (result.success) {
       enqueueSnackbar({
         type: 'success',
-        title: 'Producto Agregado',
-        message: `${newProduct.name} se agregó al inventario exitosamente.`,
+        title: 'Producto guardado con éxito',
+        message: `${newProduct.name} se agregó al inventario.`,
         duration: 3000
       });
       if (!newProduct.saveAndCreateAnother) {
         showAddProductModal.value = false;
+      } else {
+        // Trigger chain reset and focus in modal
+        addProductModalRef.value?.handleSuccessChain();
       }
       // Refrescar lista de productos
       fetchProducts();

@@ -47,9 +47,9 @@
             <button class="icon-btn" title="Filtros">
               <FunnelIcon class="w-5 h-5" />
             </button>
-            <div class="pairing-indicator" :class="{ paired: isScannerPaired }">
-              <span class="pairing-dot"></span>
-              <span>{{ scannerPairingLabel }}</span>
+            <div class="pairing-indicator" :class="{ paired: isScannerPaired }" style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb;">
+              <span class="pairing-dot" :style="{ background: isScannerPaired ? '#10b981' : '#f59e0b', width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' }"></span>
+              <span :style="{ color: isScannerPaired ? '#10b981' : '#4b5563' }">{{ isScannerPaired ? '🟢 Emparejado: Tablet 1' : '📱 Sin emparejar' }}</span>
             </div>
           </div>
 
@@ -91,21 +91,25 @@
                    </div>
                    <span 
                      class="stock-badge"
-                     :class="{ 'badge-low': getAvailableStock(product) <= 10, 'badge-out': getAvailableStock(product) === 0 }"
+                     :class="{ 
+                        'badge-in-stock': getAvailableStock(product) > 0, 
+                        'badge-low': getAvailableStock(product) > 0 && getAvailableStock(product) <= 10, 
+                        'badge-out': getAvailableStock(product) <= 0 
+                     }"
                    >
-                     {{ getAvailableStock(product) }} EN STOCK
+                     {{ Number(getAvailableStock(product)) || 0 }} EN STOCK
                    </span>
                  </div>
 
                  <div class="product-info">
                    <div class="product-header">
                      <h4 class="product-name">{{ product.name }}</h4>
-                     <span class="product-sku">SKU-{{ product.sku }}</span>
+                     <span v-if="product.sku" class="product-sku">SKU-{{ product.sku }}</span>
                    </div>
                    <div class="product-footer">
-                     <span class="product-price">${{ Number(product.price).toFixed(2) }}</span>
+                     <span class="product-price">${{ (Number(product.sale_price ?? product.price) || 0).toFixed(2) }}</span>
                      <button class="add-btn" @click.stop="addToCart(product)">
-                       <PlusIcon class="w-4 h-4" />
+                       <PlusIcon class="w-5 h-5" />
                      </button>
                    </div>
                  </div>
@@ -170,18 +174,21 @@
                  </div>
               </div>
               
-              <div class="cart-item-info">
-                 <span class="cart-item-name">{{ item.name }}</span>
-                 <span class="cart-item-unit-price">${{ Number(item.price).toFixed(2) }} c/u</span>
+               <div class="cart-item-info">
+                 <span class="cart-item-name" title="item.name">{{ item.name }}</span>
+                 <span class="cart-item-unit-price">${{ (Number(item.sale_price ?? item.price) || 0).toFixed(2) }} c/u</span>
               </div>
               
               <div class="qty-controls">
-                 <button class="qty-btn" @click="updateQuantity(item.id, -1)">-</button>
+                 <button class="qty-btn touch-btn" @click="updateQuantity(item.id, -1)">-</button>
                  <span class="qty-value">{{ item.quantity }}</span>
-                 <button class="qty-btn" @click="updateQuantity(item.id, 1)">+</button>
+                 <button class="qty-btn touch-btn" @click="updateQuantity(item.id, 1)">+</button>
               </div>
               
-              <span class="cart-item-total">${{ (Number(item.price) * item.quantity).toFixed(2) }}</span>
+              <span class="cart-item-total">${{ ((Number(item.sale_price ?? item.price) || 0) * item.quantity).toFixed(2) }}</span>
+              <button class="remove-item-btn" @click="removeFromCart(item.id)" title="Eliminar del carrito">
+                <TrashIcon style="width: 18px; height: 18px" />
+              </button>
             </div>
           </div>
           
@@ -297,21 +304,25 @@
                    </div>
                    <span 
                      class="stock-badge"
-                     :class="{ 'badge-low': getAvailableStock(product) <= 10, 'badge-out': getAvailableStock(product) === 0 }"
+                     :class="{ 
+                        'badge-in-stock': getAvailableStock(product) > 0, 
+                        'badge-low': getAvailableStock(product) > 0 && getAvailableStock(product) <= 10, 
+                        'badge-out': getAvailableStock(product) <= 0 
+                     }"
                    >
-                     {{ getAvailableStock(product) }} EN STOCK
+                     {{ Number(getAvailableStock(product)) || 0 }} EN STOCK
                    </span>
                  </div>
 
                  <div class="product-info">
                    <div class="product-header">
                      <h4 class="product-name">{{ product.name }}</h4>
-                     <span class="product-sku">SKU-{{ product.sku }}</span>
+                     <span v-if="product.sku" class="product-sku">SKU-{{ product.sku }}</span>
                    </div>
                    <div class="product-footer">
-                     <span class="product-price">${{ Number(product.price).toFixed(2) }}</span>
+                     <span class="product-price">${{ (Number(product.sale_price ?? product.price) || 0).toFixed(2) }}</span>
                      <button class="add-btn" @click.stop="addToCart(product)">
-                       <PlusIcon class="w-4 h-4" />
+                       <PlusIcon class="w-5 h-5" />
                      </button>
                    </div>
                  </div>
@@ -338,7 +349,7 @@
             :style="{ backgroundColor: isCartExpanded ? '#f3f4f6' : 'transparent' }"
           >
             <!-- Modern Drag Handle -->
-            <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background-color: #d1d5db; border-radius: 99px;"></div>
+            <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background-color: #d1d5db; border-radius: 16px;"></div>
 
             <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
               <ShoppingCartIcon style="width: 24px; height: 24px;" />
@@ -383,10 +394,10 @@
                 <div 
                   v-for="item in cart" 
                   :key="item.id" 
-                  style="display: flex; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 8px; align-items: start;"
+                  style="display: flex; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 16px; align-items: start;"
                 >
                   <!-- Product Image -->
-                  <div style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #f3f4f6;">
+                  <div style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 16px; overflow: hidden; background: #f3f4f6;">
                     <img 
                       v-if="item.image_url" 
                       :src="item.image_url" 
@@ -401,29 +412,32 @@
                   <!-- Product Info -->
                   <div style="flex: 1; min-width: 0;">
                     <p style="font-weight: 600; color: #1f2937; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</p>
-                    <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">${{ Number(item.price).toFixed(2) }} c/u</p>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">${{ (Number(item.sale_price ?? item.price) || 0).toFixed(2) }} c/u</p>
                   </div>
 
                   <!-- Quantity Controls -->
-                  <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; border-radius: 6px; padding: 0.25rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; border-radius: 16px; padding: 0.25rem;">
                     <button 
                       @click="updateQuantity(item.id, -1)"
-                      style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280; font-size: 1.1rem;"
                     >
                       −
                     </button>
                     <span style="width: 32px; text-align: center; font-weight: 600; color: #1f2937;">{{ item.quantity }}</span>
                     <button 
                       @click="updateQuantity(item.id, 1)"
-                      style="width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;"
+                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280; font-size: 1.1rem;"
                     >
                       +
                     </button>
                   </div>
 
                   <!-- Subtotal -->
-                  <div style="text-align: right; flex-shrink: 0;">
-                    <p style="font-weight: 700; color: var(--color-brand-main); margin: 0;">${{ (Number(item.price) * item.quantity).toFixed(2) }}</p>
+                  <div style="text-align: right; flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <p style="font-weight: 700; color: var(--color-brand-main); margin: 0;">${{ ((Number(item.sale_price ?? item.price) || 0) * item.quantity).toFixed(2) }}</p>
+                    <button @click="removeFromCart(item.id)" style="background: none; border: none; padding: 0.2rem; cursor: pointer; color: #ef4444;">
+                      <TrashIcon style="width: 18px; height: 18px" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -451,7 +465,7 @@
 
   <!-- Scanner Overlay para SalesModal - FULLSCREEN en móvil/tablet -->
   <Transition v-if="isMobileOrTablet" name="fade">
-    <div v-if="isScanning" style="position: fixed; inset: 0; background: white; z-index: 1050; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch;">
+    <div v-if="isScanning" style="position: fixed; inset: 0; background: white; z-index: 10005; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch;">
       <!-- Header -->
       <div style="padding: 1rem; background: #f3f4f6; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
         <h3 style="font-weight: 600; font-size: 1.25rem; margin: 0;">{{ scannerMode === 'continuous' ? 'Escaneo Fijo' : 'Escanear' }}</h3>
@@ -472,7 +486,7 @@
         <div class="scanner-laser"></div>
         
         <!-- Cooldown Overlay para Continuous Mode -->
-        <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 12px; backdrop-filter: blur(3px); z-index: 10;">
+        <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 16px; backdrop-filter: blur(3px); z-index: 10;">
           <div style="text-align: center; color: white;">
             <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
             <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
@@ -484,7 +498,7 @@
       <!-- Footer -->
       <div style="padding: 1.5rem; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
         <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0 0 1rem 0;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
-        <button @click="isScanning = false" style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <button @click="isScanning = false" style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 16px; font-weight: 600; width: 100%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
           <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
           {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
         </button>
@@ -494,11 +508,11 @@
 
   <!-- Scanner Modal para SalesModal - MODAL en desktop -->
   <Transition v-else name="fade">
-    <div v-if="isScanning" class="modal-overlay" style="z-index: 1050; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
+    <div v-if="isScanning" class="modal-overlay" style="z-index: 10005; display: flex; align-items: center; justify-content: center; flex-direction: column;" @click.self="isScanning = false">
        <div style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
          <h3 style="font-weight: 600; font-size: 1.25rem;">{{ scannerMode === 'continuous' ? 'Escaneo Fijo' : 'Escanear Producto' }}</h3>
          <p v-if="scannerMode === 'continuous'" style="font-size: 0.875rem; color: #6b7280; text-align: center;">Lecturas continuas sin cerrar</p>
-         <div style="width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #000; position: relative;">
+         <div style="width: 100%; aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: #000; position: relative;">
            <qrcode-stream 
              :key="scannerResetKey"
              @detect="onDecodeSku"
@@ -509,7 +523,7 @@
            <div class="scanner-laser"></div>
            
            <!-- Cooldown Overlay para Continuous Mode -->
-           <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 12px; backdrop-filter: blur(3px); z-index: 10;">
+           <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 16px; backdrop-filter: blur(3px); z-index: 10;">
              <div style="text-align: center; color: white;">
                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
                <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
@@ -518,7 +532,7 @@
            </div>
          </div>
          <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
-         <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+         <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 16px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
            <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
            {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
          </button>
@@ -528,8 +542,8 @@
 
   <!-- Payment / Layaway Modal -->
   <Transition name="fade">
-    <div v-if="showPaymentModal" class="modal-overlay" style="z-index: 1060; align-items: center; justify-content: center;" @click.self="showPaymentModal = false">
-       <div class="modal-content" style="max-width: 500px; height: auto; max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: 20px;">
+    <div v-if="showPaymentModal" class="modal-overlay" style="z-index: 10010; align-items: center; justify-content: center;" @click.self="showPaymentModal = false">
+       <div class="modal-content" style="max-width: 500px; height: auto; max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: 16px;">
          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
            <h2 class="text-2xl font-bold m-0" style="color: #1f2937;">Cobrar</h2>
            <button @click="showPaymentModal = false" style="background:none; border:none; cursor:pointer;">
@@ -538,16 +552,16 @@
          </div>
 
          <!-- Tabs for Payment Type -->
-         <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 1.5rem;">
+         <div style="display: flex; background: #f3f4f6; border-radius: 16px; padding: 4px; margin-bottom: 1.5rem;">
            <button 
-             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
+             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 16px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
              :style="{ background: paymentMethod === 'completed' ? 'white' : 'transparent', color: paymentMethod === 'completed' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
              @click="setPaymentMethod('completed')"
            >
              Al Contado
            </button>
            <button 
-             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
+             style="flex: 1; padding: 0.5rem; text-align: center; border-radius: 16px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; transition: all 0.2s;"
              :style="{ background: paymentMethod === 'layaway' ? 'white' : 'transparent', color: paymentMethod === 'layaway' ? '#06402b' : '#6b7280', boxShadow: paymentMethod === 'layaway' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }"
              @click="setPaymentMethod('layaway')"
            >
@@ -555,7 +569,7 @@
            </button>
          </div>
 
-         <div style="margin-bottom: 1.5rem; background: var(--color-brand-main); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+         <div style="margin-bottom: 1.5rem; background: var(--color-brand-main); color: white; padding: 1.5rem; border-radius: 16px; text-align: center;">
            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">TOTAL A COBRAR</div>
            <div style="font-size: 2.5rem; font-weight: 800; line-height: 1;">${{ total.toFixed(2) }}</div>
          </div>
@@ -566,21 +580,21 @@
              <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Pago Recibido</label>
              <div style="position: relative;">
                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: #6b7280; font-size: 1.25rem;">$</span>
-               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 1rem 1rem 1rem 2.5rem; font-size: 1.25rem; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" min="0" step="0.01">
+               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 1rem 1rem 1rem 2.5rem; font-size: 1.25rem; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 16px; outline: none; transition: border-color 0.2s;" min="0" step="0.01">
              </div>
              
              <!-- Botones rápidos de dinero -->
              <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; overflow-x: auto; padding-bottom: 4px;">
-               <button v-for="amount in quickAmounts" :key="amount" @click="amountPaid = amount" style="padding: 0.5rem 1rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-weight: 600; color: #374151; cursor: pointer; white-space: nowrap;">
+               <button v-for="amount in quickAmounts" :key="amount" @click="amountPaid = amount" style="padding: 0.5rem 1rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 16px; font-weight: 600; color: #374151; cursor: pointer; white-space: nowrap;">
                  ${{ amount }}
                </button>
-               <button @click="amountPaid = total" style="padding: 0.5rem 1rem; background: #dcfce7; border: 1px solid #16a34a; border-radius: 99px; font-weight: 600; color: #16a34a; cursor: pointer; white-space: nowrap;">
+               <button @click="amountPaid = total" style="padding: 0.5rem 1rem; background: #dcfce7; border: 1px solid #16a34a; border-radius: 16px; font-weight: 600; color: #16a34a; cursor: pointer; white-space: nowrap;">
                  Exacto
                </button>
              </div>
            </div>
 
-           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
+           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9fafb; border-radius: 16px; border: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
              <span style="font-weight: 600; color: #4b5563;">Cambio a devolver:</span>
              <span style="font-size: 1.5rem; font-weight: 800; color: #16a34a;">${{ calculateChange.toFixed(2) }}</span>
            </div>
@@ -590,7 +604,7 @@
          <div v-if="paymentMethod === 'layaway'">
            <div style="margin-bottom: 1rem;">
              <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Cliente seleccionado</label>
-             <div style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #374151; font-weight: 600;">
+             <div style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 16px; background: #f9fafb; color: #374151; font-weight: 600;">
                {{ selectedClientLabel }}
              </div>
            </div>
@@ -599,11 +613,11 @@
              <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Pago Inicial (Enganche)</label>
              <div style="position: relative;">
                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: #6b7280; font-size: 1.125rem;">$</span>
-               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 1.125rem; font-weight: 600; border: 1px solid #e5e7eb; border-radius: 8px; outline: none;" min="0" step="0.01">
+               <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 1.125rem; font-weight: 600; border: 1px solid #e5e7eb; border-radius: 16px; outline: none;" min="0" step="0.01">
              </div>
            </div>
 
-           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #fef7ec; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 1.5rem;">
+           <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #fef7ec; border-radius: 16px; border: 1px solid #fde68a; margin-bottom: 1.5rem;">
              <span style="font-weight: 600; color: #92400e;">Saldo Pendiente:</span>
              <span style="font-size: 1.25rem; font-weight: 800; color: #b45309;">${{ Math.max(0, total - amountPaid).toFixed(2) }}</span>
            </div>
@@ -695,6 +709,7 @@ interface RevertCartItem {
   id: string | number;
   name: string;
   price?: string | number;
+  sale_price?: string | number;
   quantity: number;
 }
 
@@ -959,7 +974,8 @@ const filteredProducts = computed(() => {
 const getAvailableStock = (product: Product) => {
   const item = cart.value.find(i => i.id === product.id);
   const reserved = item ? item.quantity : 0;
-  return product.stock - reserved;
+  const totalStock = Number(product.current_stock ?? product.stock ?? 0);
+  return totalStock - reserved;
 };
 
 // Cart Logic
@@ -996,6 +1012,17 @@ const addToCart = (product: Product) => {
     });
   }
   
+  // Limpiar barra de búsqueda tras agregar producto
+  searchQuery.value = '';
+  focusSearchInput();
+  
+  // Feedback visual en el carrito (flash)
+  const cartContainer = document.querySelector('.right-panel');
+  if (cartContainer) {
+    cartContainer.classList.add('flash-cart');
+    setTimeout(() => cartContainer.classList.remove('flash-cart'), 200);
+  }
+  
   syncCartToBackend();
 };
 
@@ -1014,10 +1041,11 @@ const updateQuantity = (id: string | number, delta: number) => {
   if (!item) return;
   
   const newQuantity = item.quantity + delta;
+  const totalStock = Number(item.current_stock ?? item.stock ?? 0);
   
   if (newQuantity <= 0) {
     removeFromCart(id);
-  } else if (newQuantity <= item.stock) {
+  } else if (newQuantity <= totalStock) {
     item.quantity = newQuantity;
     syncCartToBackend();
   }
@@ -1025,7 +1053,7 @@ const updateQuantity = (id: string | number, delta: number) => {
 
 // Computed Totals
 const subtotal = computed(() => {
-  return cart.value.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+  return cart.value.reduce((sum, item) => sum + (Number(item.sale_price ?? item.price ?? 0) * item.quantity), 0);
 });
 
 const tax = computed(() => {
@@ -1119,12 +1147,12 @@ const confirmPayment = async () => {
       items: cart.value.map(item => ({ 
           product: Number(item.id),
           quantity: item.quantity,
-          unit_price: Number(item.price)
+          unit_price: Number(item.sale_price ?? item.price ?? 0)
       }))
     });
     
-    if (result.success && result.transaction_id) {
-      lastSaleId.value = result.id as number | string;
+    if (result.success && (result.id || result.transaction_id)) {
+      lastSaleId.value = result.id || result.transaction_id || trxId;
       emit('sale-completed', [...cart.value]);
       showPaymentModal.value = false;
       showSuccessModal.value = true;
@@ -1144,7 +1172,15 @@ const confirmPayment = async () => {
 const handleCloseSuccess = () => {
   showSuccessModal.value = false;
   clearCart(); // Usamos clearCart para detonar el sync vacío al servidor
-  emit('close'); // Close sales modal
+  
+  // Auto focus en barra de búsqueda para nueva venta
+  nextTick(() => {
+    if (searchInputRef.value) {
+      searchInputRef.value.focus();
+    } else if (searchInputRefMobile.value) {
+      searchInputRefMobile.value.focus();
+    }
+  });
 };
 
 const handleRevert = (saleId: string | number, cartItems: RevertCartItem[]) => {
@@ -1160,7 +1196,7 @@ const handleRevert = (saleId: string | number, cartItems: RevertCartItem[]) => {
         stock: 0,
       }),
       ...item,
-      price: item.price ?? product?.price ?? 0,
+      price: item.sale_price ?? item.price ?? product?.sale_price ?? product?.price ?? 0,
     } as CartItem;
   });
   cart.value = normalized;
@@ -1330,7 +1366,26 @@ onMounted(async () => {
     }
     // Si device_id === localDeviceId, NO mostrar (fue esta sesión la que la canceló)
   });
+
+  window.addEventListener('keydown', handleGlobalKeydown);
 });
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if (!props.isOpen) return;
+  
+  // Ignorar si estamos en un modal superpuesto
+  if (showPaymentModal.value || showSuccessModal.value || showOpenShiftModal.value) return;
+
+  if (e.key === 'F2') {
+    e.preventDefault();
+    focusSearchInput();
+  } else if (e.key === 'F4' || (e.key === ' ' && !searchQuery.value.trim() && e.target === document.body)) {
+    e.preventDefault();
+    if (cart.value.length > 0) {
+      handleCheckoutClick();
+    }
+  }
+};
 
 onUnmounted(() => {
   if (channelName && pusher) {
@@ -1338,6 +1393,7 @@ onUnmounted(() => {
     pusher.disconnect();
   }
   window.removeEventListener('resize', checkDeviceSize);
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
 watch(
@@ -1419,7 +1475,7 @@ watch(
   max-width: 1200px;
   height: 90vh;
   max-height: 850px;
-  border-radius: 32px;
+  border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   padding: 1.5rem 2rem;
@@ -1463,7 +1519,7 @@ watch(
   gap: 0.75rem;
   align-items: center;
   margin-bottom: 1.5rem;
-  border-radius: 24px;
+  border-radius: 16px;
   flex-shrink: 0;
   padding: 1rem;
 }
@@ -1471,7 +1527,7 @@ watch(
 .shift-warning-banner {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid #facc15;
   background: #fef9c3;
   color: #854d0e;
@@ -1509,7 +1565,7 @@ watch(
   display: flex;
   align-items: center;
   background: #ffffff;
-  border-radius: 99px;
+  border-radius: 16px;
   padding: 0.8rem 1.25rem;
   gap: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
@@ -1575,13 +1631,13 @@ watch(
   min-height: 0;
   padding-right: 0.5rem;
   margin-right: -0.5rem;
-  border-radius: 24px;
+  border-radius: 16px;
   padding: 1rem;
 }
 
 .products-list::-webkit-scrollbar { width: 6px; }
 .products-list::-webkit-scrollbar-track { background: transparent; }
-.products-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+.products-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 16px; }
 .products-list::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
 .products-grid {
@@ -1613,7 +1669,7 @@ watch(
    ===================== */
 .product-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1629,7 +1685,7 @@ watch(
 
 .product-image {
   position: relative;
-  height: 160px;
+  height: 110px;
   background: #f8fafc;
   width: 100%;
   overflow: hidden;
@@ -1677,7 +1733,7 @@ watch(
   font-weight: 800;
   letter-spacing: 0.05em;
   padding: 0.25rem 0.6rem;
-  border-radius: 99px;
+  border-radius: 16px;
   pointer-events: none;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
@@ -1736,14 +1792,14 @@ watch(
 .add-btn {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--color-brand-main-gradient);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 24px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1764,7 +1820,7 @@ watch(
    ===================== */
 .right-panel {
   background: var(--color-card-stats-fill);
-  border-radius: 28px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1779,7 +1835,7 @@ watch(
   margin-bottom: 0.8rem;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 0.75rem;
 }
 
@@ -1793,7 +1849,7 @@ watch(
 .customer-select-input {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 0.52rem 0.65rem;
   font-size: 0.85rem;
   color: #1f2937;
@@ -1814,7 +1870,7 @@ watch(
   gap: 0.55rem;
   padding: 1.25rem;
   border: 1px dashed #cbd5e1;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #ffffff;
   margin-bottom: 0.8rem;
 }
@@ -1866,7 +1922,7 @@ watch(
   color: #9ca3af;
   cursor: pointer;
   padding: 0.4rem;
-  border-radius: 8px;
+  border-radius: 16px;
   transition: all 0.2s;
   display: flex;
 }
@@ -1908,7 +1964,7 @@ watch(
 
 .cart-items-container::-webkit-scrollbar { width: 4px; }
 .cart-items-container::-webkit-scrollbar-track { background: transparent; }
-.cart-items-container::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+.cart-items-container::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 16px; }
 
 .cart-item {
   display: flex;
@@ -1925,7 +1981,7 @@ watch(
 .cart-item-image {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #f8fafc;
   flex-shrink: 0;
   overflow: hidden;
@@ -1966,7 +2022,7 @@ watch(
   display: flex;
   align-items: center;
   background: #f8fafc;
-  border-radius: 99px;
+  border-radius: 16px;
   padding: 0.25rem 0.6rem;
   gap: 0.75rem;
   border: 1px solid #f1f5f9;
@@ -1986,8 +2042,45 @@ watch(
   transition: color 0.2s;
 }
 
+.touch-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  border-radius: 16px;
+}
+.touch-btn:hover {
+  background: #e2e8f0;
+}
+
 .qty-btn:hover {
   color: #111827;
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: #ef4444;
+  cursor: pointer;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+.remove-item-btn:hover {
+  opacity: 1;
+  background: #fee2e2;
+}
+
+.flash-cart {
+  animation: cartFlash 0.2s ease-out;
+}
+@keyframes cartFlash {
+  0% { transform: scale(1); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+  50% { transform: scale(1.02); box-shadow: 0 10px 25px rgba(234,88,12,0.15); }
+  100% { transform: scale(1); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
 }
 
 .qty-value {
@@ -2071,7 +2164,7 @@ watch(
   background: #f1f5f9;
   color: #0f172a;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2244,7 +2337,7 @@ watch(
   .cart-item-image {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    border-radius: 16px;
   }
   
   .cart-item-name {
@@ -2273,7 +2366,7 @@ watch(
   .btn-checkout {
     padding: 0.9rem;
     font-size: 0.95rem;
-    border-radius: 12px;
+    border-radius: 16px;
   }
 }
 

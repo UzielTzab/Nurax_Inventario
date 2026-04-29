@@ -24,7 +24,6 @@
         <div class="filter-panel-inner">
           <div class="filter-group">
             <AppSelect
-              v-model="localFilters.stockFilter"
               :model-value="localFilters.stockFilter"
               label="Estado de stock"
               placeholder="Selecciona estado"
@@ -249,7 +248,7 @@ const toggleFilterPanel = () => {
   filterPanelOpen.value = !filterPanelOpen.value;
 };
 
-const onFilterChange = (key: keyof Filters, value: string) => {
+const onFilterChange = (key: keyof Filters, value: any) => {
   localFilters.value = { ...localFilters.value, [key]: value };
   emit('update:filters', { ...localFilters.value });
 };
@@ -369,7 +368,8 @@ const someProductsSelected = computed(() => {
 <style scoped>
 .product-table-wrapper {
   background: var(--color-card-fill);
-  border-radius: 6px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }

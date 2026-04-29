@@ -3,33 +3,7 @@
     <div v-if="isOpen" class="modal-overlay">
       <div class="modal-content">
 
-        <!-- ── Diálogo de confirmación (capa superior) ── -->
-        <Transition name="confirm-slide">
-          <div v-if="confirmingRevert" class="confirm-overlay">
-            <div class="confirm-box">
-              <div class="confirm-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-              </div>
-              <h3 class="confirm-title">¿Revertir esta venta?</h3>
-              <p class="confirm-desc">
-                Se eliminará del historial y se restaurará el stock de
-                <strong>{{ cart.length }} producto{{ cart.length !== 1 ? 's' : '' }}</strong>.
-                Esta acción no se puede deshacer.
-              </p>
-              <div class="confirm-actions">
-                <AppButton variant="outline" class="flex-1" @click="confirmingRevert = false">
-                  Cancelar
-                </AppButton>
-                <AppButton variant="fill" color="danger" class="flex-1 btn-danger" @click="confirmRevert">
-                  Sí, revertir venta
-                </AppButton>
-              </div>
-            </div>
-          </div>
-        </Transition>
+        
 
         <!-- Header -->
         <div class="modal-header">
@@ -61,7 +35,7 @@
               <div v-for="item in cart" :key="item.id" class="ticket-item">
                 <span class="item-qty">{{ item.quantity }}x</span>
                 <span class="item-name">{{ item.name }}</span>
-                <span class="item-price">{{ settings.currency_symbol }} {{ (Number(item.price) * item.quantity).toFixed(2) }}</span>
+                <span class="item-price">{{ settings.currency_symbol }} {{ (Number(item.sale_price ?? item.price ?? 0) * item.quantity).toFixed(2) }}</span>
               </div>
             </div>
             <div class="ticket-divider"></div>
@@ -87,18 +61,12 @@
 
         <!-- Footer -->
         <div class="modal-footer">
-          <!-- Revertir -->
-          <button class="btn-revert" @click="confirmingRevert = true" title="Revertir venta">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-            </svg>
-            Revertir
-          </button>
+          
 
           <AppButton variant="outline" class="flex-1" @click="$emit('close')">
-            Hecho
+            Nueva Venta
           </AppButton>
-          <AppButton variant="fill" class="flex-1" @click="printTicket">
+          <AppButton variant="fill" class="flex-1" @click="printTicket" style="background-color: #D97706; border-color: #D97706; color: white;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 001.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
             </svg>
@@ -112,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import { useStoreSettings } from '@/composables/useStoreSettings';
 import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
@@ -121,6 +89,7 @@ interface CartItem {
   id: string | number;
   name: string;
   price?: number | string;
+  sale_price?: number | string;
   quantity: number;
 }
 
@@ -135,8 +104,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  revert: [saleId: string | number, cart: CartItem[]];
-}>();
+  }>();
 
 const { settings, loadSettings } = useStoreSettings();
 
@@ -144,7 +112,6 @@ onMounted(() => {
   loadSettings();
 });
 
-const confirmingRevert = ref(false);
 const ticketNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
 
 const currentDate = computed(() => {
@@ -157,10 +124,26 @@ const currentDate = computed(() => {
   });
 });
 
-const confirmRevert = () => {
-  confirmingRevert.value = false;
-  emit('revert', props.saleId, props.cart);
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (!props.isOpen) return;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    printTicket();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    emit('close');
+  }
 };
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
+
 
 const printTicket = () => {
   const html = buildTicketHtml({
@@ -168,7 +151,7 @@ const printTicket = () => {
     items: props.cart.map(item => ({
       name: item.name,
       quantity: item.quantity,
-      price: item.price ?? 0,
+      price: item.sale_price ?? item.price ?? 0,
     })),
     total: props.total,
     ticketId: props.saleId,
@@ -192,7 +175,7 @@ const printTicket = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 10020;
   backdrop-filter: blur(4px);
 }
 
@@ -297,7 +280,7 @@ const printTicket = () => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: linear-gradient(135deg, var(--color-brand-main, #06402B) 0%, #0a5c3a 100%);
+  background: var(--color-brand-main, #06402B);
   color: white;
 }
 
@@ -309,7 +292,7 @@ const printTicket = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-brand-main, #06402B);
+  color: #EAB308;
   margin-bottom: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }

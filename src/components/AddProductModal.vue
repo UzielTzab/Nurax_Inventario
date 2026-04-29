@@ -76,6 +76,7 @@
                   type="number"
                   label="Costo base ($)"
                   min="0"
+                  step="any"
                   placeholder="0.00"
                   required
                   @input="onBaseCostInput"
@@ -86,6 +87,7 @@
                   type="number"
                   label="Precio de venta ($)"
                   min="0"
+                  step="any"
                   placeholder="0.00"
                   required
                   @input="onSalePriceInput"
@@ -97,7 +99,7 @@
                 v-model.number="formData.marginPercent"
                 type="number"
                 label="Margen (%)"
-                min="0"
+                step="any"
                 placeholder="0"
                 hint="Campo bidireccional: costo + margen recalcula precio"
                 @input="onMarginInput"
@@ -112,13 +114,16 @@
                   <AppInput
                     id="sku"
                     v-model="formData.sku"
-                    placeholder="Si lo dejas vacio se autogenera"
+                    placeholder="Ej. 750123456789 (Escanea o escribe)"
                     style="flex: 1"
                   />
                   <button type="button" class="btn-scan" @click="startScanForPrimary" title="Escanear codigo principal">
                     <QrCodeIcon style="width: 18px; height: 18px" />
                   </button>
                 </div>
+                <span style="font-size: 0.8rem; color: #9ca3af; margin-top: 0.25rem; display: block;">
+                  Si lo dejas vacío, el sistema autogenerará un código único.
+                </span>
               </div>
 
               <div class="field-block">
@@ -172,19 +177,26 @@
 
             <AppFormSection title="Cómo se vende">
 
-              <AppInput
-                id="baseUnit"
+              <AppSelect
                 v-model="formData.baseUnitName"
                 label="Unidad de venta base"
-                placeholder="Unidad / Pieza"
+                :options="[
+                  { id: 'Pieza / Unidad', name: 'Pieza / Unidad' },
+                  { id: 'Kilogramo (Kg)', name: 'Kilogramo (Kg)' },
+                  { id: 'Litro (L)', name: 'Litro (L)' },
+                  { id: 'Metro (m)', name: 'Metro (m)' },
+                  { id: 'A granel', name: 'A granel' }
+                ]"
+                placeholder="Selecciona la unidad"
               />
 
               <div class="field-block">
                 <label class="field-label">Empaques mayoristas</label>
                 <div class="list-block">
-                  <div v-for="(pkg, idx) in formData.majorPackagings" :key="idx" class="grid-pack-row">
-                    <input v-model="pkg.name" class="form-input" type="text" placeholder="Nombre (Ej. Caja con 50)" />
-                    <input v-model.number="pkg.quantityPerUnit" class="form-input" type="number" min="1" placeholder="Cantidad" />
+                  <div v-for="(pkg, idx) in formData.majorPackagings" :key="idx" class="grid-pack-row" style="align-items: center; display: flex; gap: 0.5rem;">
+                    <input v-model="pkg.name" class="form-input" type="text" placeholder="Nombre (Ej. Caja con 50)" style="flex: 1;" />
+                    <span style="font-size: 0.85rem; color: #6b7280; white-space: nowrap;">equivale a:</span>
+                    <input v-model.number="pkg.quantityPerUnit" class="form-input" type="number" min="1" placeholder="Cantidad" style="width: 80px;" />
                     <button type="button" class="btn-remove" @click="removePackaging(idx)" title="Eliminar empaque">
                       <XMarkIcon style="width: 16px; height: 16px" />
                     </button>
@@ -350,7 +362,7 @@ const formData = reactive({
   marginPercent: 0,
   image: '',
   supplierId: '',
-  baseUnitName: 'Unidad / Pieza',
+  baseUnitName: 'Pieza / Unidad',
   alternativeCodes: [] as string[],
   majorPackagings: [] as Array<{ name: string; quantityPerUnit: number }>,
 });
@@ -396,39 +408,38 @@ const onMarginInput = () => {
   recalcSaleFromMargin();
 };
 
-const generateSKU = () => {
-  let maxNumber = 0;
-  if (props.existingSkus?.length) {
-    props.existingSkus.forEach((sku) => {
-      if (!sku) return; // Validación: ignorar valores undefined/null
-      const match = sku.match(/\d+$/);
-      if (!match) return;
-      const num = parseInt(match[0], 10);
-      if (num > maxNumber) maxNumber = num;
-    });
-  }
-  const nextNumber = maxNumber + 1;
-  formData.sku = `SKU-${nextNumber.toString().padStart(4, '0')}`;
-};
-
-const resetFormForCreate = () => {
+const resetFormForCreate = (isChained = false) => {
   formData.name = '';
-  formData.category = '';
   formData.sku = '';
   formData.stock = 0;
   formData.baseCost = 0;
   formData.salePrice = 0;
   formData.marginPercent = 0;
   formData.image = '';
-  formData.supplierId = '';
-  formData.baseUnitName = 'Unidad / Pieza';
   formData.alternativeCodes = [];
   formData.majorPackagings = [];
   imagePreview.value = '';
   rawImageFile.value = null;
-  saveAndCreateAnother.value = false;
-  generateSKU();
+
+  if (!isChained) {
+    formData.category = '';
+    formData.supplierId = '';
+    formData.baseUnitName = 'Pieza / Unidad';
+    saveAndCreateAnother.value = false;
+  }
 };
+
+defineExpose({
+  handleSuccessChain: () => {
+    if (saveAndCreateAnother.value) {
+      resetFormForCreate(true);
+      setTimeout(() => {
+        const input = document.getElementById('name');
+        if (input) input.focus();
+      }, 150);
+    }
+  }
+});
 
 const populateFormForEdit = (product: Product) => {
   formData.name = product.name || '';
@@ -440,7 +451,7 @@ const populateFormForEdit = (product: Product) => {
   recalcMarginFromPrices();
   formData.image = product.image || '';
   formData.supplierId = String(product.supplierId ?? product.supplier ?? '');
-  formData.baseUnitName = 'Unidad / Pieza';
+  formData.baseUnitName = 'Pieza / Unidad';
   formData.alternativeCodes = (product.productCodes || []).map((item) => item.code).filter(Boolean);
   formData.majorPackagings = (product.packagings || [])
     .filter((pack) => pack.quantityPerUnit > 1)
@@ -664,7 +675,7 @@ const buildProductCodesPayload = () => {
 };
 
 const buildPackagingsPayload = () => {
-  const packagings = [{ name: formData.baseUnitName.trim() || 'Unidad / Pieza', quantityPerUnit: 1 }];
+  const packagings = [{ name: formData.baseUnitName.trim() || 'Pieza / Unidad', quantityPerUnit: 1 }];
 
   formData.majorPackagings.forEach((packaging) => {
     const name = packaging.name.trim();
@@ -679,12 +690,6 @@ const buildPackagingsPayload = () => {
 const handleSubmit = () => {
   const baseCost = normalizeNumber(formData.baseCost);
   const salePrice = normalizeNumber(formData.salePrice);
-
-  // Solo validar margen cuando el usuario realmente ingresa precios.
-  if ((baseCost > 0 || salePrice > 0) && salePrice <= baseCost) {
-    alert('El precio de venta debe ser mayor que el costo base');
-    return;
-  }
 
   const payload: any = {
     name: formData.name,
@@ -709,10 +714,6 @@ const handleSubmit = () => {
     ...payload,
     saveAndCreateAnother: saveAndCreateAnother.value,
   });
-
-  if (saveAndCreateAnother.value) {
-    resetFormForCreate();
-  }
 };
 
 onMounted(async () => {

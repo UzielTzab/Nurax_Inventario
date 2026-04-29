@@ -11,9 +11,9 @@
 
   /* Marca - Nueva Paleta */
   --color-brand-main: #e6ab17;       
-  --color-brand-main-gradient: linear-gradient(to top, #227d52, #13452d);     
-  --color-brand-secondary: #06402B;  
-  --color-brand-contrast: #06402B;   
+  --color-brand-main-gradient: linear-gradient(to top, #e6ab17);     
+  --color-brand-secondary: #e6ab17;  
+  --color-brand-contrast: #e6ab17;   
   
   /* Fondos y Diseño */
   --color-background: #ffffff;         
@@ -103,7 +103,7 @@ body {
 .skeleton-stat-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
@@ -114,7 +114,8 @@ body {
 /* Table skeleton wrapper — matches ProductTable outer card */
 .skeleton-table-wrap {
   background: white;
-  border-radius: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   padding: 1.25rem 1.5rem;
