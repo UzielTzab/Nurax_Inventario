@@ -36,6 +36,8 @@ export interface Sale {
   status: string; // 'completed', 'pending', 'cancelled', 'credit', 'layaway'
   total: string | number;
   total_amount?: string | number;
+  amount_paid?: number | string;
+  cash_shift?: string | number;
   created_at: string;
   items: SaleItem[];
   payments?: Payment[];

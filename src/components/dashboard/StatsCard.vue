@@ -57,7 +57,8 @@ const trendClass = computed(() => {
 <style scoped>
 .stats-card {
   background: var(--color-card-fill);
-  border-radius: 32px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
   padding: 1.5rem;
   flex: 1;
   min-width: 200px;

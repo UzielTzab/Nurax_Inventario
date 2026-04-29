@@ -1,6 +1,6 @@
 <template>
   <Transition name="modal-fade">
-    <div v-if="isOpen" class="overlay" @click.self="$emit('close')">
+    <div v-if="isOpen" class="overlay">
       <div class="modal-card">
 
         <!-- Header -->
@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, ref } from 'vue'
+import { reactive, watch, ref, onMounted, onUnmounted } from 'vue'
 import { BuildingOfficeIcon, XMarkIcon, PlusIcon } from '@heroicons/vue/24/solid'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
@@ -140,6 +140,20 @@ function resetForm() {
 
 watch(() => props.isOpen, (val) => {
   if (!val) resetForm()
+})
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (props.isOpen && e.key === 'Escape') {
+    emit('close')
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 async function handleSubmit() {

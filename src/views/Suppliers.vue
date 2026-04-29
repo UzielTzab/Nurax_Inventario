@@ -6,10 +6,8 @@
           <h1 class="page-title">Proveedores</h1>
           <p class="page-subtitle">Gestiona la relación con tus proveedores y surtido de productos</p>
         </div>
-        <AppButton variant="fill" @click="showAddModal = true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
+        <AppButton variant="fill" @click="openDrawer()">
+          <PlusIcon style="width: 20px; height: 20px;" />
           Nuevo Proveedor
         </AppButton>
       </div>
@@ -17,9 +15,7 @@
       <!-- Search Bar -->
       <div class="search-bar">
         <div class="search-input-wrapper">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="search-icon">
-            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-          </svg>
+          <MagnifyingGlassIcon class="search-icon" />
           <input 
             type="text" 
             v-model="searchQuery" 
@@ -29,185 +25,73 @@
         </div>
       </div>
 
-      <!-- Suppliers Grid -->
-      <div v-if="isLoading" class="suppliers-grid">
-        <div v-for="i in 6" :key="'sk-supp-'+i" class="supplier-card skeleton-card">
-          <div class="card-header">
-            <AppSkeleton width="48px" height="48px" radius="24px" />
-            <div class="supplier-info-header">
-              <AppSkeleton width="120px" height="1rem" style="margin-bottom:0.3rem" />
-              <AppSkeleton width="80px" height="0.75rem" />
-            </div>
-          </div>
-          <div class="card-body">
-             <AppSkeleton width="150px" height="0.875rem" style="margin-bottom:1rem" />
-             <AppSkeleton width="130px" height="0.875rem" />
-          </div>
-          <div class="card-footer" style="padding:1rem 1.5rem;">
-             <AppSkeleton width="36px" height="36px" radius="6px" />
-             <AppSkeleton width="100px" height="36px" radius="6px" />
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="suppliers-grid">
-        <div v-for="supplier in filteredSuppliers" :key="supplier.id" class="supplier-card" @click="viewSupplierDetails(supplier)">
-          <div class="card-header">
-            <div class="supplier-avatar">
-              <span>{{ getInitials(supplier.name) }}</span>
-            </div>
-            <div class="supplier-info-header">
-              <h3>{{ supplier.name }}</h3>
-              <span class="contact-person">{{ supplier.company || 'Sin empresa' }}</span>
-            </div>            
-          </div>
-          
-          <div class="card-body">
-            <div class="info-row">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="info-icon">
-                <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
-                <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-              </svg>
-              <span>{{ supplier.email }}</span>
-            </div>
-            <div class="info-row">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="info-icon">
-                <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
-              </svg>
-              <span>{{ supplier.phone }}</span>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <button class="btn-danger-outline" @click.stop="handleDeleteSupplier(supplier)" title="Eliminar proveedor">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            <AppButton variant="outline">Ver Detalles</AppButton>
-          </div>
-        </div>
-      </div>
-      
       <!-- Empty State -->
       <div v-if="!isLoading && filteredSuppliers.length === 0" class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-        </svg>
+        <ArchiveBoxIcon class="empty-icon" />
         <h3>No se encontraron proveedores</h3>
-        <p>Ajusta tu búsqueda o agrega un nuevo proveedor a tu lista.</p>
+        <p>Aún no tienes proveedores registrados. Agrégalos para agilizar tus compras y reabastecimiento.</p>
       </div>
-      
-      <!-- Supplier Details Modal -->
-      <Teleport to="body">
-        <div v-if="selectedSupplier" class="modal-overlay" @click.self="closeModal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <div class="modal-title-group">
-                  <h2>{{ selectedSupplier.name }}</h2>
-                  <span class="modal-subtitle">ID: {{ selectedSupplier.id }}</span>
-              </div>
-              <button class="close-btn" @click="closeModal">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clip-rule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            
-            <div class="modal-body-layout">
-               <!-- Left: Contact Info -->
-               <div class="supplier-contact-panel">
-                  <h3>Contacto</h3>
-                  <div class="contact-details">
-                      <div class="contact-group">
-                          <label>Empresa</label>
-                          <p>{{ selectedSupplier.company || 'N/A' }}</p>
-                      </div>
-                      <div class="contact-group">
-                          <label>Correo Electrónico</label>
-                          <p>{{ selectedSupplier.email }}</p>
-                      </div>
-                      <div class="contact-group">
-                          <label>Teléfono</label>
-                          <p>{{ selectedSupplier.phone }}</p>
-                      </div>
-                  </div>
-                  <div class="contact-actions">
-                      <AppButton variant="fill">Enviar Mensaje</AppButton>
-                      <AppButton variant="outline">Editar Info</AppButton>
-                  </div>
-               </div>
 
-               <!-- Right: Products List -->
-               <div class="supplier-products-panel">
-                  <h3>Productos Suministrados</h3>
-                  <div class="products-table-wrapper">
-                      <table class="products-table">
-                          <thead>
-                              <tr>
-                                  <th>Producto</th>
-                                  <th>SKU</th>
-                                  <th>Costo</th>
-                                  <th>Stock</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <tr v-for="product in supplierProducts" :key="product.sku">
-                                  <td class="font-medium">{{ product.name }}</td>
-                                  <td class="text-sm text-gray">{{ product.sku }}</td>
-                                  <td>${{ Number(product.price).toFixed(2) }}</td>
-                                  <td>
-                                      <span :class="['stock-badge', product.stock > 10 ? 'success' : 'warning']">
-                                          {{ product.stock }}
-                                      </span>
-                                  </td>
-                              </tr>
-                              <tr v-if="supplierProducts.length === 0">
-                                 <td colspan="4" style="text-align: center; color: #6b7280; padding: 2rem;">No hay productos asignados a este proveedor.</td>
-                              </tr>
-                          </tbody>
-                      </table>
+      <!-- Suppliers Table (Contact Directory) -->
+      <div v-else class="directory-table-container">
+        <table class="directory-table">
+          <thead>
+            <tr>
+              <th>Proveedor</th>
+              <th>Contacto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="supplier in filteredSuppliers" :key="supplier.id" class="supplier-row" @click="openDrawer(supplier.id)">
+              <td>
+                <div class="supplier-cell">
+                  <div class="supplier-avatar">
+                    <span>{{ getInitials(supplier.name) }}</span>
                   </div>
-               </div>
-            </div>
-          </div>
-        </div>
-      </Teleport>
-
+                  <div class="supplier-name-info">
+                    <span class="supplier-name">{{ supplier.name }}</span>
+                    <span v-if="supplier.company && supplier.company !== supplier.name" class="supplier-company">{{ supplier.company }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="contact-cell">
+                  <span class="contact-info-text">{{ supplier.phone || supplier.email || 'Sin información de contacto' }}</span>
+                  
+                  <a v-if="isPhone(supplier.phone)" :href="getWhatsAppUrl(supplier.phone)" target="_blank" rel="noopener noreferrer" @click.stop class="whatsapp-btn" title="Contactar por WhatsApp">
+                    <WhatsAppIcon class="whatsapp-icon" />
+                  </a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Modal: Añadir Proveedor -->
-    <AddSupplierModal
-      :is-open="showAddModal"
-      @close="showAddModal = false"
-      @supplier-created="handleSupplierCreated"
-    />
-    <!-- Modal: Confirmar Borrado -->
-    <ConfirmationModal
-      :is-open="confirmationState.isOpen"
-      :title="confirmationState.title"
-      :message="confirmationState.message"
-      :type="confirmationState.type"
-      :confirm-text="confirmationState.confirmText"
-      @close="confirmationState.isOpen = false"
-      @confirm="handleConfirmation"
+    <!-- Supplier Detail Drawer -->
+    <SupplierDetailDrawer
+      :is-open="showDrawer"
+      :supplier-id="drawerSupplierId"
+      @close="closeDrawer"
+      @saved="handleSupplierSaved"
+      @deleted="handleSupplierDeleted"
     />
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { MagnifyingGlassIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline';
+import { PlusIcon } from '@heroicons/vue/24/solid';
+import WhatsAppIcon from '@/components/ui/WhatsAppIcon.vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import AppSkeleton from '@/components/ui/AppSkeleton.vue';
-import AddSupplierModal from '@/components/AddSupplierModal.vue';
-import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
+import AppButton from '@/components/ui/AppButton.vue';
+import SupplierDetailDrawer from '@/components/SupplierDetailDrawer.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
-import { useProductStore } from '@/stores/product.store';
-
 const { enqueueSnackbar } = useSnackbar();
 const { suppliers, isLoading, deleteSupplier, fetchSuppliers } = useSuppliers();
-const productStore = useProductStore();
 
 onMounted(() => {
   if (suppliers.value.length === 0) {
@@ -215,63 +99,40 @@ onMounted(() => {
   }
 });
 
-// Asegurar que tengamos productos siempre cargados (si no lo están ya del main layout)
-if (productStore.products.length === 0) {
-  productStore.fetchProducts();
-}
+const searchQuery = ref('');
+const showDrawer = ref(false);
+const drawerSupplierId = ref<string | number | null>(null);
 
-const confirmationState = ref({
-  isOpen: false,
-  title: '',
-  message: '',
-  type: 'info' as 'danger' | 'warning' | 'info' | 'success',
-  confirmText: 'Confirmar',
-  onConfirm: () => {}
-});
+const openDrawer = (id?: string | number) => {
+  drawerSupplierId.value = id || null;
+  showDrawer.value = true;
+};
 
-const handleConfirmation = () => confirmationState.value.onConfirm();
+const closeDrawer = () => {
+  showDrawer.value = false;
+  setTimeout(() => {
+    drawerSupplierId.value = null;
+  }, 300);
+};
 
-const handleSupplierCreated = async (_supplierId: string, _supplierName: string) => {
-  showAddModal.value = false;
-  // Refrescar la lista de proveedores
+const handleSupplierSaved = async () => {
   await fetchSuppliers();
 };
 
-const handleDeleteSupplier = (supplier: Supplier) => {
-  confirmationState.value = {
-    isOpen: true,
-    title: 'Eliminar Proveedor',
-    message: `¿Estás seguro de que deseas eliminar al proveedor "${supplier.name}"? Los productos vinculados a este proveedor perderán la referencia de suministro. Esta acción no se puede deshacer.`,
-    type: 'danger',
-    confirmText: 'Sí, eliminar',
-    onConfirm: async () => {
-      confirmationState.value.isOpen = false;
-      const result = await deleteSupplier(supplier.id);
-      if (result.success) {
-        enqueueSnackbar({
-          type: 'success',
-          title: 'Proveedor eliminado',
-          message: `${supplier.name} eliminado exitosamente.`,
-          duration: 3000
-        });
-        if (selectedSupplier.value?.id === supplier.id) {
-          selectedSupplier.value = null; // Cierra el panel de detalles si estaba abierto
-        }
-      } else {
-        enqueueSnackbar({
-          type: 'error',
-          title: 'No se pudo eliminar',
-          message: result.error || 'Ocurrió un error inesperado.',
-          duration: 4000
-        });
-      }
-    }
-  };
+const handleSupplierDeleted = async () => {
+  await fetchSuppliers();
 };
 
-const searchQuery = ref('');
-const selectedSupplier = ref<Supplier | null>(null);
-const showAddModal = ref(false);
+const isPhone = (text: string) => {
+  if (!text) return false;
+  const digits = text.replace(/\D/g, '');
+  return digits.length >= 10;
+};
+
+const getWhatsAppUrl = (phone: string) => {
+  const digits = phone.replace(/\D/g, '');
+  return `https://wa.me/${digits}`;
+};
 
 const filteredSuppliers = computed(() => {
     if (!searchQuery.value) return suppliers.value;
@@ -283,21 +144,9 @@ const filteredSuppliers = computed(() => {
 });
 
 const getInitials = (name: string) => {
+    if (!name) return 'PR';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 };
-
-const viewSupplierDetails = (supplier: Supplier) => {
-    selectedSupplier.value = supplier;
-};
-
-const closeModal = () => {
-    selectedSupplier.value = null;
-};
-
-const supplierProducts = computed(() => {
-    if (!selectedSupplier.value) return [];
-    return productStore.products.filter(p => p.supplier == selectedSupplier.value!.id);
-});
 </script>
 
 <style scoped>
@@ -385,64 +234,147 @@ margin: 0;
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
-.suppliers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 1.5rem;
-}
-
-.supplier-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s;
+.empty-state {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #E5E7EB;
+    margin-top: 2rem;
 }
 
-.supplier-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-color: var(--color-brand-primary);
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    color: #9CA3AF;
+    margin-bottom: 1.5rem;
 }
 
-.card-header {
-    padding: 1.5rem;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
+.empty-state h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.empty-state p {
+    margin-top: 0.5rem;
+    color: #6B7280;
+    max-width: 400px;
+}
+
+/* Directory Table */
+.directory-table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.directory-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.directory-table th {
+    background: #F9FAFB;
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.supplier-row {
+    cursor: pointer;
+    transition: all 0.2s;
     border-bottom: 1px solid #F3F4F6;
 }
 
+.supplier-row:last-child {
+    border-bottom: none;
+}
+
+.supplier-row:hover {
+    background: #F9FAFB;
+}
+
+.supplier-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+}
+
 .supplier-avatar {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background: #EFF6FF;
     color: #3B82F6;
-    border-radius: 24px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.125rem;
+    font-size: 0.875rem;
     flex-shrink: 0;
 }
 
-.supplier-info-header {
-    flex: 1;
+.supplier-name-info {
+    display: flex;
+    flex-direction: column;
 }
 
-.supplier-info-header h3 {
-    margin: 0;
-    font-size: 1rem;
+.supplier-name {
     font-weight: 600;
-    color: #1F2937;
+    color: #111827;
+    font-size: 0.95rem;
 }
 
-.contact-person {
-    font-size: 0.875rem;
+.supplier-company {
+    font-size: 0.8rem;
     color: #6B7280;
+}
+
+.contact-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+}
+
+.contact-info-text {
+    font-size: 0.9rem;
+    color: #4B5563;
+}
+
+.whatsapp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #ECFDF5;
+    color: #10B981;
+    transition: all 0.2s;
+}
+
+.whatsapp-btn:hover {
+    background: #D1FAE5;
+    transform: scale(1.05);
+}
+
+.whatsapp-icon {
+    width: 18px;
+    height: 18px;
 }
 
 .supplier-status {

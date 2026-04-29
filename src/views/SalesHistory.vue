@@ -1,18 +1,36 @@
 <template>
   <DashboardLayout>
     <div class="sales-history-container">
-      <div class="page-header">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
           <h1 class="page-title">Historial de Ventas</h1>
           <p class="page-subtitle">Visualiza tus ingresos y transacciones</p>
         </div>
+        <div class="period-filter-section" style="display: flex; gap: 1rem; align-items: center;">
+          <div class="period-pills">
+            <button class="period-pill" :class="{ active: selectedPeriod === 'today' }" @click="selectedPeriod = 'today'">Hoy</button>
+            <button class="period-pill" :class="{ active: selectedPeriod === 'yesterday' }" @click="selectedPeriod = 'yesterday'">Ayer</button>
+            <button class="period-pill" :class="{ active: selectedPeriod === 'last7days' }" @click="selectedPeriod = 'last7days'">Últimos 7 días</button>
+            <button class="period-pill" :class="{ active: selectedPeriod === 'custom' }" @click="selectedPeriod = 'custom'">
+              Personalizado
+              <svg xmlns="http://www.w3.org/2000/svg" class="calendar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+          <div class="custom-dates" v-if="selectedPeriod === 'custom'" style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="date" v-model="customStartDate" class="date-input" style="padding: 0.4rem; border-radius: 6px; border: 1px solid #ccc;" />
+            <span>-</span>
+            <input type="date" v-model="customEndDate" class="date-input" style="padding: 0.4rem; border-radius: 6px; border: 1px solid #ccc;" />
+          </div>
+        </div>
       </div>
 
 
-      <!-- Stats Cards -->
-      <!-- <div class="stats-grid">
+      <!-- Stats Cards (KPIs) -->
+      <div class="stats-grid">
         <template v-if="salesStore.isLoading">
-          <div v-for="i in 2" :key="'sk-s-'+i" class="skeleton-stat-card">
+          <div v-for="i in 3" :key="'sk-s-'+i" class="skeleton-stat-card">
             <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
               <AppSkeleton width="110px" height="0.75rem" />
               <AppSkeleton width="70px" height="1.75rem" />
@@ -20,57 +38,23 @@
           </div>
         </template>
         <template v-else>
-        <StatsCard
-          label="Ingresos de Hoy"
-          :value="'$' + formatMoney(todayIncome)"
-          subtitle=""
-          variant="brand"
-        />
-        <StatsCard
-          label="Ventas Totales"
-          :value="salesCount"
-          subtitle=""
-        />
+          <StatsCard
+            label="Ingresos Totales"
+            :value="'$' + formatMoney(filteredIncome)"
+            subtitle=""
+            variant="brand"
+          />
+          <StatsCard
+            label="Tickets Emitidos"
+            :value="filteredSalesCount"
+            subtitle=""
+          />
+          <StatsCard
+            label="Ticket Promedio"
+            :value="'$' + formatMoney(averageTicket)"
+            subtitle=""
+          />
         </template>
-      </div> -->
-
-      <!-- Charts Grid -->
-      <div class="charts-grid-section" v-if="!salesStore.isLoading">
-        <!-- Weekly Trend Chart -->
-        <div class="chart-card">
-          <h3>Tendencia Semanal</h3>
-          <div class="chart-container">
-             <Line 
-               v-if="chartData" 
-               :data="chartData" 
-               :options="chartOptions" 
-             />
-          </div>
-        </div>
-
-        <!-- Top Products Chart -->
-        <div class="chart-card">
-          <h3>Top 3 Productos Más Vendidos</h3>
-          <div class="chart-container">
-             <Bar
-               v-if="barChartData"
-               :data="barChartData"
-               :options="barChartOptions"
-             />
-          </div>
-        </div>
-      </div>
-
-      <!-- Skeleton: Charts -->
-      <div v-if="salesStore.isLoading" class="charts-grid-section">
-        <div class="chart-card">
-          <AppSkeleton width="160px" height="1rem" style="margin-bottom:1.5rem" />
-          <AppSkeleton width="100%" height="250px" radius="12px" />
-        </div>
-        <div class="chart-card">
-          <AppSkeleton width="200px" height="1rem" style="margin-bottom:1.5rem" />
-          <AppSkeleton width="100%" height="250px" radius="12px" />
-        </div>
       </div>
 
       <!-- Sales Table -->
@@ -79,51 +63,6 @@
           <h3>Registro de ventas</h3>
           
           <div class="transactions-header-controls">
-            <!-- Filtro de período (Pills y Custom Dates) -->
-            <div class="period-filter-section">
-              <div class="period-pills">
-                <button 
-                  class="period-pill" 
-                  :class="{ active: selectedPeriod === 'today' }"
-                  @click="selectedPeriod = 'today'">
-                  Hoy
-                </button>
-                <button 
-                  class="period-pill" 
-                  :class="{ active: selectedPeriod === 'yesterday' }"
-                  @click="selectedPeriod = 'yesterday'">
-                  Ayer
-                </button>
-                <button 
-                  class="period-pill" 
-                  :class="{ active: selectedPeriod === 'last7days' }"
-                  @click="selectedPeriod = 'last7days'">
-                  Últimos 7 días
-                </button>
-                <button 
-                  class="period-pill" 
-                  :class="{ active: selectedPeriod === 'custom' }"
-                  @click="selectedPeriod = 'custom'">
-                  Personalizado
-                  <svg xmlns="http://www.w3.org/2000/svg" class="calendar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div class="custom-dates" v-if="selectedPeriod === 'custom'">
-                <div class="date-input-group">
-                  <label>Desde:</label>
-                  <input type="date" v-model="customStartDate" class="date-input" />
-                </div>
-                <span class="date-separator">-</span>
-                <div class="date-input-group">
-                  <label>Hasta:</label>
-                  <input type="date" v-model="customEndDate" class="date-input" />
-                </div>
-              </div>
-            </div>
-
             <!-- Buscador y Monto -->
             <div class="search-amount-section">
               <div class="search-wrapper shadow-sm">
@@ -191,18 +130,18 @@
             <tbody>
               <template v-for="sale in paginatedSales" :key="sale.id">
                 <!-- Fila principal -->
-                <tr class="main-row" :class="{ 'row-expanded': expandedRows.has(sale.id) }">
+                <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
                   <td>{{ formatTime(sale.created_at) }}</td>
-                  <td class="font-mono text-xs trx-id">{{ sale.transaction_id }}</td>
+                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-brand-main);">{{ formatShortId(sale.id, sale.transaction_id) }}</td>
 
                   <!-- Columna de productos con cantidades -->
                   <td>
                     <div class="product-summary">
                       <span class="product-first">
-                        <span class="qty-pill">{{ sale.items[0]?.quantity ?? 1 }}×</span>
-                        {{ sale.items[0]?.product_name || 'Producto desconocido' }}
+                        <span class="qty-pill">{{ sale.items?.[0]?.quantity ?? 1 }}×</span>
+                        {{ sale.items?.[0]?.product_name || 'Producto desconocido' }}
                       </span>
-                      <span v-if="sale.items.length > 1" class="more-items">
+                      <span v-if="sale.items && sale.items.length > 1" class="more-items">
                         +{{ sale.items.length - 1 }} producto{{ sale.items.length - 1 !== 1 ? 's' : '' }} más
                       </span>
                     </div>
@@ -214,61 +153,16 @@
                     <span v-else class="status-badge success">Completado</span>
                   </td>
                   <td>
-                    <button
-                      class="btn-icon"
-                      :class="{ 'btn-icon-active': expandedRows.has(sale.id) }"
-                      :title="expandedRows.has(sale.id) ? 'Ocultar detalle' : 'Ver detalle'"
-                      @click="toggleDetail(sale.id)"
-                    >
-                      <!-- Ojo normal -->
-                      <svg v-if="!expandedRows.has(sale.id)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
-                      <!-- Ojo cerrado (expandido) -->
-                      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    <button class="btn-icon" title="Ver detalle" @click.stop="openDrawer(sale)">
+                      <!-- Ojo icono -->
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: #6B7280;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                       </svg>
                     </button>
                   </td>
                 </tr>
 
-                <!-- Fila de detalle expandible -->
-                <Transition name="detail-row">
-                  <tr v-if="expandedRows.has(sale.id)" class="detail-row">
-                    <td colspan="6">
-                      <div class="detail-content">
-                        <div class="detail-header">
-                          <p class="detail-label">Detalle de productos vendidos:</p>
-                          <div class="header-actions" style="display: flex; gap: 0.5rem;">
-                            <button v-if="sale.status !== 'cancelled'" class="btn-revert" @click="handleCancel(sale.id)" title="Revertir venta">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                              </svg>
-                              Revertir Venta
-                            </button>
-                            <button class="btn-reprint" @click="printSaleTicket(sale)" title="Reimprimir ticket">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
-                              </svg>
-                              Reimprimir Ticket
-                            </button>
-                          </div>
-                        </div>
-                        <div class="detail-items">
-                          <div
-                            v-for="(item, idx) in sale.items"
-                            :key="idx"
-                            class="detail-item"
-                          >
-                            <span class="detail-qty">{{ item.quantity ?? 1 }}×</span>
-                            <span class="detail-name">{{ item.product_name }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </Transition>
+                
               </template>
             </tbody>
           </table>
@@ -290,6 +184,15 @@
       @close="confirmModal.isOpen = false"
       @confirm="executeCancel"
     />
+  
+    <SaleDetailDrawer
+      :is-open="drawerOpen"
+      :sale="selectedSale"
+      :settings="storeSettings"
+      @close="drawerOpen = false"
+      @print="printSaleTicket"
+      @cancel="handleCancel"
+    />
   </DashboardLayout>
 </template>
 
@@ -301,39 +204,12 @@ import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
+import SaleDetailDrawer from '@/components/SaleDetailDrawer.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useStoreSettings } from '@/composables/useStoreSettings';
 import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
 
 import type { Sale } from '@/stores/sales.store';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  type ChartOptions
-} from 'chart.js';
-
-import { Line, Bar } from 'vue-chartjs';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
-
 import { storeToRefs } from 'pinia';
 const salesStore = useSalesStore();
 const { settings: storeSettings, loadSettings } = useStoreSettings();
@@ -345,6 +221,24 @@ onMounted(async () => {
   await salesStore.fetchSales(1, 10); // Cargar primera página con 10 registros
   loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
 });
+
+// ── Búsqueda y filtros ──
+
+const drawerOpen = ref(false);
+const selectedSale = ref<Sale | null>(null);
+
+const openDrawer = (sale: Sale) => {
+  selectedSale.value = sale;
+  drawerOpen.value = true;
+};
+
+const formatShortId = (id: string | number | undefined, trxId: string | undefined) => {
+  if (!id) return '#NX-UNK';
+  const strId = String(id);
+  const parts = strId.split('-');
+  const lastPart = parts[parts.length - 1] || '';
+  return `#NX-${lastPart.slice(0, 6).toUpperCase()}`;
+};
 
 // ── Búsqueda y filtros ──
 const searchQuery = ref('');
@@ -365,24 +259,17 @@ watch(pageSize, (newSize) => {
   salesStore.fetchSales(1, newSize);
 });
 
-// Control de filas expandidas
-const expandedRows = ref(new Set<number>());
-const toggleDetail = (id: number) => {
-  if (expandedRows.value.has(id)) {
-    expandedRows.value.delete(id);
-  } else {
-    expandedRows.value.add(id);
-  }
-  // Force reactivity on Set
-  expandedRows.value = new Set(expandedRows.value);
-};
+
 
 // Access store state via getters or computed using storeToRefs for guaranteed reactivity
 const { sales, weeklyData, totalSales: storeTotalSales } = storeToRefs(salesStore);
 
 // Format Helpers
-const formatMoney = (amount: number | string) => {
-  return Number(amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatMoney = (amount: number | string | undefined | null) => {
+  if (amount === undefined || amount === null) return '0.00';
+  const num = Number(amount);
+  if (isNaN(num)) return '0.00';
+  return num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const formatTime = (date: Date | string) => {
@@ -400,10 +287,10 @@ const formatDateTime = (date: Date | string) => {
 const printSaleTicket = (sale: Sale) => {
   const html = buildTicketHtml({
     store: storeSettings.value,
-    items: sale.items.map(item => ({
+    items: (sale.items || []).map(item => ({
       name: item.product_name,
       quantity: item.quantity ?? 1,
-      price: item.unit_price ?? (Number(sale.total) / (sale.items.length || 1)),
+      price: item.unit_price ?? (Number(sale.total) / ((sale.items || []).length || 1)),
     })),
     total: Number(sale.total),
     ticketId: sale.id,
@@ -502,12 +389,15 @@ const filteredSales = computed(() => {
     // 2. Filtro de búsqueda por ID o nombre de producto
     if (q) {
       const matchesId = String(sale.id).toLowerCase().includes(q) || sale.transaction_id?.toLowerCase().includes(q);
-      const matchesProduct = sale.items.some(item => item.product_name?.toLowerCase().includes(q));
+      const matchesProduct = (sale.items || []).some(item => item.product_name?.toLowerCase().includes(q));
       if (!matchesId && !matchesProduct) return false;
     }
 
     // 3. Filtro de monto mínimo
-    if (minAmount.value > 0 && Number(sale.total) < minAmount.value) return false;
+    if (minAmount.value > 0) {
+      const total = Number(sale.total);
+      if (isNaN(total) || total < minAmount.value) return false;
+    }
 
     return true;
   });
@@ -518,211 +408,22 @@ const filteredSales = computed(() => {
 const paginatedSales = computed(() => filteredSales.value);
 
 // Stats
-const todayIncome = computed(() => {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const filteredIncome = computed(() => {
   return filteredSales.value
-      .filter(s => {
-        const saleDate = new Date(s.created_at);
-        return saleDate >= startOfDay && s.status !== 'cancelled';
-      })
-      .reduce((sum, s) => sum + Number(s.total), 0);
+      .filter(s => s.status !== 'cancelled')
+      .reduce((sum, s) => {
+        const val = Number(s.total);
+        return sum + (isNaN(val) ? 0 : val);
+      }, 0);
 });
 
 // salesCount es el número de ventas después de aplicar filtros locales
-const salesCount = computed(() => filteredSales.value.length);
-
-// Chart Configuration
-const chartData = computed(() => {
-  return {
-    labels: weeklyData.value.map(d => d.day),
-    datasets: [
-      {
-        label: 'Ventas ($)',
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-          gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue 500
-          gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-          return gradient;
-        },
-        borderColor: '#3B82F6',
-        pointBackgroundColor: '#FFFFFF',
-        pointBorderColor: '#3B82F6',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        data: weeklyData.value.map(d => d.amount),
-        fill: true,
-        tension: 0
-      }
-    ]
-  };
+const filteredSalesCount = computed(() => filteredSales.value.length);
+const averageTicket = computed(() => {
+  if (filteredSalesCount.value === 0) return 0;
+  return filteredIncome.value / filteredSalesCount.value;
 });
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false
-    },
-    tooltip: {
-      backgroundColor: '#1F2937',
-      titleColor: '#F9FAFB',
-      bodyColor: '#F9FAFB',
-      padding: 10,
-      cornerRadius: 8,
-      displayColors: false,
-      callbacks: {
-        label: function(context: any) {
-          let label = context.dataset.label || '';
-          if (label) {
-            label += ': ';
-          }
-          if (context.parsed.y !== null) {
-            label += new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(context.parsed.y);
-          }
-          return label;
-        }
-      }
-    }
-  },
-  scales: {
-    y: {
-      title: { display: true, text: 'Ventas (MXN)', color: '#9CA3AF', font: { weight: 'bold' as const } },
-      beginAtZero: true,
-      grid: {
-        color: '#F3F4F6'
-      },
-      ticks: {
-        callback: function(value: any) {
-          return '$' + value;
-        },
-        color: '#9CA3AF',
-        font: {
-          size: 11
-        }
-      },
-      border: {
-        display: false
-      }
-    },
-    x: {
-      title: { display: true, text: 'Días de la semana', color: '#9CA3AF', font: { weight: 'bold' as const } },
-      grid: {
-        display: false
-      },
-      ticks: {
-        color: '#6B7280',
-        font: {
-          size: 11
-        }
-      },
-      border: {
-        display: false
-      }
-    }
-  }
-};
-
-// Top Products Logic
-const topProducts = computed(() => {
-  const productCounts: Record<string, number> = {};
-  
-  filteredSales.value.forEach(sale => {
-    // Check if items exists and is an array to be safe
-    if (Array.isArray(sale.items)) {
-      sale.items.forEach(item => {
-        const qty = item.quantity || 1;
-        productCounts[item.product_name] = (productCounts[item.product_name] || 0) + qty;
-      });
-    }
-  });
-
-  return Object.entries(productCounts)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
-});
-
-const barChartData = computed(() => {
-  return {
-    labels: topProducts.value.map(p => p.name),
-    datasets: [
-      {
-        label: 'Unidades',
-        backgroundColor: [
-          '#06402b', // Forest Green (1st)
-          '#22c55e', // Mint (2nd)
-          '#86efac'  // Light Mint (3rd)
-        ],
-        borderRadius: 8,
-        borderSkipped: false,
-        data: topProducts.value.map(p => p.count),
-        barThickness: 40
-      }
-    ]
-  };
-});
-
-const barChartOptions: ChartOptions<'bar'> = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false
-    },
-    tooltip: {
-      backgroundColor: '#1F2937',
-      titleColor: '#F9FAFB',
-      bodyColor: '#F9FAFB',
-      padding: 10,
-      cornerRadius: 8,
-      displayColors: true,
-      callbacks: {
-        label: function(context: any) {
-          return `${context.dataset.label}: ${context.parsed.y}`;
-        }
-      }
-    }
-  },
-  scales: {
-    y: {
-      title: { display: true, text: 'Unidades vendidas', color: '#9CA3AF', font: { weight: 'bold' as const } },
-      beginAtZero: true,
-      grid: {
-        color: '#F3F4F6'
-      },
-      ticks: {
-        stepSize: 1,
-        color: '#9CA3AF',
-        font: {
-          size: 11
-        }
-      },
-      border: {
-        display: false
-      }
-    },
-    x: {
-      title: { display: true, text: 'Nombres de los Productos', color: '#9CA3AF', font: { weight: 'bold' as const } },
-      grid: {
-        display: false
-      },
-      ticks: {
-        color: '#6B7280',
-        font: {
-          size: 11,
-          weight: 'bold'
-        }
-      },
-      border: {
-        display: false
-      }
-    }
-  }
-};
 </script>
 
 <style scoped>
@@ -815,7 +516,7 @@ const barChartOptions: ChartOptions<'bar'> = {
 .transactions-section {
   background: white;
   padding: 1.5rem;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid #E5E7EB;
 }
 
@@ -904,7 +605,7 @@ const barChartOptions: ChartOptions<'bar'> = {
 }
 
 .period-pill.active {
-  background-color: #004D40; /* Verde oscuro basado en la imagen */
+  background-color: var(--color-brand-main);
   color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
