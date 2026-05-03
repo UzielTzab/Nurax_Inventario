@@ -28,7 +28,7 @@ export interface OnboardingWizardPayload {
   tienda: {
     nombre: string;
     identificador_fiscal?: string;
-    nicho: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS';
+    nicho: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS' | 'BELLEZA';
   };
   configuracion: {
     fondo_inicial_defecto: number;

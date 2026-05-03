@@ -23,7 +23,7 @@ export const Step2Schema = z.object({
   niche: z
     .string()
     .min(1, 'Selecciona un nicho de negocio')
-    .refine((value) => ['ELECTRONICA', 'ABARROTES', 'FARMACIA', 'FERRETERIA', 'MASCOTAS'].includes(value), {
+    .refine((value) => ['ELECTRONICA', 'ABARROTES', 'FARMACIA', 'FERRETERIA', 'MASCOTAS', 'BELLEZA'].includes(value), {
       message: 'Selecciona un nicho de negocio'
     })
 });
