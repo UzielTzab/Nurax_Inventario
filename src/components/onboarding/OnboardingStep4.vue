@@ -63,7 +63,7 @@ interface Props {
     tax_id: string;
   };
   step2Data: {
-    niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | '';
+    niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS' | '';
   };
   step3Data: {
     include_supplier: boolean;
@@ -127,7 +127,7 @@ const finalize = async () => {
       tienda: {
         nombre: props.step1Data.store_name,
         identificador_fiscal: props.step1Data.tax_id || '',
-        nicho: props.step2Data.niche as 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA'
+        nicho: props.step2Data.niche as 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS'
       },
       configuracion: {
         fondo_inicial_defecto: form.value.default_cash

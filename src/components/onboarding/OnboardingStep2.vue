@@ -18,7 +18,7 @@
           :key="option.value"
           type="button"
           class="niche-card"
-          :class="{ active: form.niche === option.value }"
+          :class="[{ active: form.niche === option.value }, { 'niche-card--span-2': option.value === 'MASCOTAS' }]"
           @click="selectNiche(option.value)"
         >
           <span class="niche-icon">{{ option.icon }}</span>
@@ -39,7 +39,7 @@ import { validateStep2 } from '@/utils/onboarding.schemas';
 
 interface Props {
   initialData?: {
-    niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | '';
+    niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS' | '';
   };
 }
 
@@ -69,7 +69,8 @@ const nicheOptions = [
   { value: 'ELECTRONICA', label: 'Electronica', icon: '📱', subtitle: 'Cables, cargadores, audio' },
   { value: 'ABARROTES', label: 'Abarrotes', icon: '🛒', subtitle: 'Snacks, bebidas, despensa' },
   { value: 'FARMACIA', label: 'Farmacia', icon: '💊', subtitle: 'Medicamentos y cuidado' },
-  { value: 'FERRETERIA', label: 'Ferreteria', icon: '🔧', subtitle: 'Herramientas y repuestos' }
+  { value: 'FERRETERIA', label: 'Ferreteria', icon: '🔧', subtitle: 'Herramientas y repuestos' },
+  { value: 'MASCOTAS', label: 'Mascotas y Veterinaria', icon: '🐾', subtitle: 'Alimentos, higiene, accesorios' }
 ];
 
 const selectNiche = (value: any) => {
@@ -99,8 +100,12 @@ defineExpose({
 
 .niche-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.niche-card--span-2 {
+  grid-column: span 2;
 }
 
 .niche-card {
@@ -156,5 +161,15 @@ defineExpose({
 .niche-subtitle {
   color: var(--color-wizard-text-grey);
   font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .niche-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .niche-card--span-2 {
+    grid-column: span 1;
+  }
 }
 </style>

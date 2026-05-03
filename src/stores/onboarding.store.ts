@@ -7,7 +7,7 @@ export interface OnboardingStep1Data {
 }
 
 export interface OnboardingStep2Data {
-  niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | '';
+  niche: 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS' | '';
 }
 
 export interface OnboardingStep3Data {
