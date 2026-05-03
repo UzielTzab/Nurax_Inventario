@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <Transition name="panel-fade">
     <div v-if="isOpen" class="panel-overlay" @click.self="$emit('close')">
       <aside class="side-panel">
@@ -158,6 +159,7 @@
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -171,9 +173,9 @@ import {
 } from '@heroicons/vue/24/outline';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppSelect from '@/components/ui/AppSelect.vue';
-import apiClient from '@/services/api';
 import { useSuppliers } from '@/composables/useSuppliers';
 import { useAuth } from '@/composables/useAuth';
+import { useProductDetail } from '@/composables/useProductDetail';
 
 interface Movement {
   id: string;
@@ -198,6 +200,14 @@ const emit = defineEmits<{
 
 const { suppliers, fetchSuppliers } = useSuppliers();
 const { currentUser, initSession } = useAuth();
+const {
+  categoriesList,
+  fetchCategories: fetchDetailCategories,
+  fetchProductById,
+  fetchProductMovements,
+  patchProductById,
+  deleteProductById,
+} = useProductDetail();
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -207,8 +217,7 @@ const loadingMovements = ref(false);
 const movements = ref<Movement[]>([]);
 const imagePreview = ref('');
 const rawImageFile = ref<File | null>(null);
-const categoriesList = ref<Array<{ id: string; name: string }>>([]);
-const activeStoreId = ref<string | null>(null);
+const removeImageRequested = ref(false);
 
 const form = ref({
   name: '',
@@ -223,37 +232,10 @@ const supplierOptions = computed(() =>
   suppliers.value.map((s: any) => ({ id: String(s.id), name: s.name }))
 );
 
-/**
- * Resuelve el store_id activo del usuario — mismo patrón que AddProductModal.
- * Primero intenta desde el perfil en caché, luego hace fetch a /accounts/stores/.
- */
-const resolveStoreId = async (): Promise<string | null> => {
-  if (activeStoreId.value) return activeStoreId.value;
-
-  const fromUser = currentUser.value?.store_profile?.id;
-  if (fromUser) {
-    activeStoreId.value = String(fromUser);
-    return activeStoreId.value;
-  }
-
-  try {
-    const storesRes = await apiClient.get<any>('/v1/accounts/stores/');
-    if (storesRes.success && Array.isArray(storesRes.data) && storesRes.data.length > 0) {
-      const active = storesRes.data.find((s: any) => s.active) || storesRes.data[0];
-      activeStoreId.value = String(active.id);
-      return activeStoreId.value;
-    }
-  } catch (e) {
-    console.error('[ProductDetailDrawer] Error resolving store id:', e);
-  }
-
-  return null;
-};
-
 const fetchProduct = async (id: string | number) => {
   isLoading.value = true;
   try {
-    const res = await apiClient.get<any>(`/v1/products/products/${id}/`);
+    const res = await fetchProductById(id);
     if (res.success && res.data) {
       const p = res.data;
       form.value = {
@@ -266,6 +248,7 @@ const fetchProduct = async (id: string | number) => {
       };
       imagePreview.value = p.image_url || '';
       rawImageFile.value = null;
+      removeImageRequested.value = false;
     }
   } finally {
     isLoading.value = false;
@@ -276,28 +259,14 @@ const fetchMovements = async (id: string | number) => {
   loadingMovements.value = true;
   movements.value = [];
   try {
-    const res = await apiClient.get<any>(`/v1/products/products/${id}/movements/`);
-    if (res.success && res.data) {
-      movements.value = Array.isArray(res.data) ? res.data : (res.data.results || []);
-    }
+    movements.value = (await fetchProductMovements(id)) as any;
   } finally {
     loadingMovements.value = false;
   }
 };
 
 const fetchCategories = async () => {
-  try {
-    // Resolvemos el store_id primero — igual que AddProductModal
-    const storeId = await resolveStoreId();
-    const res = await apiClient.get<any>('/v1/products/categories/', {
-      params: storeId ? { store_id: storeId } : undefined,
-    });
-    if (res.success && res.data) {
-      categoriesList.value = res.data.results || res.data;
-    }
-  } catch (e) {
-    console.error('[ProductDetailDrawer] Error fetching categories:', e);
-  }
+  await fetchDetailCategories(currentUser.value);
 };
 
 watch(
@@ -320,6 +289,7 @@ const handleImageUpload = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   rawImageFile.value = file;
+  removeImageRequested.value = false;
   const reader = new FileReader();
   reader.onload = (ev) => { imagePreview.value = String(ev.target?.result || ''); };
   reader.readAsDataURL(file);
@@ -328,6 +298,7 @@ const handleImageUpload = (e: Event) => {
 const removeImage = () => {
   imagePreview.value = '';
   rawImageFile.value = null;
+  removeImageRequested.value = true;
 };
 
 const handleSave = async () => {
@@ -344,6 +315,7 @@ const handleSave = async () => {
       if (form.value.category) fd.append('category', form.value.category);
       if (form.value.supplierId) fd.append('supplier', form.value.supplierId);
       fd.append('image_file', rawImageFile.value);
+      if (removeImageRequested.value) fd.append('remove_image', 'true');
       payload = fd;
     } else {
       payload = {
@@ -353,9 +325,10 @@ const handleSave = async () => {
         current_stock: form.value.stock,
         category: form.value.category || undefined,
         supplier: form.value.supplierId || undefined,
+        remove_image: removeImageRequested.value,
       };
     }
-    const res = await apiClient.patch<any>(`/v1/products/products/${props.productId}/`, payload);
+    const res = await patchProductById(props.productId, payload);
     if (res.success) {
       emit('saved', res.data);
     }
@@ -370,7 +343,7 @@ const doDelete = async () => {
   if (!props.productId) return;
   isDeleting.value = true;
   try {
-    const res = await apiClient.delete(`/v1/products/products/${props.productId}/`);
+    const res = await deleteProductById(props.productId);
     if (res.success) {
       showDeleteModal.value = false;
       emit('deleted', props.productId);

@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <Transition name="panel-fade">
     <div v-if="isOpen" class="panel-overlay" @click.self="$emit('close')">
       <aside class="side-panel">
@@ -79,6 +80,7 @@
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">

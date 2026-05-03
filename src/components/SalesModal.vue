@@ -223,7 +223,7 @@
          </div>
         </div>
       </div>
-  </div>
+    </div>
   </div>
 
   <!-- Mobile/Tablet: Fullscreen view -->

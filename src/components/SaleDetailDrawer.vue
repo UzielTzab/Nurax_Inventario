@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <Teleport to="body">
+    <div class="sale-detail-drawer-root">
     <!-- Overlay principal oscuro -->
     <Transition name="fade">
       <div 
@@ -50,7 +51,7 @@
             <div class="ticket-divider"></div>
             <div class="ticket-total">
               <span>TOTAL</span>
-              <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.total) }}</span>
+              <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.total_amount) }}</span>
             </div>
             
             <div v-if="sale.amount_paid" class="ticket-payment-info">
@@ -58,9 +59,9 @@
                 <span>Efectivo:</span>
                 <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.amount_paid) }}</span>
               </div>
-              <div v-if="Number(sale.amount_paid) > Number(sale.total)" style="display: flex; justify-content: space-between;">
+              <div v-if="Number(sale.amount_paid) > Number(sale.total_amount)" style="display: flex; justify-content: space-between;">
                 <span>Cambio:</span>
-                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney((Number(sale.amount_paid) || 0) - (Number(sale.total) || 0)) }}</span>
+                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney((Number(sale.amount_paid) || 0) - (Number(sale.total_amount) || 0)) }}</span>
               </div>
             </div>
             
@@ -107,7 +108,8 @@
         </div>
       </div>
     </Transition>
-  </div>
+    </div>
+    </Teleport>
 </template>
 
 <script setup lang="ts">

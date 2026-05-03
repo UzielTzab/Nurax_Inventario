@@ -262,6 +262,10 @@ export const useProductStore = defineStore('products', () => {
         fd.append('image_file', updatedProduct.imageFile);
       }
 
+      if (updatedProduct.removeImage === true) {
+        fd.append('remove_image', 'true');
+      }
+
       const response = await productsService.updateProduct(updatedProduct.id, fd);
 
       if (response.success && response.data) {

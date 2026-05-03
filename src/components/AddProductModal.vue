@@ -295,7 +295,7 @@ import AppFormSection from '@/components/ui/AppFormSection.vue';
 import AddSupplierModal from '@/components/AddSupplierModal.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
 import { useAuth } from '@/composables/useAuth';
-import apiClient from '@/services/api';
+import { useProductDetail } from '@/composables/useProductDetail';
 
 interface Product {
   id: string | number;
@@ -324,15 +324,17 @@ const emit = defineEmits(['close', 'productAdded', 'productUpdated']);
 
 const { suppliers, fetchSuppliers } = useSuppliers();
 const { currentUser, initSession } = useAuth();
+const {
+  categoriesList,
+  fetchCategories: fetchDetailCategories,
+  createCategory: createDetailCategory,
+} = useProductDetail();
 
 const showAddSupplierModal = ref(false);
 const showCategoryModal = ref(false);
 const newCategoryName = ref('');
 const isCreatingCategory = ref(false);
 const categoryError = ref('');
-const activeStoreId = ref<string | null>(null);
-
-const categoriesList = ref<Array<{ id: number | string; name: string }>>([]);
 const saveAndCreateAnother = ref(false);
 
 const filteredCategories = computed(() => categoriesList.value);
@@ -369,6 +371,7 @@ const formData = reactive({
 
 const imagePreview = ref('');
 const rawImageFile = ref<File | null>(null);
+const removeImageRequested = ref(false);
 
 const normalizeNumber = (value: unknown) => {
   const n = Number(value ?? 0);
@@ -420,6 +423,7 @@ const resetFormForCreate = (isChained = false) => {
   formData.majorPackagings = [];
   imagePreview.value = '';
   rawImageFile.value = null;
+  removeImageRequested.value = false;
 
   if (!isChained) {
     formData.category = '';
@@ -459,6 +463,7 @@ const populateFormForEdit = (product: Product) => {
 
   imagePreview.value = product.image || '';
   rawImageFile.value = null;
+  removeImageRequested.value = false;
   saveAndCreateAnother.value = false;
 };
 
@@ -488,6 +493,7 @@ const handleImageUpload = (event: Event) => {
   reader.readAsDataURL(file);
 
   rawImageFile.value = file;
+  removeImageRequested.value = false;
   target.value = '';
 };
 
@@ -495,6 +501,7 @@ const removeImage = () => {
   imagePreview.value = '';
   formData.image = '';
   rawImageFile.value = null;
+  removeImageRequested.value = true;
 };
 
 const adjustStock = (amount: number) => {
@@ -570,70 +577,24 @@ const paintOutline = (detectedCodes: any[], ctx: CanvasRenderingContext2D) => {
   }
 };
 
-const resolveStoreId = async (): Promise<string | null> => {
-  if (activeStoreId.value) return activeStoreId.value;
-
-  const fromUser = currentUser.value?.store_profile?.id;
-  if (fromUser) {
-    activeStoreId.value = String(fromUser);
-    return activeStoreId.value;
-  }
-
-  try {
-    const storesRes = await apiClient.get<any>('/v1/accounts/stores/');
-    if (storesRes.success && Array.isArray(storesRes.data) && storesRes.data.length > 0) {
-      const active = storesRes.data.find((item: any) => item.active) || storesRes.data[0];
-      activeStoreId.value = String(active.id);
-      return activeStoreId.value;
-    }
-  } catch (error) {
-    console.error('Error resolving store id:', error);
-  }
-
-  return null;
-};
-
 const fetchCategories = async () => {
-  try {
-    const storeId = await resolveStoreId();
-    const response = await apiClient.get<any>('/v1/products/categories/', {
-      params: storeId ? { store_id: storeId } : undefined,
-    });
-    if (!response.success || !response.data) return;
-    categoriesList.value = response.data.results || response.data;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-  }
+  await fetchDetailCategories(currentUser.value);
 };
 
 const createCategory = async () => {
   categoryError.value = '';
   const name = newCategoryName.value.trim();
-  if (!name) {
-    categoryError.value = 'Escribe un nombre de categoria.';
-    return;
-  }
-
-  const storeId = await resolveStoreId();
-  if (!storeId) {
-    categoryError.value = 'No se encontro la tienda activa.';
-    return;
-  }
 
   isCreatingCategory.value = true;
   try {
-    const response = await apiClient.post<any>('/v1/products/categories/', {
-      name,
-      store: storeId,
-    });
+    const response = await createDetailCategory(name, currentUser.value);
 
     if (!response.success || !response.data) {
       categoryError.value = response.error || 'No se pudo crear la categoria.';
       return;
     }
 
-    categoriesList.value.push(response.data);
-    formData.category = response.data.id;
+    formData.category = String(response.data.id);
     newCategoryName.value = '';
     showCategoryModal.value = false;
   } catch (error: any) {
@@ -688,9 +649,6 @@ const buildPackagingsPayload = () => {
 };
 
 const handleSubmit = () => {
-  const baseCost = normalizeNumber(formData.baseCost);
-  const salePrice = normalizeNumber(formData.salePrice);
-
   const payload: any = {
     name: formData.name,
     category: formData.category,
@@ -699,6 +657,7 @@ const handleSubmit = () => {
     baseCost: formData.baseCost,
     salePrice: formData.salePrice,
     imageFile: rawImageFile.value,
+    removeImage: removeImageRequested.value,
     supplierId: formData.supplierId,
     supplier: formData.supplierId,
     productCodes: buildProductCodesPayload(),

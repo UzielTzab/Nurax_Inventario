@@ -139,7 +139,7 @@
                     <div class="product-summary">
                       <span class="product-first">
                         <span class="qty-pill">{{ sale.items?.[0]?.quantity ?? 1 }}×</span>
-                        {{ sale.items?.[0]?.product_name || 'Producto desconocido' }}
+                        {{ sale.items?.[0]?.product_name || 'Venta General' }}
                       </span>
                       <span v-if="sale.items && sale.items.length > 1" class="more-items">
                         +{{ sale.items.length - 1 }} producto{{ sale.items.length - 1 !== 1 ? 's' : '' }} más
@@ -147,7 +147,7 @@
                     </div>
                   </td>
 
-                  <td class="total-cell">${{ formatMoney(Number(sale.total)) }}</td>
+                  <td class="total-cell">${{ formatMoney(sale.total_amount) }}</td>
                   <td>
                     <span v-if="sale.status === 'cancelled'" class="status-badge danger">Cancelado</span>
                     <span v-else class="status-badge success">Completado</span>
@@ -290,9 +290,9 @@ const printSaleTicket = (sale: Sale) => {
     items: (sale.items || []).map(item => ({
       name: item.product_name,
       quantity: item.quantity ?? 1,
-      price: item.unit_price ?? (Number(sale.total) / ((sale.items || []).length || 1)),
+      price: item.unit_price ?? (Number(sale.total_amount) / ((sale.items || []).length || 1)),
     })),
-    total: Number(sale.total),
+    total: Number(sale.total_amount),
     ticketId: sale.id,
     date: formatDateTime(sale.created_at),
     paperWidth: getStoredPaperWidth(),
@@ -395,7 +395,7 @@ const filteredSales = computed(() => {
 
     // 3. Filtro de monto mínimo
     if (minAmount.value > 0) {
-      const total = Number(sale.total);
+      const total = Number(sale.total_amount);
       if (isNaN(total) || total < minAmount.value) return false;
     }
 
@@ -412,7 +412,7 @@ const filteredIncome = computed(() => {
   return filteredSales.value
       .filter(s => s.status !== 'cancelled')
       .reduce((sum, s) => {
-        const val = Number(s.total);
+        const val = Number(s.total_amount);
         return sum + (isNaN(val) ? 0 : val);
       }, 0);
 });
