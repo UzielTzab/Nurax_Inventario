@@ -71,6 +71,21 @@ export interface InventoryTransaction {
   created_at: string;
 }
 
+export interface ProductMovement {
+  id: string;
+  movement_type: string;
+  quantity: number;
+  stock_before: number;
+  stock_after: number;
+  created_at: string;
+  user_name?: string;
+}
+
+export interface CategoryOption {
+  id: string;
+  name: string;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // SERVICIO DE PRODUCTOS
 // ════════════════════════════════════════════════════════════════════════════
@@ -149,6 +164,13 @@ class ProductsService {
   }
 
   /**
+   * Actualiza parcialmente un producto
+   */
+  async patchProduct(id: number | string, data: FormData | Partial<Product>) {
+    return apiClient.patch<Product>(`/v1/products/products/${id}/`, data);
+  }
+
+  /**
    * Elimina un producto
    */
   async deleteProduct(id: number | string) {
@@ -194,6 +216,31 @@ class ProductsService {
     return apiClient.get<InventoryTransaction[]>(
       `/v1/inventory/transactions/?product=${productId}`
     );
+  }
+
+  /**
+   * Obtiene últimos movimientos desde endpoint de productos
+   */
+  async getProductMovements(productId: number | string) {
+    return apiClient.get<ProductMovement[] | PaginationResponse<ProductMovement>>(
+      `/v1/products/products/${productId}/movements/`
+    );
+  }
+
+  /**
+   * Obtiene categorías de productos (opcionalmente por tienda)
+   */
+  async getCategories(storeId?: string | number) {
+    return apiClient.get<CategoryOption[] | PaginationResponse<CategoryOption>>('/v1/products/categories/', {
+      params: storeId ? { store_id: storeId } : undefined,
+    });
+  }
+
+  /**
+   * Crea una categoría de producto
+   */
+  async createCategory(data: { name: string; store: string | number }) {
+    return apiClient.post<CategoryOption>('/v1/products/categories/', data);
   }
 }
 
