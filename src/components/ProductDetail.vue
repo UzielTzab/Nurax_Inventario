@@ -20,24 +20,38 @@
             <!-- Image -->
             <img :src="product.image" alt="" class="w-full h-64 object-cover rounded-lg shadow-md mb-6">
 
-            <!-- Product Info Grid -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-              <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Cantidad</p>
-                <p class="text-2xl font-black text-white mt-1">{{ product.quantity }} <span class="text-sm font-normal text-gray-500 uppercase">u</span></p>
-              </div>
-              <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Precio</p>
-                <p class="text-2xl font-black text-brand-primary mt-1">{{ product.price }}</p>
-              </div>
-              <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Proveedor</p>
-                <p class="text-base font-bold text-white mt-1">{{ product.supplier }}</p>
-              </div>
-              <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Categoría</p>
-                <p class="text-base font-bold text-white mt-1">{{ product.category }}</p>
-              </div>
+            <!-- Product Info Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <AppInput
+                label="Nombre"
+                :model-value="product.name"
+                readonly
+              />
+              <AppInput
+                label="SKU"
+                :model-value="product.sku"
+                readonly
+              />
+              <AppInput
+                label="Cantidad"
+                :model-value="`${product.quantity} u`"
+                readonly
+              />
+              <AppInput
+                label="Precio"
+                :model-value="String(product.price)"
+                readonly
+              />
+              <AppInput
+                label="Proveedor"
+                :model-value="product.supplier"
+                readonly
+              />
+              <AppInput
+                label="Categoría"
+                :model-value="product.category"
+                readonly
+              />
             </div>
 
             <!-- Status Badge -->
@@ -73,6 +87,7 @@
 
 <script setup lang="ts">
 import { XMarkIcon, TruckIcon } from '@heroicons/vue/24/outline';
+import AppInput from '@/components/ui/AppInput.vue';
 
 defineProps({
   product: Object

@@ -109,11 +109,11 @@
             <AppFormSection title="Códigos y Escaneo">
 
               <div class="field-block">
-                <label class="field-label">Codigo principal</label>
                 <div class="inline-input-actions">
                   <AppInput
                     id="sku"
                     v-model="formData.sku"
+                    label="Codigo principal"
                     placeholder="Ej. 750123456789 (Escanea o escribe)"
                     style="flex: 1"
                   />
@@ -130,7 +130,11 @@
                 <label class="field-label">Codigos alternativos</label>
                 <div class="list-block">
                   <div v-for="(_, idx) in formData.alternativeCodes" :key="idx" class="list-row">
-                    <input v-model="formData.alternativeCodes[idx]" class="form-input" type="text" placeholder="Codigo alternativo" />
+                    <AppInput
+                      v-model="formData.alternativeCodes[idx]"
+                      placeholder="Codigo alternativo"
+                      style="flex: 1"
+                    />
                     <button type="button" class="btn-scan small" @click="startScanForAlt(idx)" title="Escanear codigo alternativo">
                       <QrCodeIcon style="width: 16px; height: 16px" />
                     </button>
@@ -154,7 +158,13 @@
                 </label>
                 <div class="stock-input-wrapper">
                   <button type="button" class="btn-adjust" @click="adjustStock(-1)" :disabled="formData.stock <= 0">-</button>
-                  <input v-model.number="formData.stock" class="form-input stock-input" type="number" min="0" required />
+                  <AppInput
+                    v-model="formData.stock"
+                    type="number"
+                    min="0"
+                    required
+                    class="stock-input"
+                  />
                   <button type="button" class="btn-adjust" @click="adjustStock(1)">+</button>
                 </div>
               </div>
@@ -194,9 +204,19 @@
                 <label class="field-label">Empaques mayoristas</label>
                 <div class="list-block">
                   <div v-for="(pkg, idx) in formData.majorPackagings" :key="idx" class="grid-pack-row" style="align-items: center; display: flex; gap: 0.5rem;">
-                    <input v-model="pkg.name" class="form-input" type="text" placeholder="Nombre (Ej. Caja con 50)" style="flex: 1;" />
+                    <AppInput
+                      v-model="pkg.name"
+                      placeholder="Nombre (Ej. Caja con 50)"
+                      style="flex: 1;"
+                    />
                     <span style="font-size: 0.85rem; color: #6b7280; white-space: nowrap;">equivale a:</span>
-                    <input v-model.number="pkg.quantityPerUnit" class="form-input" type="number" min="1" placeholder="Cantidad" style="width: 80px;" />
+                    <AppInput
+                      v-model="pkg.quantityPerUnit"
+                      type="number"
+                      min="1"
+                      placeholder="Cantidad"
+                      style="width: 80px;"
+                    />
                     <button type="button" class="btn-remove" @click="removePackaging(idx)" title="Eliminar empaque">
                       <XMarkIcon style="width: 16px; height: 16px" />
                     </button>
@@ -788,22 +808,6 @@ watch(showCategoryModal, (open) => {
   gap: 0.7rem;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.62rem 0.72rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 0.9rem;
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #06402b;
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.1);
-}
-
 .image-upload-section {
   display: flex;
   flex-direction: column;
@@ -958,6 +962,11 @@ watch(showCategoryModal, (open) => {
 }
 
 .stock-input {
+  text-align: center;
+  font-weight: 700;
+}
+
+:deep(.stock-input .app-input-field) {
   text-align: center;
   font-weight: 700;
 }
