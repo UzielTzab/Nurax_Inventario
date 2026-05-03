@@ -27,7 +27,7 @@
         :autocomplete="autocomplete"
         class="app-input-field"
         :class="{ 'has-left-icon': $slots.icon || iconLeft, 'has-right-icon': type === 'password' || $slots.right }"
-        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+        @input="handleInput"
         @focus="isFocused = true"
         @blur="isFocused = false"
       />
@@ -89,7 +89,9 @@ const props = withDefaults(defineProps<Props>(), {
   required: false,
 });
 
-defineEmits<{ (e: 'update:modelValue', value: string): void }>();
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number): void;
+}>();
 
 // Unique id so label:for works correctly even with multiple instances
 const autoId = `app-input-${Math.random().toString(36).slice(2, 7)}`;
@@ -102,6 +104,17 @@ const currentType = computed(() => {
   if (props.type === 'password') return showPassword.value ? 'text' : 'password';
   return props.type;
 });
+
+const handleInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value;
+
+  if (props.type === 'number') {
+    emit('update:modelValue', value === '' ? '' : Number(value));
+    return;
+  }
+
+  emit('update:modelValue', value);
+};
 
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
@@ -153,6 +166,7 @@ const containerClass = computed(() => ({
 
 .app-input-focused { 
   border-color: var(--color-brand-main, #227d52);
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.1);
 }
 
 .app-input-error-border {
@@ -186,6 +200,12 @@ const containerClass = computed(() => ({
 
 .app-input-field:disabled {
   cursor: not-allowed;
+}
+
+.app-input-field:read-only {
+  cursor: default;
+  background: transparent;
+  color: #111827;
 }
 
 .app-input-field.has-left-icon {

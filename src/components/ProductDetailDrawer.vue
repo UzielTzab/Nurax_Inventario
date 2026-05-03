@@ -10,16 +10,17 @@
             <h2 class="panel-title">Detalle del Producto</h2>
           </div>
           <div class="header-right">
-            <button
+            <AppButton
               v-if="!isLoading"
-              class="btn-danger-ghost"
+              variant="danger"
+              size="sm"
               type="button"
               @click="confirmDelete"
               title="Eliminar producto"
+              :icon="TrashIcon"
             >
-              <TrashIcon style="width:16px;height:16px" />
               Eliminar
-            </button>
+            </AppButton>
             <button class="close-btn" @click="$emit('close')">
               <XMarkIcon class="icon" />
             </button>
@@ -63,8 +64,12 @@
             <div class="form-section">
               <h3 class="section-title">Lo Esencial</h3>
               <div class="field-block">
-                <label class="field-label">Nombre del producto</label>
-                <input v-model="form.name" class="form-input" type="text" placeholder="Nombre del producto" required />
+                <AppInput
+                  v-model="form.name"
+                  label="Nombre del producto"
+                  placeholder="Nombre del producto"
+                  required
+                />
               </div>
               <div class="field-block">
                 <label class="field-label">Categoría</label>
@@ -77,12 +82,22 @@
               <h3 class="section-title">Finanzas</h3>
               <div class="grid-two">
                 <div class="field-block">
-                  <label class="field-label">Costo base ($)</label>
-                  <input v-model.number="form.baseCost" class="form-input" type="number" min="0" step="0.01" />
+                  <AppInput
+                    v-model="form.baseCost"
+                    label="Costo base ($)"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
                 <div class="field-block">
-                  <label class="field-label">Precio de venta ($)</label>
-                  <input v-model.number="form.salePrice" class="form-input" type="number" min="0.01" step="0.01" />
+                  <AppInput
+                    v-model="form.salePrice"
+                    label="Precio de venta ($)"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                  />
                 </div>
               </div>
             </div>
@@ -94,7 +109,12 @@
                 <label class="field-label">Stock físico actual</label>
                 <div class="stock-input-wrapper">
                   <button type="button" class="btn-adjust" @click="form.stock = Math.max(0, form.stock - 1)">−</button>
-                  <input v-model.number="form.stock" class="form-input stock-input" type="number" min="0" />
+                  <AppInput
+                    v-model="form.stock"
+                    type="number"
+                    min="0"
+                    class="stock-input"
+                  />
                   <button type="button" class="btn-adjust" @click="form.stock++">+</button>
                 </div>
               </div>
@@ -172,6 +192,7 @@ import {
   ArrowsRightLeftIcon,
 } from '@heroicons/vue/24/outline';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppInput from '@/components/ui/AppInput.vue';
 import AppSelect from '@/components/ui/AppSelect.vue';
 import { useSuppliers } from '@/composables/useSuppliers';
 import { useAuth } from '@/composables/useAuth';
@@ -535,22 +556,6 @@ const formatDate = (iso: string) => {
   color: #374151;
 }
 
-.form-input {
-  border: 1.5px solid #e5e7eb;
-  border-radius: 8px;
-  padding: .55rem .75rem;
-  font-size: .9rem;
-  color: #111827;
-  background: #fff;
-  transition: border-color .15s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #06402b;
-  box-shadow: 0 0 0 3px rgba(6,64,43,.1);
-}
-
 .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
 .stock-input-wrapper {
@@ -559,7 +564,15 @@ const formatDate = (iso: string) => {
   gap: .4rem;
 }
 
-.stock-input { text-align: center; width: 5rem; }
+.stock-input { width: 5rem; }
+
+:deep(.stock-input .app-input-field) {
+  text-align: center;
+}
+
+:deep(.stock-input .app-input-label) {
+  margin-bottom: 0;
+}
 
 .btn-adjust {
   width: 32px;

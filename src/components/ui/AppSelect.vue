@@ -7,14 +7,14 @@
     </label>
 
     <!-- Custom dropdown button -->
-    <div class="app-select-container" :class="containerClass">
+    <div ref="wrapperRef" class="app-select-container" :class="containerClass">
       <button
+        ref="buttonRef"
         :id="selectId"
         type="button"
         :disabled="disabled"
         class="app-select-button"
         @click="isOpen = !isOpen"
-        @blur="handleBlur"
       >
         <span class="app-select-value">
           {{
@@ -29,10 +29,17 @@
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
+    </div>
 
-      <!-- Dropdown menu -->
+    <!-- Dropdown menu -->
+    <Teleport to="body">
       <Transition name="dropdown">
-        <div v-if="isOpen" class="app-select-menu">
+        <div
+          v-if="isOpen"
+          ref="menuRef"
+          class="app-select-menu"
+          :style="menuStyles"
+        >
           <div
             v-for="option in options"
             :key="option.id || option.value"
@@ -49,7 +56,7 @@
           </div>
         </div>
       </Transition>
-    </div>
+    </Teleport>
 
     <!-- Helper / Error text -->
     <p v-if="error" class="app-select-error">{{ error }}</p>
@@ -58,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 interface SelectOption {
   id?: string | number;
@@ -93,7 +100,10 @@ const autoId = `app-select-${Math.random().toString(36).slice(2, 7)}`;
 const selectId = computed(() => props.id ?? autoId);
 
 const isOpen = ref(false);
-const isFocused = ref(false);
+const wrapperRef = ref<HTMLElement | null>(null);
+const buttonRef = ref<HTMLElement | null>(null);
+const menuRef = ref<HTMLElement | null>(null);
+const menuStyles = ref<Record<string, string>>({});
 
 const wrapperClass = computed(() => ({
   'app-select-disabled': props.disabled,
@@ -101,25 +111,57 @@ const wrapperClass = computed(() => ({
 }));
 
 const containerClass = computed(() => ({
-  'app-select-focused': isFocused.value || isOpen.value,
+  'app-select-focused': isOpen.value,
   'app-select-error-border': !!props.error,
   'app-select-disabled-border': props.disabled,
   'app-select-open': isOpen.value,
 }));
 
+const updateMenuPosition = () => {
+  if (!buttonRef.value) return;
+
+  const rect = buttonRef.value.getBoundingClientRect();
+  menuStyles.value = {
+    top: `${rect.bottom + 8}px`,
+    left: `${rect.left}px`,
+    minWidth: `${rect.width}px`,
+    maxWidth: 'calc(100vw - 1rem)',
+  };
+};
+
+const closeOnOutsideClick = (event: PointerEvent) => {
+  if (!isOpen.value) return;
+
+  const target = event.target as Node | null;
+  if (!target) return;
+
+  if (wrapperRef.value?.contains(target) || menuRef.value?.contains(target)) return;
+  isOpen.value = false;
+};
+
+watch(isOpen, async (open) => {
+  if (open) {
+    await nextTick();
+    updateMenuPosition();
+  }
+});
+
+onMounted(() => {
+  document.addEventListener('pointerdown', closeOnOutsideClick, true);
+  window.addEventListener('resize', updateMenuPosition);
+  window.addEventListener('scroll', updateMenuPosition, true);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', closeOnOutsideClick, true);
+  window.removeEventListener('resize', updateMenuPosition);
+  window.removeEventListener('scroll', updateMenuPosition, true);
+});
+
 const selectOption = (option: SelectOption) => {
   const value = (option.id || option.value) as string | number;
   emit('update:modelValue', value);
   isOpen.value = false;
-};
-
-const handleBlur = () => {
-  isFocused.value = false;
-  setTimeout(() => {
-    if (!isOpen.value) {
-      isOpen.value = false;
-    }
-  }, 150);
 };
 </script>
 
@@ -227,17 +269,13 @@ const handleBlur = () => {
 
 /* Dropdown menu */
 .app-select-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: fixed;
   width: max-content;
-  min-width: 100%;
-  margin-top: 0.5rem;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  z-index: 50;
+  z-index: 9999;
   max-height: 300px;
   overflow-y: auto;
 }
