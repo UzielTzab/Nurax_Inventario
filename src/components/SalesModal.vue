@@ -897,11 +897,12 @@ const parkCart = async () => {
 
     if (!activeCartId.value) {
       const cartResponse: any = await apiClient.get('/v1/carts/carts/my-cart/');
-      if (cartResponse?.success && cartResponse?.data?.active_cart_id) {
-        activeCartId.value = cartResponse.data.active_cart_id;
-        if (cartResponse.data.session_id) {
-          cartSessionId.value = cartResponse.data.session_id;
-          subscribeToCartChannel(cartResponse.data.session_id);
+      const actualData = cartResponse?.data?.data || cartResponse?.data;
+      if (cartResponse?.success && actualData?.active_cart_id) {
+        activeCartId.value = actualData.active_cart_id;
+        if (actualData.session_id) {
+          cartSessionId.value = actualData.session_id;
+          subscribeToCartChannel(actualData.session_id);
         }
       }
     }
@@ -915,10 +916,11 @@ const parkCart = async () => {
   try {
     const response: any = await apiClient.post(`/v1/carts/carts/${activeCartId.value}/park/`);
     if (response && response.success) {
+      const actualData = response.data?.data || response.data;
       enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito aparcado. Puedes recuperarlo después.' });
       cart.value = [];
-      cartSessionId.value = response.data?.new_active_cart?.session_id || '';
-      activeCartId.value = response.data?.new_active_cart?.id || '';
+      cartSessionId.value = actualData?.new_active_cart?.session_id || '';
+      activeCartId.value = actualData?.new_active_cart?.id || '';
       if (cartSessionId.value) {
         subscribeToCartChannel(cartSessionId.value);
       }
@@ -935,9 +937,10 @@ const parkCart = async () => {
 const loadParkedCarts = async () => {
   try {
     const response: any = await apiClient.get('/v1/carts/carts/parked/');
-    if (response && response.success && Array.isArray(response.data)) {
-      parkedCarts.value = response.data;
-      parkedCartsCount.value = response.data.length;
+    const actualData = response?.data?.data || response?.data;
+    if (response && response.success && Array.isArray(actualData)) {
+      parkedCarts.value = actualData;
+      parkedCartsCount.value = actualData.length;
     }
   } catch (error) {
     console.error('Error cargando carritos aparcados:', error);
@@ -953,16 +956,17 @@ const restoreParkedCart = async (parkedCartId: string) => {
   try {
     const response: any = await apiClient.post(`/v1/carts/carts/${parkedCartId}/restore/`);
     if (response && response.success && response.data) {
-      // Actualizar carrito local con los items restaurados
-      if (Array.isArray(response.data.cart)) {
-        cart.value = response.data.cart;
+      const actualData = response.data?.data || response.data;
+      // Actualizar carrito local con los items restaurados mapeados
+      if (Array.isArray(actualData.cart)) {
+        cart.value = mapRemoteCartToLocal(actualData.cart);
       }
-      if (response.data.session_id) {
-        cartSessionId.value = response.data.session_id;
-        subscribeToCartChannel(response.data.session_id);
+      if (actualData.session_id) {
+        cartSessionId.value = actualData.session_id;
+        subscribeToCartChannel(actualData.session_id);
       }
-      if (response.data.active_cart_id) {
-        activeCartId.value = response.data.active_cart_id;
+      if (actualData.active_cart_id) {
+        activeCartId.value = actualData.active_cart_id;
       }
       enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito restaurado' });
       showParkedCartsModal.value = false;
@@ -1012,8 +1016,9 @@ const subscribeToCartChannel = (sessionId: string) => {
       try {
         isRemoteUpdate = true;
         const res: any = await apiClient.get('/v1/carts/carts/my-cart/');
-        if (res.success && res.data && Array.isArray(res.data.cart)) {
-          cart.value = res.data.cart;
+        const actualData = res.data?.data || res.data;
+        if (res.success && actualData && Array.isArray(actualData.cart)) {
+          cart.value = mapRemoteCartToLocal(actualData.cart);
         }
       } catch (err) {
         console.error('Error refetch carrito tras CART_UPDATED:', err);
@@ -1026,6 +1031,21 @@ const subscribeToCartChannel = (sessionId: string) => {
   }
 };
 
+const mapRemoteCartToLocal = (remoteCart: any[]): CartItem[] => {
+  return remoteCart.map((remoteItem: any) => {
+    // remoteItem.product es el ID del producto real en la DB, mientras que remoteItem.id es el del cart_item
+    const localProd = apiProducts.value?.find((p: any) => p.id === remoteItem.product);
+    return {
+      ...(localProd || {}),
+      id: remoteItem.product, // Importante: usar el ID del producto, no el del cart_item para igualar addToCart
+      cart_item_id: remoteItem.id, // Guardar el ID original del item por si se requiere
+      name: remoteItem.product_name || localProd?.name || 'Producto',
+      quantity: remoteItem.quantity,
+      sale_price: remoteItem.unit_price_at_time || localProd?.sale_price || localProd?.price || 0,
+    } as any;
+  });
+};
+
 const syncCartToBackend = async () => {
   if (isRemoteUpdate) return;
   const prev = JSON.parse(JSON.stringify(cart.value));
@@ -1036,11 +1056,11 @@ const syncCartToBackend = async () => {
     });
 
     if (res && res.success && res.data) {
-      const syncData: any = res.data as any;
+      const syncData: any = (res.data as any)?.data || res.data;
       // Actualizar estado local desde servidor (fuente de la verdad)
       if (Array.isArray(syncData.cart)) {
         isRemoteUpdate = true;
-        cart.value = syncData.cart;
+        cart.value = mapRemoteCartToLocal(syncData.cart);
         isRemoteUpdate = false;
       }
       if (syncData.session_id) {
@@ -1594,11 +1614,26 @@ onMounted(async () => {
   pusher = new Pusher(pusherKey, {
     cluster: pusherCluster,
     forceTLS: true,
-    authEndpoint: '/api/pusher/auth/',
-    auth: {
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken') || ''
-      }
+    authorizer: (channel: any) => {
+      return {
+        authorize: (socketId: string, callback: any) => {
+          apiClient.post('/pusher/auth/', {
+            socket_id: socketId,
+            channel_name: channel.name
+          })
+          .then((response: any) => {
+            if (response && response.success) {
+              const actualData = response.data?.data || response.data;
+              callback(null, actualData);
+            } else {
+              callback(new Error(response?.error || 'Auth failed'), { auth: '' });
+            }
+          })
+          .catch((err: any) => {
+            callback(new Error(err.message), { auth: '' });
+          });
+        }
+      };
     }
   });
   
