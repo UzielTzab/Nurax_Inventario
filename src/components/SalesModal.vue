@@ -12,21 +12,10 @@
           </div>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <button 
-            class="icon-btn" 
-            @click="openParkedCartsModal" 
-            title="Ver carritos aparcados"
-            style="padding: 0.5rem; border-radius: 8px; background: #f3f4f6; border: 1px solid #e5e7eb; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: #6b7280;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 1 7.5 0v4.5m-7.5 0-1.572-3.068a2.25 2.25 0 0 0-4.156 0L9 10.5m0 0H3.75m0 0h15m-10.5 6h10.5m-10.5 0v3.75a2.25 2.25 0 0 0 4.5 0V16.5" />
-            </svg>
-            <span style="font-size: 0.8rem; font-weight: 600; color: #374151;">{{ parkedCartsCount || '' }}</span>
-          </button>
           <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       </div>
@@ -95,10 +84,15 @@
                 </div>
               </transition>
             </div>
-            <div class="pairing-indicator" :class="{ paired: isScannerPaired }" style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb;">
-              <span class="pairing-dot" :style="{ background: isScannerPaired ? '#10b981' : '#f59e0b', width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' }"></span>
-              <span :style="{ color: isScannerPaired ? '#10b981' : '#4b5563' }">{{ isScannerPaired ? '🟢 Emparejado: Tablet 1' : '📱 Sin emparejar' }}</span>
-            </div>
+            <button 
+              class="pairing-indicator" 
+              :class="{ paired: isScannerPaired }" 
+              style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;"
+              title="Estado del escáner"
+            >
+              <span v-if="isScannerPaired" style="color: #10b981;">🟢 Celular Conectado</span>
+              <span v-else style="color: #4b5563;">📱 Vincular Celular</span>
+            </button>
           </div>
 
           <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }">
@@ -200,22 +194,41 @@
             />
           </div>
           
-          <div class="cart-header">
-            <div class="cart-title">
-              <ShoppingCartIcon class="cart-icon" />
-              <h3>Resumen de Venta</h3>
+          <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="cart-title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <ShoppingCartIcon class="cart-icon" style="margin: 0;" />
+              <h3 style="margin: 0;">Resumen de Venta</h3>
             </div>
 
-            <div style="display: flex; gap: 0.5rem;">
-              <button 
-                class="icon-btn" 
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <!-- Botón: Ventas en espera con Badge -->
+              <div v-if="parkedCartsCount > 0" style="position: relative; display: inline-flex;">
+                <AppButton 
+                  variant="outline"
+                  iconOnly
+                  @click="openParkedCartsModal" 
+                  title="Ver ventas pausadas"
+                >
+                  <ClipboardDocumentListIcon style="width: 20px; height: 20px;" />
+                </AppButton>
+                <!-- Notification Badge -->
+                <span style="position: absolute; top: -4px; right: -4px; background-color: #ef4444; color: white; border-radius: 9999px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; border: 2px solid white; line-height: 1; z-index: 10;">
+                  {{ parkedCartsCount }}
+                </span>
+              </div>
+
+              <!-- Botón: Pausar Venta -->
+              <AppButton 
+                variant="soft-warning"
+                iconOnly
                 @click="parkCart" 
                 :disabled="cart.length === 0" 
-                title="Aparcar carrito para después"
-                style="padding: 0.5rem 0.75rem; border-radius: 8px; background: #fff8e1; border: 1px solid #fbbf24; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 600; font-size: 0.8rem;"
+                title="Pausar venta actual"
               >
-                📌 Aparcar
-              </button>
+                <PauseIcon style="width: 20px; height: 20px;" />
+              </AppButton>
+
+              <!-- Botón: Vaciar Venta -->
               <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
                 <TrashIcon class="w-5 h-5" />
               </button>
@@ -741,13 +754,13 @@
               <div style="font-size: 0.875rem; color: #6b7280;">{{ parkedCart.items_count }} items · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
               <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ parkedCart.parked_at ? new Date(parkedCart.parked_at).toLocaleString() : 'N/A' }}</div>
             </div>
-            <button
-              class="icon-btn"
-              style="padding: 0.6rem 0.9rem; border-radius: 10px; background: #dcfce7; border: 1px solid #16a34a; color: #166534; font-weight: 700; cursor: pointer;"
+            <AppButton
+              variant="fill"
+              size="sm"
               @click="restoreParkedCart(parkedCart.id)"
             >
               Recuperar
-            </button>
+            </AppButton>
           </div>
         </div>
       </div>
@@ -777,7 +790,10 @@ import {
   TagIcon,
   ArrowRightIcon,
   PhotoIcon,
-  XMarkIcon
+  XMarkIcon,
+  QueueListIcon,
+  ClipboardDocumentListIcon,
+  PauseIcon
 } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { QrcodeStream } from 'vue-qrcode-reader';
