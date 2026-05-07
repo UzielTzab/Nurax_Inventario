@@ -279,9 +279,7 @@
                   <div v-for="(product, idx) in ticketProducts" :key="idx" class="ticket-tr">
                     <span class="left-col">
                       {{ product.quantity }}x {{ product.name }}
-                      <template v-if="product.quantity > 1">
-                        <span class="unit-price"> ({{ product.unitPriceFormatted }})</span>
-                      </template>
+                      <span class="unit-price"> ({{ product.unitPriceFormatted }})</span>
                     </span>
                     <span class="right-col">{{ product.lineTotalFormatted }}</span>
                   </div>
@@ -308,7 +306,7 @@
                   <p class="ticket-thank-you">
                     "{{ formattedThankYouMessage }}"
                   </p>
-                  <p class="ticket-number">NO. TICKET #004592</p>
+                  <p class="ticket-number">NO. TICKET {{ ticketFolio }}</p>
                   <!-- Mock Barcode -->
                   <div class="ticket-barcode">
                     <svg viewBox="0 0 200 40" preserveAspectRatio="none">
@@ -454,7 +452,7 @@ const ticketProducts = computed(() => {
 
     return {
       quantity: qty,
-      name: p.name,
+      name: capitalizeFirstLetter(p.name || ''),
       unitPriceNumber,
       lineTotalNumber,
       unitPriceFormatted,
@@ -475,6 +473,13 @@ const ticketCash = computed(() => {
 
 const ticketChange = computed(() => {
   return Math.max(0, ticketCash.value - ticketSubtotal.value);
+});
+
+// Short folio for ticket preview (take last 8 chars of a UUID) — frontend MVP hack
+const mockSaleUuid = '05F59484-F423-49DC-B124-00EE2BC2C024';
+const ticketFolio = computed(() => {
+  const raw = (mockSaleUuid || '').replace(/-/g, '');
+  return '#' + raw.slice(-8).toUpperCase();
 });
 
 const capitalizeFirstLetter = (value: string) => {
@@ -1172,6 +1177,12 @@ textarea:focus {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
   font-family: inherit;
   margin-bottom: 1.5rem;
+  font-style: normal;
+}
+
+/* Force normal font-style for ticket preview to avoid italics on thermal printers */
+.ticket-simulation, .ticket-simulation * {
+  font-style: normal !important;
 }
 
 .ticket-header {

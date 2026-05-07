@@ -38,6 +38,8 @@ export interface BuildTicketOptions {
   date: string;
   paperWidth?: PaperWidth;
   isReprint?: boolean;
+  amountPaid?: number;
+  changeReturned?: number;
   /** localStorage key to persist paper width preference */
 }
 
@@ -48,6 +50,21 @@ const PAPER_WIDTHS: Record<PaperWidth, string> = {
   'A4': '210mm',
 };
 
+// Helper: capitalize first letter
+function capitalizeFirstLetter(str: string): string {
+  if (!str) return str;
+  const match = str.match(/[A-Za-z]/);
+  if (!match || match.index === undefined) return str;
+  const idx = match.index;
+  return str.slice(0, idx) + str.charAt(idx).toUpperCase() + str.slice(idx + 1);
+}
+
+// Helper: short folio from UUID (last 8 chars)
+function getShortFolio(uuid: string | number): string {
+  const raw = String(uuid).replace(/-/g, '');
+  return '#' + raw.slice(-8).toUpperCase();
+}
+
 export function buildTicketHtml(opts: BuildTicketOptions): string {
   const {
     store,
@@ -57,6 +74,8 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
     date,
     paperWidth = '80mm',
     isReprint = false,
+    amountPaid = 0,
+    changeReturned = 0,
   } = opts;
 
   const currency  = store.currency_symbol?.trim() || '$';
@@ -78,20 +97,39 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
 
   // ── Items rows ─────────────────────────────────────────────────────────────
   const itemsHtml = items.map(item => {
-    const lineTotal = (Number(item.price) * item.quantity).toFixed(2);
+    const unitPrice = Number(item.price);
+    const lineTotal = (unitPrice * item.quantity).toFixed(2);
+    const capitalizedName = capitalizeFirstLetter(item.name || '');
     return `
       <div class="item-row">
         <span class="item-qty-name">
           <span class="qty">${item.quantity}x</span>
-          ${item.name}
+          ${capitalizedName} <span class="unit-price">(${currency}${unitPrice.toFixed(2)})</span>
         </span>
         <span class="item-price">${currency}${lineTotal}</span>
       </div>
     `;
   }).join('');
 
-  // ── Ticket number formatted ───────────────────────────────────────────────
-  const ticketNumFormatted = `NO. TICKET #${String(ticketId).padStart(6, '0')}`;
+  // ── Ticket number formatted (short folio from UUID) ────────────────────────
+  const ticketNumFormatted = `NO. TICKET ${getShortFolio(ticketId)}`;
+
+  // ── Payment info HTML ──────────────────────────────────────────────────────
+  const paymentHtml = (amountPaid || 0) > 0 || (changeReturned || 0) > 0 ? `
+    <div class="payment-info">
+      <div class="payment-row">
+        <span>Efectivo</span>
+        <span>${currency}${(amountPaid || 0).toFixed(2)}</span>
+      </div>
+      <div class="payment-row">
+        <span>Cambio</span>
+        <span>${currency}${(changeReturned || 0).toFixed(2)}</span>
+      </div>
+    </div>
+  ` : '';
+
+  // ── Capitalize thank-you message ──────────────────────────────────────────
+  const ticketMsgCapitalized = capitalizeFirstLetter(ticketMsg);
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -229,10 +267,31 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
 
     .thank-you {
       font-size: ${paperWidth === '58mm' ? '11px' : '13px'};
-      font-style: italic;
+      font-style: normal;
       color: #374151;
       margin-bottom: 10px;
       padding: 0 8px;
+    }
+
+    .unit-price {
+      font-size: ${paperWidth === '58mm' ? '9px' : '10px'};
+      color: #9ca3af;
+      margin-left: 2px;
+    }
+
+    .payment-info {
+      margin-top: 10px;
+      padding: 8px 0;
+      border-top: 1px dashed #e5e7eb;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .payment-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: ${paperWidth === '58mm' ? '10px' : '11px'};
+      color: #6b7280;
+      padding: 3px 4px;
     }
 
     .ticket-num {
@@ -283,7 +342,7 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
   <div class="items-section">
     <div class="items-header">
       <span>Cant. Artículo</span>
-      <span>Total</span>
+      <span>Importe</span>
     </div>
     ${itemsHtml}
   </div>
@@ -298,9 +357,12 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
 
   <hr class="divider" />
 
+  <!-- Payment Info (if available) -->
+  ${paymentHtml}
+
   <!-- Footer -->
   <div class="footer">
-    <div class="thank-you">"${ticketMsg}"</div>
+    <div class="thank-you">"${ticketMsgCapitalized}"</div>
     <div class="ticket-num">${ticketNumFormatted}</div>
     ${barcodeHtml}
     ${isReprint ? '<div class="reprint-badge">— Reimpresión —</div>' : ''}

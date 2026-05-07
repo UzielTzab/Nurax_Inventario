@@ -158,6 +158,8 @@ const printTicket = () => {
     date: currentDate.value,
     paperWidth: getStoredPaperWidth(),
     isReprint: false,
+    amountPaid: props.amountPaid,
+    changeReturned: props.changeReturned,
   });
   openTicketPrint(html);
 };
