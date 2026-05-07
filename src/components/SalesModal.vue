@@ -1,15 +1,34 @@
+
 <template>
   <!-- Desktop: Modal clásico -->
   <div v-if="isOpen && !isMobileOrTablet" class="modal-overlay">
     <div class="modal-content">
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <h2 class="modal-title">Punto de Venta</h2>
-        <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
+      <!-- Modal Header with Terminal Indicator -->
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+          <h2 class="modal-title">Punto de Venta</h2>
+          <div v-if="currentUser && currentUser.store_profile" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">
+            📦 {{ currentUser.store_profile.name || currentUser.store_profile.company_name || 'Tienda' }} ({{ currentUser.name || currentUser.username }})
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button 
+            class="icon-btn" 
+            @click="openParkedCartsModal" 
+            title="Ver carritos aparcados"
+            style="padding: 0.5rem; border-radius: 8px; background: #f3f4f6; border: 1px solid #e5e7eb; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: #6b7280;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 1 7.5 0v4.5m-7.5 0-1.572-3.068a2.25 2.25 0 0 0-4.156 0L9 10.5m0 0H3.75m0 0h15m-10.5 6h10.5m-10.5 0v3.75a2.25 2.25 0 0 0 4.5 0V16.5" />
+            </svg>
+            <span style="font-size: 0.8rem; font-weight: 600; color: #374151;">{{ parkedCartsCount || '' }}</span>
+          </button>
+          <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+          </button>
+        </div>
       </div>
 
       <div v-if="isInitializing" class="empty-state">
@@ -186,9 +205,21 @@
               <ShoppingCartIcon class="cart-icon" />
               <h3>Resumen de Venta</h3>
             </div>
-            <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
-              <TrashIcon class="w-5 h-5" />
-            </button>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <button 
+                class="icon-btn" 
+                @click="parkCart" 
+                :disabled="cart.length === 0" 
+                title="Aparcar carrito para después"
+                style="padding: 0.5rem 0.75rem; border-radius: 8px; background: #fff8e1; border: 1px solid #fbbf24; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 600; font-size: 0.8rem;"
+              >
+                📌 Aparcar
+              </button>
+              <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
+                <TrashIcon class="w-5 h-5" />
+              </button>
+            </div>
           </div>
           
           <div v-if="cart.length === 0" class="sale-items-placeholder">
@@ -688,6 +719,40 @@
     @close="showOpenShiftModal = false"
     @shift-opened="handleShiftOpened"
   />
+
+  <Transition name="fade">
+    <div v-if="showParkedCartsModal" class="modal-overlay" style="z-index: 10015; align-items: center; justify-content: center;" @click.self="showParkedCartsModal = false">
+      <div class="modal-content" style="max-width: 640px; width: 92%; max-height: 80vh; overflow-y: auto; padding: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="text-xl font-bold m-0" style="color: #1f2937;">Carritos aparcados</h2>
+          <button @click="showParkedCartsModal = false" style="background:none; border:none; cursor:pointer;">
+            <XMarkIcon style="width: 24px; height: 24px; color: #6b7280;"/>
+          </button>
+        </div>
+
+        <div v-if="parkedCarts.length === 0" style="padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 16px;">
+          No hay carritos aparcados todavía.
+        </div>
+
+        <div v-else style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div v-for="parkedCart in parkedCarts" :key="parkedCart.id" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 16px; background: white;">
+            <div style="min-width: 0;">
+              <div style="font-weight: 700; color: #111827;">{{ parkedCart.store_name }}</div>
+              <div style="font-size: 0.875rem; color: #6b7280;">{{ parkedCart.items_count }} items · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
+              <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ parkedCart.parked_at ? new Date(parkedCart.parked_at).toLocaleString() : 'N/A' }}</div>
+            </div>
+            <button
+              class="icon-btn"
+              style="padding: 0.6rem 0.9rem; border-radius: 10px; background: #dcfce7; border: 1px solid #16a34a; color: #166534; font-weight: 700; cursor: pointer;"
+              @click="restoreParkedCart(parkedCart.id)"
+            >
+              Recuperar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -729,6 +794,8 @@ const { products: apiProducts, fetchProducts, pagination, goToPage, setPageSize 
 
 interface CartItem extends Product {
   quantity: number;
+  product?: string | number;
+  unit_price_at_time?: number | string;
 }
 
 interface PosClient {
@@ -767,6 +834,10 @@ const shiftBannerPulse = ref(false);
 const showFilterMenu = ref(false);
 const selectedCategory = ref<string | null>(null);
 const filterMenuRef = ref<HTMLElement | null>(null);
+const showParkedCartsModal = ref(false);
+const parkedCarts = ref<any[]>([]);
+const parkedCartsCount = ref(0);
+const activeCartId = ref('');
 
 const clients = ref<PosClient[]>([]);
 const clientSearch = ref('');
@@ -818,6 +889,93 @@ const normalizeCategoryName = (product: Product) => {
   return 'Sin categoria';
 };
 
+const parkCart = async () => {
+  if (!activeCartId.value) {
+    if (cart.value.length > 0) {
+      await syncCartToBackend();
+    }
+
+    if (!activeCartId.value) {
+      const cartResponse: any = await apiClient.get('/v1/carts/carts/my-cart/');
+      if (cartResponse?.success && cartResponse?.data?.active_cart_id) {
+        activeCartId.value = cartResponse.data.active_cart_id;
+        if (cartResponse.data.session_id) {
+          cartSessionId.value = cartResponse.data.session_id;
+          subscribeToCartChannel(cartResponse.data.session_id);
+        }
+      }
+    }
+
+    if (!activeCartId.value) {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: 'No hay carrito activo para aparcar' });
+      return;
+    }
+  }
+
+  try {
+    const response: any = await apiClient.post(`/v1/carts/carts/${activeCartId.value}/park/`);
+    if (response && response.success) {
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito aparcado. Puedes recuperarlo después.' });
+      cart.value = [];
+      cartSessionId.value = response.data?.new_active_cart?.session_id || '';
+      activeCartId.value = response.data?.new_active_cart?.id || '';
+      if (cartSessionId.value) {
+        subscribeToCartChannel(cartSessionId.value);
+      }
+      await loadParkedCarts();
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response?.error || 'No se pudo aparcar el carrito' });
+    }
+  } catch (error) {
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo aparcar el carrito' });
+    console.error('Error al aparcar carrito:', error);
+  }
+};
+
+const loadParkedCarts = async () => {
+  try {
+    const response: any = await apiClient.get('/v1/carts/carts/parked/');
+    if (response && response.success && Array.isArray(response.data)) {
+      parkedCarts.value = response.data;
+      parkedCartsCount.value = response.data.length;
+    }
+  } catch (error) {
+    console.error('Error cargando carritos aparcados:', error);
+  }
+};
+
+const openParkedCartsModal = async () => {
+  await loadParkedCarts();
+  showParkedCartsModal.value = true;
+};
+
+const restoreParkedCart = async (parkedCartId: string) => {
+  try {
+    const response: any = await apiClient.post(`/v1/carts/carts/${parkedCartId}/restore/`);
+    if (response && response.success && response.data) {
+      // Actualizar carrito local con los items restaurados
+      if (Array.isArray(response.data.cart)) {
+        cart.value = response.data.cart;
+      }
+      if (response.data.session_id) {
+        cartSessionId.value = response.data.session_id;
+        subscribeToCartChannel(response.data.session_id);
+      }
+      if (response.data.active_cart_id) {
+        activeCartId.value = response.data.active_cart_id;
+      }
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito restaurado' });
+      showParkedCartsModal.value = false;
+      await loadParkedCarts();
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response?.error || 'No se pudo restaurar el carrito' });
+    }
+  } catch (error) {
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo restaurar el carrito' });
+    console.error('Error al restaurar carrito:', error);
+  }
+};
+
 const categoryOptions = computed(() => {
   if (!apiProducts.value || apiProducts.value.length === 0) return [];
   const unique = new Set<string>();
@@ -836,14 +994,69 @@ const clearFilterLabel = computed(() => {
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 let isRemoteUpdate = false;
 
+const cartSessionId = ref('');
+let cartChannel: any = null;
+const subscribeToCartChannel = (sessionId: string) => {
+  try {
+    if (!pusher) return;
+    if (cartChannel && cartChannel.name === `private-cart-${sessionId}`) return;
+    if (cartChannel) {
+      pusher.unsubscribe(cartChannel.name);
+    }
+    cartChannel = pusher.subscribe(`private-cart-${sessionId}`);
+    cartChannel.bind('CART_UPDATED', async (data: any) => {
+      const fromDeviceId = data.device_id;
+      // Ignorar si el evento vino de esta misma sesión
+      if (fromDeviceId === localDeviceId) return;
+      // Refetch silencioso del carrito para mantener fuente de la verdad
+      try {
+        isRemoteUpdate = true;
+        const res: any = await apiClient.get('/v1/carts/carts/my-cart/');
+        if (res.success && res.data && Array.isArray(res.data.cart)) {
+          cart.value = res.data.cart;
+        }
+      } catch (err) {
+        console.error('Error refetch carrito tras CART_UPDATED:', err);
+      } finally {
+        isRemoteUpdate = false;
+      }
+    });
+  } catch (e) {
+    console.warn('subscribeToCartChannel error', e);
+  }
+};
+
 const syncCartToBackend = async () => {
   if (isRemoteUpdate) return;
+  const prev = JSON.parse(JSON.stringify(cart.value));
   try {
-    await apiClient.post('/v1/products/products/sync-cart/', {
+    const res = await apiClient.post('/v1/carts/carts/sync-cart/', {
       cart: cart.value,
       device_id: localDeviceId
     });
+
+    if (res && res.success && res.data) {
+      const syncData: any = res.data as any;
+      // Actualizar estado local desde servidor (fuente de la verdad)
+      if (Array.isArray(syncData.cart)) {
+        isRemoteUpdate = true;
+        cart.value = syncData.cart;
+        isRemoteUpdate = false;
+      }
+      if (syncData.session_id) {
+        cartSessionId.value = syncData.session_id;
+        subscribeToCartChannel(syncData.session_id);
+      }
+      if (syncData.active_cart_id) {
+        activeCartId.value = syncData.active_cart_id;
+      }
+    } else {
+      cart.value = prev;
+      enqueueSnackbar({ type: 'error', title: 'Error de sincronización', message: res?.error || 'No se pudo sincronizar el carrito.' });
+    }
   } catch (error) {
+    cart.value = prev;
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo transmitir el carrito al servidor.' });
     console.error("Error transmitiendo carrito:", error);
   }
 };
@@ -1252,9 +1465,9 @@ const confirmPayment = async () => {
       cash_shift: shiftsStore.currentShift?.id || null,
       device_id: localDeviceId,
       items: cart.value.map(item => ({ 
-          product: Number(item.id),
+          product: item.product || item.id,
           quantity: item.quantity,
-          unit_price: Number(item.sale_price ?? item.price ?? 0)
+          unit_price: Number(item.unit_price_at_time ?? item.sale_price ?? item.price ?? 0)
       }))
     });
     
@@ -1276,10 +1489,13 @@ const confirmPayment = async () => {
   }
 };
 
-const handleCloseSuccess = () => {
+const handleCloseSuccess = async () => {
   showSuccessModal.value = false;
   clearCart(); // Usamos clearCart para detonar el sync vacío al servidor
   
+  // Refrescar stock de productos localmente después de una venta
+  await fetchProducts();
+
   // Auto focus en barra de búsqueda para nueva venta
   nextTick(() => {
     if (searchInputRef.value) {
@@ -1336,11 +1552,22 @@ onMounted(async () => {
     await fetchClients();
 
     // 3. Cargar el carrito guardado en la Base de Datos (si existe)
-    const res = await apiClient.get<any>('/v1/products/products/my-cart/');
-    if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
-      isRemoteUpdate = true;
-      cart.value = res.data.cart;
-      isRemoteUpdate = false;
+    const res: any = await apiClient.get('/v1/carts/carts/my-cart/');
+    if (res.success && res.data) {
+      const cartData: any = res.data;
+      if (Array.isArray(cartData.cart) && cartData.cart.length > 0) {
+        isRemoteUpdate = true;
+        cart.value = cartData.cart;
+        isRemoteUpdate = false;
+      }
+      if (cartData.session_id) {
+        cartSessionId.value = cartData.session_id;
+        subscribeToCartChannel(cartData.session_id);
+      }
+      if (cartData.active_cart_id) {
+        activeCartId.value = cartData.active_cart_id;
+      }
+      await loadParkedCarts();
     }
   } catch (e) {
     console.error("Error al inicializar Punto de Venta:", e);
@@ -1357,9 +1584,22 @@ onMounted(async () => {
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
 
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()!.split(';').shift();
+    return null;
+  };
+
   pusher = new Pusher(pusherKey, {
     cluster: pusherCluster,
-    forceTLS: true
+    forceTLS: true,
+    authEndpoint: '/api/pusher/auth/',
+    auth: {
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      }
+    }
   });
   
   channelName = `pos-user-${userId}`;
@@ -1399,21 +1639,8 @@ onMounted(async () => {
 
   // -------------------------------------------------------------
   // B. Escuchar cambios de Carrito de otro dispositivo
+  // (Se maneja en el canal privado del carrito cuando estamos suscritos)
   // -------------------------------------------------------------
-  channel.bind('CART_UPDATED', (data: any) => {
-    const nuevoCarrito = data.cart;
-    const fromDeviceId = data.device_id;
-    
-    // Si the device_id no es igual a nuestro localDeviceId
-    if (fromDeviceId !== localDeviceId && nuevoCarrito) {
-      isRemoteUpdate = true;
-      cart.value = nuevoCarrito;
-      isRemoteUpdate = false; // Restablecer bandera tras actualización síncrona
-      isScannerPaired.value = true;
-      scannerPairingLabel.value = `📱 Emparejado con ${String(fromDeviceId).slice(0, 10)}`;
-      console.log("Carrito sincronizado por actualización remota de otro dispositivo.");
-    }
-  });
 
   // Evento: INVENTORY_UPDATED
   // Enviado por backend cuando se vende, devuelve o modifica un producto
@@ -1496,9 +1723,17 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 };
 
 onUnmounted(() => {
-  if (channelName && pusher) {
-    pusher.unsubscribe(channelName);
-    pusher.disconnect();
+  try {
+    if (cartChannel && pusher) {
+      pusher.unsubscribe(cartChannel.name || `private-cart-${cartSessionId.value}`);
+      cartChannel = null;
+    }
+    if (channelName && pusher) {
+      pusher.unsubscribe(channelName);
+      pusher.disconnect();
+    }
+  } catch (e) {
+    console.warn('Error desconectando Pusher:', e);
   }
   window.removeEventListener('resize', checkDeviceSize);
   window.removeEventListener('keydown', handleGlobalKeydown);
