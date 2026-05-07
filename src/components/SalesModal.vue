@@ -44,17 +44,47 @@
             <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
               <QrCodeIcon class="w-5 h-5" />
             </button>
-            <button class="icon-btn" title="Filtros">
-              <FunnelIcon class="w-5 h-5" />
-            </button>
+            <div class="filter-menu-wrapper" ref="filterMenuRef">
+              <button
+                class="icon-btn filter-btn"
+                :class="{ 'filter-active': hasActiveCategory }"
+                title="Filtros"
+                @click="toggleFilterMenu"
+              >
+                <FunnelIcon class="w-5 h-5" />
+                <span v-if="hasActiveCategory" class="filter-badge"></span>
+              </button>
+              <transition name="fade">
+                <div v-if="showFilterMenu" class="filter-menu">
+                  <button type="button" class="filter-menu-item" @click="clearCategoryFilter">
+                    {{ clearFilterLabel }}
+                  </button>
+                  <div v-if="categoryOptions.length" class="filter-menu-divider"></div>
+                  <button
+                    v-for="category in categoryOptions"
+                    :key="category"
+                    type="button"
+                    class="filter-menu-item"
+                    :class="{ 'is-selected': selectedCategory === category }"
+                    @click="selectCategory(category)"
+                  >
+                    {{ category }}
+                  </button>
+                  <div v-if="categoryOptions.length === 0" class="filter-menu-empty">
+                    Sin categorias
+                  </div>
+                </div>
+              </transition>
+            </div>
             <div class="pairing-indicator" :class="{ paired: isScannerPaired }" style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb;">
               <span class="pairing-dot" :style="{ background: isScannerPaired ? '#10b981' : '#f59e0b', width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' }"></span>
               <span :style="{ color: isScannerPaired ? '#10b981' : '#4b5563' }">{{ isScannerPaired ? '🟢 Emparejado: Tablet 1' : '📱 Sin emparejar' }}</span>
             </div>
           </div>
 
-          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner">
-            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }">
+              <span>⚠️ Tu turno no ha iniciado.</span>
+              <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
           <!-- Products List -->
@@ -209,17 +239,18 @@
                 <TagIcon class="w-5 h-5" />
               </button>
             </div>
-            <AppButton
-              class="btn-checkout"
-              variant="fill"
-              fullWidth
-              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
-              :loading="isSubmitting"
-              @click="handleCheckoutClick"
-            >
-              IR AL COBRO
-              <ArrowRightIcon class="w-5 h-5" />
-            </AppButton>
+            <div class="checkout-trigger" @click="handleCheckoutClickProxy">
+              <AppButton
+                class="btn-checkout"
+                variant="fill"
+                fullWidth
+                :disabled="cart.length === 0 || !shiftsStore.hasOpenShift || isSubmitting"
+                :loading="isSubmitting"
+              >
+                IR AL COBRO
+                <ArrowRightIcon class="w-5 h-5" />
+              </AppButton>
+            </div>
          </div>
         </div>
       </div>
@@ -272,8 +303,9 @@
             </button>
           </div>
 
-          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" style="margin: 0 1rem 1rem 1rem;">
-            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }" style="margin: 0 1rem 1rem 1rem;">
+            <span>⚠️ Tu turno no ha iniciado.</span>
+            <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
           <!-- Products List -->
@@ -447,16 +479,17 @@
 
           <!-- Checkout Button - Always Visible -->
           <div style="padding: 1rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;">
-            <AppButton
-              class="btn-checkout"
-              variant="fill"
-              fullWidth
-              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
-              :loading="isSubmitting"
-              @click="handleCheckoutClick"
-            >
-              FINALIZAR VENTA
-            </AppButton>
+            <div class="checkout-trigger" @click="handleCheckoutClickProxy">
+              <AppButton
+                class="btn-checkout"
+                variant="fill"
+                fullWidth
+                :disabled="cart.length === 0 || !shiftsStore.hasOpenShift || isSubmitting"
+                :loading="isSubmitting"
+              >
+                FINALIZAR VENTA
+              </AppButton>
+            </div>
           </div>
         </div>
       </div>
@@ -730,6 +763,10 @@ const amountPaid = ref(0);
 const isInitializing = ref(true);
 const showOpenShiftModal = ref(false);
 const pendingCheckoutAfterShift = ref(false);
+const shiftBannerPulse = ref(false);
+const showFilterMenu = ref(false);
+const selectedCategory = ref<string | null>(null);
+const filterMenuRef = ref<HTMLElement | null>(null);
 
 const clients = ref<PosClient[]>([]);
 const clientSearch = ref('');
@@ -767,6 +804,33 @@ const filteredClients = computed(() => {
   const query = clientSearch.value.trim().toLowerCase();
   if (!query) return clients.value;
   return clients.value.filter((client) => client.name.toLowerCase().includes(query));
+});
+
+const normalizeCategoryName = (product: Product) => {
+  const rawCategory = (product as any).category_name ?? (product as any).category?.name ?? (product as any).category;
+  if (typeof rawCategory === 'string') {
+    const normalized = rawCategory.trim();
+    return normalized || 'Sin categoria';
+  }
+  if (typeof rawCategory === 'number') {
+    return String(rawCategory);
+  }
+  return 'Sin categoria';
+};
+
+const categoryOptions = computed(() => {
+  if (!apiProducts.value || apiProducts.value.length === 0) return [];
+  const unique = new Set<string>();
+  for (const product of apiProducts.value) {
+    unique.add(normalizeCategoryName(product));
+  }
+  return Array.from(unique).sort((a, b) => a.localeCompare(b));
+});
+
+const hasActiveCategory = computed(() => Boolean(selectedCategory.value));
+
+const clearFilterLabel = computed(() => {
+  return hasActiveCategory.value ? 'Limpiar filtros' : 'Ver todos';
 });
 
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -956,17 +1020,40 @@ const goToInventory = () => {
   router.push('/dashboard/inventory');
 };
 
+const toggleFilterMenu = () => {
+  showFilterMenu.value = !showFilterMenu.value;
+};
+
+const selectCategory = (category: string) => {
+  selectedCategory.value = category;
+  showFilterMenu.value = false;
+};
+
+const clearCategoryFilter = () => {
+  selectedCategory.value = null;
+  showFilterMenu.value = false;
+};
+
+const handleFilterMenuOutsideClick = (event: MouseEvent) => {
+  if (!showFilterMenu.value) return;
+  const target = event.target as Node;
+  if (filterMenuRef.value && !filterMenuRef.value.contains(target)) {
+    showFilterMenu.value = false;
+  }
+};
+
 const filteredProducts = computed(() => {
   if (!apiProducts.value || apiProducts.value.length === 0) return [];
-  
+
   const query = searchQuery.value.toLowerCase().trim();
-  
-  if (!query) return apiProducts.value;
-  
-  return apiProducts.value.filter(product => {
+  const categoryFilter = selectedCategory.value;
+
+  return apiProducts.value.filter((product) => {
     const nameStr = product.name ? String(product.name).toLowerCase() : '';
     const skuStr = product.sku ? String(product.sku).toLowerCase() : '';
-    return nameStr.includes(query) || skuStr.includes(query);
+    const matchesQuery = !query || nameStr.includes(query) || skuStr.includes(query);
+    const matchesCategory = !categoryFilter || normalizeCategoryName(product) === categoryFilter;
+    return matchesQuery && matchesCategory;
   });
 });
 
@@ -1073,13 +1160,33 @@ const handleCheckout = () => {
   showPaymentModal.value = true;
 };
 
+const triggerShiftBannerPulse = () => {
+  shiftBannerPulse.value = true;
+  setTimeout(() => {
+    shiftBannerPulse.value = false;
+  }, 650);
+};
+
+const openShiftModalFromBanner = () => {
+  pendingCheckoutAfterShift.value = cart.value.length > 0;
+  showOpenShiftModal.value = true;
+  triggerShiftBannerPulse();
+};
+
 const handleCheckoutClick = () => {
   if (!shiftsStore.hasOpenShift) {
-    pendingCheckoutAfterShift.value = true;
+    pendingCheckoutAfterShift.value = cart.value.length > 0;
     showOpenShiftModal.value = true;
+    triggerShiftBannerPulse();
     return;
   }
   handleCheckout();
+};
+
+const handleCheckoutClickProxy = () => {
+  if (isSubmitting.value) return;
+  if (cart.value.length === 0) return;
+  handleCheckoutClick();
 };
 
 const handleShiftOpened = async () => {
@@ -1244,6 +1351,7 @@ onMounted(async () => {
   // Detectar tamaño del dispositivo
   checkDeviceSize();
   window.addEventListener('resize', checkDeviceSize);
+  document.addEventListener('click', handleFilterMenuOutsideClick);
 
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
@@ -1394,12 +1502,16 @@ onUnmounted(() => {
   }
   window.removeEventListener('resize', checkDeviceSize);
   window.removeEventListener('keydown', handleGlobalKeydown);
+  document.removeEventListener('click', handleFilterMenuOutsideClick);
 });
 
 watch(
   () => props.isOpen,
   (open) => {
-    if (!open) return;
+    if (!open) {
+      showFilterMenu.value = false;
+      return;
+    }
     focusSearchInput();
   }
 );
@@ -1533,6 +1645,37 @@ watch(
   color: #854d0e;
   font-size: 0.85rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.shift-cta {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.shift-cta:hover {
+  background: #fff;
+}
+
+.shift-banner-pulse {
+  animation: shiftPulse 0.65s ease-in-out;
+}
+
+@keyframes shiftPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { transform: scale(1.015); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.25); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 .pairing-indicator {
@@ -1619,6 +1762,78 @@ watch(
   background: #f3f4f6;
   color: #111827;
   transform: translateY(-1px);
+}
+
+.filter-menu-wrapper {
+  position: relative;
+}
+
+.filter-btn {
+  position: relative;
+}
+
+.filter-btn.filter-active {
+  background: #fef9c3;
+  color: #92400e;
+  box-shadow: 0 0 0 2px #facc15;
+}
+
+.filter-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.filter-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0.4rem;
+  min-width: 220px;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  z-index: 8;
+}
+
+.filter-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.filter-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.filter-menu-item.is-selected {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.filter-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.35rem 0.5rem;
+}
+
+.filter-menu-empty {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 /* =====================

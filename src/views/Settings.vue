@@ -274,11 +274,16 @@
                 <div class="ticket-table">
                   <div class="ticket-th">
                     <span class="left-col">CANT. ARTICULO</span>
-                    <span class="right-col">TOTAL</span>
+                    <span class="right-col">IMPORTE</span>
                   </div>
                   <div v-for="(product, idx) in ticketProducts" :key="idx" class="ticket-tr">
-                    <span class="left-col">{{ product.quantity }}x {{ product.name }}</span>
-                    <span class="right-col">{{ product.price }}</span>
+                    <span class="left-col">
+                      {{ product.quantity }}x {{ product.name }}
+                      <template v-if="product.quantity > 1">
+                        <span class="unit-price"> ({{ product.unitPriceFormatted }})</span>
+                      </template>
+                    </span>
+                    <span class="right-col">{{ product.lineTotalFormatted }}</span>
                   </div>
                 </div>
 
@@ -291,7 +296,7 @@
                   </div>
                   <div class="ticket-subInfo">
                     <span>Efectivo</span>
-                    <span>$300.00</span>
+                    <span>{{ '$' + ticketCash.toFixed(2) }}</span>
                   </div>
                   <div class="ticket-subInfo">
                     <span>Cambio</span>
@@ -301,7 +306,7 @@
 
                 <div class="ticket-footer">
                   <p class="ticket-thank-you">
-                    "{{ settings.thankYouMessage || '¡Gracias por su compra!' }}"
+                    "{{ formattedThankYouMessage }}"
                   </p>
                   <p class="ticket-number">NO. TICKET #004592</p>
                   <!-- Mock Barcode -->
@@ -437,22 +442,52 @@ const currentMockProducts = computed(() => {
 
 const ticketProducts = computed(() => {
   const products = currentMockProducts.value || [];
-  return products.map((p, i) => ({
-    quantity: i + 1,
-    ...p
-  }));
+  return products.map((p, i) => {
+    const qty = i + 1;
+    const rawPriceStr = String(p.price || '');
+    const unitPriceNumber = parseFloat(rawPriceStr.replace(/[^\d.]/g, '')) || 0;
+    const lineTotalNumber = unitPriceNumber * qty;
+    const currencySymbolMatch = rawPriceStr.match(/^[^\d\s\-\(\)]*/);
+    const currencySymbol = (currencySymbolMatch && currencySymbolMatch[0]) ? currencySymbolMatch[0].trim() : (settings.value.currency ? settings.value.currency.split(' ')[0] : '$');
+    const unitPriceFormatted = rawPriceStr.trim() || (currencySymbol + unitPriceNumber.toFixed(2));
+    const lineTotalFormatted = currencySymbol + lineTotalNumber.toFixed(2);
+
+    return {
+      quantity: qty,
+      name: p.name,
+      unitPriceNumber,
+      lineTotalNumber,
+      unitPriceFormatted,
+      lineTotalFormatted,
+    };
+  });
 });
 
 const ticketSubtotal = computed(() => {
-  return ticketProducts.value.reduce((sum, p) => {
-    const price = parseFloat(p.price.replace(/[^\d.]/g, ''));
-    return sum + (isNaN(price) ? 0 : price * p.quantity);
-  }, 0);
+  return ticketProducts.value.reduce((sum, p) => sum + (p.lineTotalNumber || 0), 0);
+});
+
+const ticketCash = computed(() => {
+  const total = ticketSubtotal.value;
+  if (total <= 0) return 0;
+  return Math.ceil(total / 100) * 100;
 });
 
 const ticketChange = computed(() => {
-  const cash = 300; // Mock efectivo
-  return Math.max(0, cash - ticketSubtotal.value);
+  return Math.max(0, ticketCash.value - ticketSubtotal.value);
+});
+
+const capitalizeFirstLetter = (value: string) => {
+  if (!value) return value;
+  const match = value.match(/[A-Za-z]/);
+  if (!match || match.index === undefined) return value;
+  const index = match.index;
+  return value.slice(0, index) + value.charAt(index).toUpperCase() + value.slice(index + 1);
+};
+
+const formattedThankYouMessage = computed(() => {
+  const raw = settings.value.thankYouMessage || '¡Gracias por su compra!';
+  return capitalizeFirstLetter(raw.trim());
 });
 
 // Ref for the hidden file input and selected logo file
@@ -1209,15 +1244,29 @@ textarea:focus {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.4rem;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
 .left-col {
   flex: 1;
   padding-right: 1rem;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .right-col {
   font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.unit-price {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-left: 0.35rem;
 }
 
 .ticket-total-section {
@@ -1248,11 +1297,11 @@ textarea:focus {
 }
 
 .ticket-thank-you {
-  font-size: 0.85rem;
-  font-style: italic;
+  font-size: 0.8rem;
   color: #374151;
   margin-bottom: 0.5rem;
   white-space: pre-line;
+  line-height: 1.4;
 }
 
 .ticket-number {
