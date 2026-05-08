@@ -17,6 +17,7 @@ export interface StoreProfileResponse {
   currency_symbol: string
   address: string
   phone: string
+  country_code?: string
   ticket_message: string
   logo_url?: string
   company_name: string

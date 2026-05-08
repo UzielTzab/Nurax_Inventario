@@ -1,15 +1,23 @@
+
 <template>
   <!-- Desktop: Modal clásico -->
   <div v-if="isOpen && !isMobileOrTablet" class="modal-overlay">
     <div class="modal-content">
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <h2 class="modal-title">Punto de Venta</h2>
-        <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      <!-- Modal Header with Terminal Indicator -->
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+          <h2 class="modal-title">Punto de Venta</h2>
+          <div v-if="currentUser && currentUser.store_profile" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">
+            📦 {{ currentUser.store_profile.name || currentUser.store_profile.company_name || 'Tienda' }} ({{ currentUser.name || currentUser.username }})
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="modal-close-btn" @click="$emit('close')" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div v-if="isInitializing" class="empty-state">
@@ -44,17 +52,52 @@
             <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
               <QrCodeIcon class="w-5 h-5" />
             </button>
-            <button class="icon-btn" title="Filtros">
-              <FunnelIcon class="w-5 h-5" />
-            </button>
-            <div class="pairing-indicator" :class="{ paired: isScannerPaired }" style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb;">
-              <span class="pairing-dot" :style="{ background: isScannerPaired ? '#10b981' : '#f59e0b', width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' }"></span>
-              <span :style="{ color: isScannerPaired ? '#10b981' : '#4b5563' }">{{ isScannerPaired ? '🟢 Emparejado: Tablet 1' : '📱 Sin emparejar' }}</span>
+            <div class="filter-menu-wrapper" ref="filterMenuRef">
+              <button
+                class="icon-btn filter-btn"
+                :class="{ 'filter-active': hasActiveCategory }"
+                title="Filtros"
+                @click="toggleFilterMenu"
+              >
+                <FunnelIcon class="w-5 h-5" />
+                <span v-if="hasActiveCategory" class="filter-badge"></span>
+              </button>
+              <transition name="fade">
+                <div v-if="showFilterMenu" class="filter-menu">
+                  <button type="button" class="filter-menu-item" @click="clearCategoryFilter">
+                    {{ clearFilterLabel }}
+                  </button>
+                  <div v-if="categoryOptions.length" class="filter-menu-divider"></div>
+                  <button
+                    v-for="category in categoryOptions"
+                    :key="category"
+                    type="button"
+                    class="filter-menu-item"
+                    :class="{ 'is-selected': selectedCategory === category }"
+                    @click="selectCategory(category)"
+                  >
+                    {{ category }}
+                  </button>
+                  <div v-if="categoryOptions.length === 0" class="filter-menu-empty">
+                    Sin categorias
+                  </div>
+                </div>
+              </transition>
             </div>
+            <button 
+              class="pairing-indicator" 
+              :class="{ paired: isScannerPaired }" 
+              style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;"
+              title="Estado del escáner"
+            >
+              <span v-if="isScannerPaired" style="color: #10b981;">🟢 Celular Conectado</span>
+              <span v-else style="color: #4b5563;">📱 Vincular Celular</span>
+            </button>
           </div>
 
-          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner">
-            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }">
+              <span>⚠️ Tu turno no ha iniciado.</span>
+              <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
           <!-- Products List -->
@@ -151,14 +194,45 @@
             />
           </div>
           
-          <div class="cart-header">
-            <div class="cart-title">
-              <ShoppingCartIcon class="cart-icon" />
-              <h3>Resumen de Venta</h3>
+          <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="cart-title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <ShoppingCartIcon class="cart-icon" style="margin: 0;" />
+              <h3 style="margin: 0;">Resumen de Venta</h3>
             </div>
-            <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
-              <TrashIcon class="w-5 h-5" />
-            </button>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <!-- Botón: Ventas en espera con Badge -->
+              <div v-if="parkedCartsCount > 0" style="position: relative; display: inline-flex;">
+                <AppButton 
+                  variant="outline"
+                  iconOnly
+                  @click="openParkedCartsModal" 
+                  title="Ver ventas pausadas"
+                >
+                  <ClipboardDocumentListIcon style="width: 20px; height: 20px;" />
+                </AppButton>
+                <!-- Notification Badge -->
+                <span style="position: absolute; top: -4px; right: -4px; background-color: #ef4444; color: white; border-radius: 9999px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; border: 2px solid white; line-height: 1; z-index: 10;">
+                  {{ parkedCartsCount }}
+                </span>
+              </div>
+
+              <!-- Botón: Pausar Venta -->
+              <AppButton 
+                variant="soft-warning"
+                iconOnly
+                @click="parkCart" 
+                :disabled="cart.length === 0" 
+                title="Pausar venta actual"
+              >
+                <PauseIcon style="width: 20px; height: 20px;" />
+              </AppButton>
+
+              <!-- Botón: Vaciar Venta -->
+              <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
+                <TrashIcon class="w-5 h-5" />
+              </button>
+            </div>
           </div>
           
           <div v-if="cart.length === 0" class="sale-items-placeholder">
@@ -209,17 +283,18 @@
                 <TagIcon class="w-5 h-5" />
               </button>
             </div>
-            <AppButton
-              class="btn-checkout"
-              variant="fill"
-              fullWidth
-              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
-              :loading="isSubmitting"
-              @click="handleCheckoutClick"
-            >
-              IR AL COBRO
-              <ArrowRightIcon class="w-5 h-5" />
-            </AppButton>
+            <div class="checkout-trigger" @click="handleCheckoutClickProxy">
+              <AppButton
+                class="btn-checkout"
+                variant="fill"
+                fullWidth
+                :disabled="cart.length === 0 || !shiftsStore.hasOpenShift || isSubmitting"
+                :loading="isSubmitting"
+              >
+                IR AL COBRO
+                <ArrowRightIcon class="w-5 h-5" />
+              </AppButton>
+            </div>
          </div>
         </div>
       </div>
@@ -272,8 +347,9 @@
             </button>
           </div>
 
-          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" style="margin: 0 1rem 1rem 1rem;">
-            ⚠️ Tu turno no ha iniciado. Abre caja para poder finalizar ventas.
+          <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }" style="margin: 0 1rem 1rem 1rem;">
+            <span>⚠️ Tu turno no ha iniciado.</span>
+            <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
           <!-- Products List -->
@@ -447,16 +523,17 @@
 
           <!-- Checkout Button - Always Visible -->
           <div style="padding: 1rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;">
-            <AppButton
-              class="btn-checkout"
-              variant="fill"
-              fullWidth
-              :disabled="cart.length === 0 || !shiftsStore.hasOpenShift"
-              :loading="isSubmitting"
-              @click="handleCheckoutClick"
-            >
-              FINALIZAR VENTA
-            </AppButton>
+            <div class="checkout-trigger" @click="handleCheckoutClickProxy">
+              <AppButton
+                class="btn-checkout"
+                variant="fill"
+                fullWidth
+                :disabled="cart.length === 0 || !shiftsStore.hasOpenShift || isSubmitting"
+                :loading="isSubmitting"
+              >
+                FINALIZAR VENTA
+              </AppButton>
+            </div>
           </div>
         </div>
       </div>
@@ -655,6 +732,40 @@
     @close="showOpenShiftModal = false"
     @shift-opened="handleShiftOpened"
   />
+
+  <Transition name="fade">
+    <div v-if="showParkedCartsModal" class="modal-overlay" style="z-index: 10015; align-items: center; justify-content: center;" @click.self="showParkedCartsModal = false">
+      <div class="modal-content" style="max-width: 640px; width: 92%; max-height: 80vh; overflow-y: auto; padding: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="text-xl font-bold m-0" style="color: #1f2937;">Carritos aparcados</h2>
+          <button @click="showParkedCartsModal = false" style="background:none; border:none; cursor:pointer;">
+            <XMarkIcon style="width: 24px; height: 24px; color: #6b7280;"/>
+          </button>
+        </div>
+
+        <div v-if="parkedCarts.length === 0" style="padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 16px;">
+          No hay carritos aparcados todavía.
+        </div>
+
+        <div v-else style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div v-for="parkedCart in parkedCarts" :key="parkedCart.id" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 16px; background: white;">
+            <div style="min-width: 0;">
+              <div style="font-weight: 700; color: #111827;">{{ parkedCart.store_name }}</div>
+              <div style="font-size: 0.875rem; color: #6b7280;">{{ parkedCart.items_count }} items · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
+              <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ parkedCart.parked_at ? new Date(parkedCart.parked_at).toLocaleString() : 'N/A' }}</div>
+            </div>
+            <AppButton
+              variant="fill"
+              size="sm"
+              @click="restoreParkedCart(parkedCart.id)"
+            >
+              Recuperar
+            </AppButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -679,7 +790,10 @@ import {
   TagIcon,
   ArrowRightIcon,
   PhotoIcon,
-  XMarkIcon
+  XMarkIcon,
+  QueueListIcon,
+  ClipboardDocumentListIcon,
+  PauseIcon
 } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
 import { QrcodeStream } from 'vue-qrcode-reader';
@@ -696,6 +810,8 @@ const { products: apiProducts, fetchProducts, pagination, goToPage, setPageSize 
 
 interface CartItem extends Product {
   quantity: number;
+  product?: string | number;
+  unit_price_at_time?: number | string;
 }
 
 interface PosClient {
@@ -730,6 +846,14 @@ const amountPaid = ref(0);
 const isInitializing = ref(true);
 const showOpenShiftModal = ref(false);
 const pendingCheckoutAfterShift = ref(false);
+const shiftBannerPulse = ref(false);
+const showFilterMenu = ref(false);
+const selectedCategory = ref<string | null>(null);
+const filterMenuRef = ref<HTMLElement | null>(null);
+const showParkedCartsModal = ref(false);
+const parkedCarts = ref<any[]>([]);
+const parkedCartsCount = ref(0);
+const activeCartId = ref('');
 
 const clients = ref<PosClient[]>([]);
 const clientSearch = ref('');
@@ -769,17 +893,206 @@ const filteredClients = computed(() => {
   return clients.value.filter((client) => client.name.toLowerCase().includes(query));
 });
 
+const normalizeCategoryName = (product: Product) => {
+  const rawCategory = (product as any).category_name ?? (product as any).category?.name ?? (product as any).category;
+  if (typeof rawCategory === 'string') {
+    const normalized = rawCategory.trim();
+    return normalized || 'Sin categoria';
+  }
+  if (typeof rawCategory === 'number') {
+    return String(rawCategory);
+  }
+  return 'Sin categoria';
+};
+
+const parkCart = async () => {
+  if (!activeCartId.value) {
+    if (cart.value.length > 0) {
+      await syncCartToBackend();
+    }
+
+    if (!activeCartId.value) {
+      const cartResponse: any = await apiClient.get('/v1/carts/carts/my-cart/');
+      const actualData = cartResponse?.data?.data || cartResponse?.data;
+      if (cartResponse?.success && actualData?.active_cart_id) {
+        activeCartId.value = actualData.active_cart_id;
+        if (actualData.session_id) {
+          cartSessionId.value = actualData.session_id;
+          subscribeToCartChannel(actualData.session_id);
+        }
+      }
+    }
+
+    if (!activeCartId.value) {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: 'No hay carrito activo para aparcar' });
+      return;
+    }
+  }
+
+  try {
+    const response: any = await apiClient.post(`/v1/carts/carts/${activeCartId.value}/park/`);
+    if (response && response.success) {
+      const actualData = response.data?.data || response.data;
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito aparcado. Puedes recuperarlo después.' });
+      cart.value = [];
+      cartSessionId.value = actualData?.new_active_cart?.session_id || '';
+      activeCartId.value = actualData?.new_active_cart?.id || '';
+      if (cartSessionId.value) {
+        subscribeToCartChannel(cartSessionId.value);
+      }
+      await loadParkedCarts();
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response?.error || 'No se pudo aparcar el carrito' });
+    }
+  } catch (error) {
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo aparcar el carrito' });
+    console.error('Error al aparcar carrito:', error);
+  }
+};
+
+const loadParkedCarts = async () => {
+  try {
+    const response: any = await apiClient.get('/v1/carts/carts/parked/');
+    const actualData = response?.data?.data || response?.data;
+    if (response && response.success && Array.isArray(actualData)) {
+      parkedCarts.value = actualData;
+      parkedCartsCount.value = actualData.length;
+    }
+  } catch (error) {
+    console.error('Error cargando carritos aparcados:', error);
+  }
+};
+
+const openParkedCartsModal = async () => {
+  await loadParkedCarts();
+  showParkedCartsModal.value = true;
+};
+
+const restoreParkedCart = async (parkedCartId: string) => {
+  try {
+    const response: any = await apiClient.post(`/v1/carts/carts/${parkedCartId}/restore/`);
+    if (response && response.success && response.data) {
+      const actualData = response.data?.data || response.data;
+      // Actualizar carrito local con los items restaurados mapeados
+      if (Array.isArray(actualData.cart)) {
+        cart.value = mapRemoteCartToLocal(actualData.cart);
+      }
+      if (actualData.session_id) {
+        cartSessionId.value = actualData.session_id;
+        subscribeToCartChannel(actualData.session_id);
+      }
+      if (actualData.active_cart_id) {
+        activeCartId.value = actualData.active_cart_id;
+      }
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito restaurado' });
+      showParkedCartsModal.value = false;
+      await loadParkedCarts();
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response?.error || 'No se pudo restaurar el carrito' });
+    }
+  } catch (error) {
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo restaurar el carrito' });
+    console.error('Error al restaurar carrito:', error);
+  }
+};
+
+const categoryOptions = computed(() => {
+  if (!apiProducts.value || apiProducts.value.length === 0) return [];
+  const unique = new Set<string>();
+  for (const product of apiProducts.value) {
+    unique.add(normalizeCategoryName(product));
+  }
+  return Array.from(unique).sort((a, b) => a.localeCompare(b));
+});
+
+const hasActiveCategory = computed(() => Boolean(selectedCategory.value));
+
+const clearFilterLabel = computed(() => {
+  return hasActiveCategory.value ? 'Limpiar filtros' : 'Ver todos';
+});
+
 const localDeviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 let isRemoteUpdate = false;
 
+const cartSessionId = ref('');
+let cartChannel: any = null;
+const subscribeToCartChannel = (sessionId: string) => {
+  try {
+    if (!pusher) return;
+    if (cartChannel && cartChannel.name === `private-cart-${sessionId}`) return;
+    if (cartChannel) {
+      pusher.unsubscribe(cartChannel.name);
+    }
+    cartChannel = pusher.subscribe(`private-cart-${sessionId}`);
+    cartChannel.bind('CART_UPDATED', async (data: any) => {
+      const fromDeviceId = data.device_id;
+      // Ignorar si el evento vino de esta misma sesión
+      if (fromDeviceId === localDeviceId) return;
+      // Refetch silencioso del carrito para mantener fuente de la verdad
+      try {
+        isRemoteUpdate = true;
+        const res: any = await apiClient.get('/v1/carts/carts/my-cart/');
+        const actualData = res.data?.data || res.data;
+        if (res.success && actualData && Array.isArray(actualData.cart)) {
+          cart.value = mapRemoteCartToLocal(actualData.cart);
+        }
+      } catch (err) {
+        console.error('Error refetch carrito tras CART_UPDATED:', err);
+      } finally {
+        isRemoteUpdate = false;
+      }
+    });
+  } catch (e) {
+    console.warn('subscribeToCartChannel error', e);
+  }
+};
+
+const mapRemoteCartToLocal = (remoteCart: any[]): CartItem[] => {
+  return remoteCart.map((remoteItem: any) => {
+    // remoteItem.product es el ID del producto real en la DB, mientras que remoteItem.id es el del cart_item
+    const localProd = apiProducts.value?.find((p: any) => p.id === remoteItem.product);
+    return {
+      ...(localProd || {}),
+      id: remoteItem.product, // Importante: usar el ID del producto, no el del cart_item para igualar addToCart
+      cart_item_id: remoteItem.id, // Guardar el ID original del item por si se requiere
+      name: remoteItem.product_name || localProd?.name || 'Producto',
+      quantity: remoteItem.quantity,
+      sale_price: remoteItem.unit_price_at_time || localProd?.sale_price || localProd?.price || 0,
+    } as any;
+  });
+};
+
 const syncCartToBackend = async () => {
   if (isRemoteUpdate) return;
+  const prev = JSON.parse(JSON.stringify(cart.value));
   try {
-    await apiClient.post('/v1/products/products/sync-cart/', {
+    const res = await apiClient.post('/v1/carts/carts/sync-cart/', {
       cart: cart.value,
       device_id: localDeviceId
     });
+
+    if (res && res.success && res.data) {
+      const syncData: any = (res.data as any)?.data || res.data;
+      // Actualizar estado local desde servidor (fuente de la verdad)
+      if (Array.isArray(syncData.cart)) {
+        isRemoteUpdate = true;
+        cart.value = mapRemoteCartToLocal(syncData.cart);
+        isRemoteUpdate = false;
+      }
+      if (syncData.session_id) {
+        cartSessionId.value = syncData.session_id;
+        subscribeToCartChannel(syncData.session_id);
+      }
+      if (syncData.active_cart_id) {
+        activeCartId.value = syncData.active_cart_id;
+      }
+    } else {
+      cart.value = prev;
+      enqueueSnackbar({ type: 'error', title: 'Error de sincronización', message: res?.error || 'No se pudo sincronizar el carrito.' });
+    }
   } catch (error) {
+    cart.value = prev;
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo transmitir el carrito al servidor.' });
     console.error("Error transmitiendo carrito:", error);
   }
 };
@@ -956,17 +1269,40 @@ const goToInventory = () => {
   router.push('/dashboard/inventory');
 };
 
+const toggleFilterMenu = () => {
+  showFilterMenu.value = !showFilterMenu.value;
+};
+
+const selectCategory = (category: string) => {
+  selectedCategory.value = category;
+  showFilterMenu.value = false;
+};
+
+const clearCategoryFilter = () => {
+  selectedCategory.value = null;
+  showFilterMenu.value = false;
+};
+
+const handleFilterMenuOutsideClick = (event: MouseEvent) => {
+  if (!showFilterMenu.value) return;
+  const target = event.target as Node;
+  if (filterMenuRef.value && !filterMenuRef.value.contains(target)) {
+    showFilterMenu.value = false;
+  }
+};
+
 const filteredProducts = computed(() => {
   if (!apiProducts.value || apiProducts.value.length === 0) return [];
-  
+
   const query = searchQuery.value.toLowerCase().trim();
-  
-  if (!query) return apiProducts.value;
-  
-  return apiProducts.value.filter(product => {
+  const categoryFilter = selectedCategory.value;
+
+  return apiProducts.value.filter((product) => {
     const nameStr = product.name ? String(product.name).toLowerCase() : '';
     const skuStr = product.sku ? String(product.sku).toLowerCase() : '';
-    return nameStr.includes(query) || skuStr.includes(query);
+    const matchesQuery = !query || nameStr.includes(query) || skuStr.includes(query);
+    const matchesCategory = !categoryFilter || normalizeCategoryName(product) === categoryFilter;
+    return matchesQuery && matchesCategory;
   });
 });
 
@@ -1073,13 +1409,33 @@ const handleCheckout = () => {
   showPaymentModal.value = true;
 };
 
+const triggerShiftBannerPulse = () => {
+  shiftBannerPulse.value = true;
+  setTimeout(() => {
+    shiftBannerPulse.value = false;
+  }, 650);
+};
+
+const openShiftModalFromBanner = () => {
+  pendingCheckoutAfterShift.value = cart.value.length > 0;
+  showOpenShiftModal.value = true;
+  triggerShiftBannerPulse();
+};
+
 const handleCheckoutClick = () => {
   if (!shiftsStore.hasOpenShift) {
-    pendingCheckoutAfterShift.value = true;
+    pendingCheckoutAfterShift.value = cart.value.length > 0;
     showOpenShiftModal.value = true;
+    triggerShiftBannerPulse();
     return;
   }
   handleCheckout();
+};
+
+const handleCheckoutClickProxy = () => {
+  if (isSubmitting.value) return;
+  if (cart.value.length === 0) return;
+  handleCheckoutClick();
 };
 
 const handleShiftOpened = async () => {
@@ -1145,9 +1501,9 @@ const confirmPayment = async () => {
       cash_shift: shiftsStore.currentShift?.id || null,
       device_id: localDeviceId,
       items: cart.value.map(item => ({ 
-          product: Number(item.id),
+          product: item.product || item.id,
           quantity: item.quantity,
-          unit_price: Number(item.sale_price ?? item.price ?? 0)
+          unit_price: Number(item.unit_price_at_time ?? item.sale_price ?? item.price ?? 0)
       }))
     });
     
@@ -1169,10 +1525,13 @@ const confirmPayment = async () => {
   }
 };
 
-const handleCloseSuccess = () => {
+const handleCloseSuccess = async () => {
   showSuccessModal.value = false;
   clearCart(); // Usamos clearCart para detonar el sync vacío al servidor
   
+  // Refrescar stock de productos localmente después de una venta
+  await fetchProducts();
+
   // Auto focus en barra de búsqueda para nueva venta
   nextTick(() => {
     if (searchInputRef.value) {
@@ -1229,11 +1588,22 @@ onMounted(async () => {
     await fetchClients();
 
     // 3. Cargar el carrito guardado en la Base de Datos (si existe)
-    const res = await apiClient.get<any>('/v1/products/products/my-cart/');
-    if (res.success && res.data && res.data.cart && res.data.cart.length > 0) {
-      isRemoteUpdate = true;
-      cart.value = res.data.cart;
-      isRemoteUpdate = false;
+    const res: any = await apiClient.get('/v1/carts/carts/my-cart/');
+    if (res.success && res.data) {
+      const cartData: any = res.data;
+      if (Array.isArray(cartData.cart) && cartData.cart.length > 0) {
+        isRemoteUpdate = true;
+        cart.value = cartData.cart;
+        isRemoteUpdate = false;
+      }
+      if (cartData.session_id) {
+        cartSessionId.value = cartData.session_id;
+        subscribeToCartChannel(cartData.session_id);
+      }
+      if (cartData.active_cart_id) {
+        activeCartId.value = cartData.active_cart_id;
+      }
+      await loadParkedCarts();
     }
   } catch (e) {
     console.error("Error al inicializar Punto de Venta:", e);
@@ -1244,14 +1614,43 @@ onMounted(async () => {
   // Detectar tamaño del dispositivo
   checkDeviceSize();
   window.addEventListener('resize', checkDeviceSize);
+  document.addEventListener('click', handleFilterMenuOutsideClick);
 
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '2123775';
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'us2';
 
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()!.split(';').shift();
+    return null;
+  };
+
   pusher = new Pusher(pusherKey, {
     cluster: pusherCluster,
-    forceTLS: true
+    forceTLS: true,
+    authorizer: (channel: any) => {
+      return {
+        authorize: (socketId: string, callback: any) => {
+          apiClient.post('/pusher/auth/', {
+            socket_id: socketId,
+            channel_name: channel.name
+          })
+          .then((response: any) => {
+            if (response && response.success) {
+              const actualData = response.data?.data || response.data;
+              callback(null, actualData);
+            } else {
+              callback(new Error(response?.error || 'Auth failed'), { auth: '' });
+            }
+          })
+          .catch((err: any) => {
+            callback(new Error(err.message), { auth: '' });
+          });
+        }
+      };
+    }
   });
   
   channelName = `pos-user-${userId}`;
@@ -1291,21 +1690,8 @@ onMounted(async () => {
 
   // -------------------------------------------------------------
   // B. Escuchar cambios de Carrito de otro dispositivo
+  // (Se maneja en el canal privado del carrito cuando estamos suscritos)
   // -------------------------------------------------------------
-  channel.bind('CART_UPDATED', (data: any) => {
-    const nuevoCarrito = data.cart;
-    const fromDeviceId = data.device_id;
-    
-    // Si the device_id no es igual a nuestro localDeviceId
-    if (fromDeviceId !== localDeviceId && nuevoCarrito) {
-      isRemoteUpdate = true;
-      cart.value = nuevoCarrito;
-      isRemoteUpdate = false; // Restablecer bandera tras actualización síncrona
-      isScannerPaired.value = true;
-      scannerPairingLabel.value = `📱 Emparejado con ${String(fromDeviceId).slice(0, 10)}`;
-      console.log("Carrito sincronizado por actualización remota de otro dispositivo.");
-    }
-  });
 
   // Evento: INVENTORY_UPDATED
   // Enviado por backend cuando se vende, devuelve o modifica un producto
@@ -1388,18 +1774,30 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 };
 
 onUnmounted(() => {
-  if (channelName && pusher) {
-    pusher.unsubscribe(channelName);
-    pusher.disconnect();
+  try {
+    if (cartChannel && pusher) {
+      pusher.unsubscribe(cartChannel.name || `private-cart-${cartSessionId.value}`);
+      cartChannel = null;
+    }
+    if (channelName && pusher) {
+      pusher.unsubscribe(channelName);
+      pusher.disconnect();
+    }
+  } catch (e) {
+    console.warn('Error desconectando Pusher:', e);
   }
   window.removeEventListener('resize', checkDeviceSize);
   window.removeEventListener('keydown', handleGlobalKeydown);
+  document.removeEventListener('click', handleFilterMenuOutsideClick);
 });
 
 watch(
   () => props.isOpen,
   (open) => {
-    if (!open) return;
+    if (!open) {
+      showFilterMenu.value = false;
+      return;
+    }
     focusSearchInput();
   }
 );
@@ -1533,6 +1931,37 @@ watch(
   color: #854d0e;
   font-size: 0.85rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.shift-cta {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.shift-cta:hover {
+  background: #fff;
+}
+
+.shift-banner-pulse {
+  animation: shiftPulse 0.65s ease-in-out;
+}
+
+@keyframes shiftPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { transform: scale(1.015); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.25); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 .pairing-indicator {
@@ -1619,6 +2048,78 @@ watch(
   background: #f3f4f6;
   color: #111827;
   transform: translateY(-1px);
+}
+
+.filter-menu-wrapper {
+  position: relative;
+}
+
+.filter-btn {
+  position: relative;
+}
+
+.filter-btn.filter-active {
+  background: #fef9c3;
+  color: #92400e;
+  box-shadow: 0 0 0 2px #facc15;
+}
+
+.filter-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.filter-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0.4rem;
+  min-width: 220px;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  z-index: 8;
+}
+
+.filter-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.filter-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.filter-menu-item.is-selected {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.filter-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.35rem 0.5rem;
+}
+
+.filter-menu-empty {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 /* =====================

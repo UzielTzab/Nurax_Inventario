@@ -21,10 +21,14 @@ export type { StoreSettings };
 // ════════════════════════════════════════════════════════════════════════════
 
 const settings = ref<StoreSettings>({
+  id: '',
   store_name: '',
+  tax_id: '',
+  niche: '',
   currency_symbol: '$ MXN',
   address: '',
   phone: '',
+  country_code: '+52',
   ticket_message: '¡Gracias por su preferencia!',
   logo_url: '',
 });
@@ -50,10 +54,14 @@ export const useStoreSettings = () => {
       .then((res) => {
         if (res.success && res.data) {
           settings.value = {
+            id: res.data.id || '',
             store_name: res.data.store_name || '',
+            tax_id: res.data.tax_id || '',
+            niche: res.data.niche || '',
             currency_symbol: res.data.currency_symbol || '$ MXN',
             address: res.data.address || '',
             phone: res.data.phone || '',
+            country_code: res.data.country_code || '+52',
             ticket_message: res.data.ticket_message || '¡Gracias por su preferencia!',
             logo_url: res.data.logo_url || '',
           };
@@ -88,10 +96,14 @@ export const useStoreSettings = () => {
       const response = await storeSettingsService.updateStoreSettings(updatedData);
       if (response.success && response.data) {
         settings.value = {
+          id: response.data.id || settings.value.id,
           store_name: response.data.store_name || settings.value.store_name,
+          tax_id: response.data.tax_id || settings.value.tax_id,
+          niche: response.data.niche || settings.value.niche,
           currency_symbol: response.data.currency_symbol || settings.value.currency_symbol,
           address: response.data.address || settings.value.address,
           phone: response.data.phone || settings.value.phone,
+          country_code: response.data.country_code || settings.value.country_code,
           ticket_message: response.data.ticket_message || settings.value.ticket_message,
           logo_url: response.data.logo_url || settings.value.logo_url,
         };

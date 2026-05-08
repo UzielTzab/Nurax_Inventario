@@ -9,11 +9,6 @@
             <h1 class="page-title">Configuración del Negocio</h1>
             <p class="page-subtitle">Administra la identidad de tu tienda y personaliza la experiencia de tus clientes en los recibos.</p>
           </div>
-          <div class="header-actions">
-            <AppButton variant="fill" @click="saveSettings" :loading="isSaving">
-              Guardar Cambios
-            </AppButton>
-          </div>
         </div>
 
         <div class="settings-grid">
@@ -162,7 +157,7 @@
                     <!-- Preview if image selected -->
                     <template v-if="settings.logoUrl">
                       <img :src="settings.logoUrl" class="dropzone-preview" alt="Logo preview" />
-                      <button class="dropzone-remove" @click.stop="settings.logoUrl = ''" title="Quitar logo">
+                      <button class="dropzone-remove" @click.stop="removeLogo" title="Quitar logo">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
                       </button>
                     </template>
@@ -279,11 +274,14 @@
                 <div class="ticket-table">
                   <div class="ticket-th">
                     <span class="left-col">CANT. ARTICULO</span>
-                    <span class="right-col">TOTAL</span>
+                    <span class="right-col">IMPORTE</span>
                   </div>
                   <div v-for="(product, idx) in ticketProducts" :key="idx" class="ticket-tr">
-                    <span class="left-col">{{ product.quantity }}x {{ product.name }}</span>
-                    <span class="right-col">{{ product.price }}</span>
+                    <span class="left-col">
+                      {{ product.quantity }}x {{ product.name }}
+                      <span class="unit-price"> ({{ product.unitPriceFormatted }})</span>
+                    </span>
+                    <span class="right-col">{{ product.lineTotalFormatted }}</span>
                   </div>
                 </div>
 
@@ -296,7 +294,7 @@
                   </div>
                   <div class="ticket-subInfo">
                     <span>Efectivo</span>
-                    <span>$300.00</span>
+                    <span>{{ '$' + ticketCash.toFixed(2) }}</span>
                   </div>
                   <div class="ticket-subInfo">
                     <span>Cambio</span>
@@ -306,9 +304,9 @@
 
                 <div class="ticket-footer">
                   <p class="ticket-thank-you">
-                    "{{ settings.thankYouMessage || '¡Gracias por su compra!' }}"
+                    "{{ formattedThankYouMessage }}"
                   </p>
-                  <p class="ticket-number">NO. TICKET #004592</p>
+                  <p class="ticket-number">NO. TICKET {{ ticketFolio }}</p>
                   <!-- Mock Barcode -->
                   <div class="ticket-barcode">
                     <svg viewBox="0 0 200 40" preserveAspectRatio="none">
@@ -342,7 +340,13 @@
 
             <!-- Button Under Preview -->
             <div class="preview-actions">
-              <AppButton variant="fill" @click="saveSettings" :loading="isSaving" class="full-width-btn">
+              <AppButton
+                variant="fill"
+                class="save-btn"
+                @click="saveSettings"
+                :loading="isSaving"
+                :disabled="!isDirty || isSaving"
+              >
                 Guardar Cambios
               </AppButton>
             </div>
@@ -361,7 +365,7 @@ import { AppButton, AppInput, AppSkeleton, AppSelect } from '@/components/ui';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
 import { HomeModernIcon } from '@heroicons/vue/24/outline';
-import apiClient from '@/services/api';
+import { storeSettingsService, type StoreSettings } from '@/services/store-settings.service';
 import { getStoredPaperWidth, savePaperWidth, type PaperWidth } from '@/utils/ticketBuilder';
 
 const { enqueueSnackbar } = useSnackbar();
@@ -392,25 +396,35 @@ const isReadOnly = computed(() => {
 
 // ── Mock Products por Nicho ────────────────────────────────────────────────
 const mockProductsByNiche: Record<string, {name: string; price: string}[]> = {
-  'Electrónica': [
+  'ELECTRONICA': [
     { name: 'Cable USB-C 2m', price: '$150.00' },
     { name: 'Audífonos Bluetooth V5', price: '$450.00' },
     { name: 'Cargador Rápido 65W', price: '$280.00' },
   ],
-  'Abarrotes': [
+  'ABARROTES': [
     { name: 'Leche Entera 1L', price: '$28.50' },
     { name: 'Pan de Caja', price: '$32.00' },
     { name: 'Café Molido Premium', price: '$85.00' },
   ],
-  'Farmacia': [
+  'FARMACIA': [
     { name: 'Vitamina C Tabletas x30', price: '$95.00' },
     { name: 'Analgésico Ibuprofeno 400mg', price: '$45.00' },
     { name: 'Protector Solar FPS 50', price: '$120.00' },
   ],
-  'Ferretería': [
+  'FERRETERIA': [
     { name: 'Taladro Percutor 800W', price: '$1,200.00' },
     { name: 'Juego de Brocas x21', price: '$89.00' },
     { name: 'Nivel Digital 60cm', price: '$350.00' },
+  ],
+  'MASCOTAS': [
+    { name: 'Croquetas Premium 2kg', price: '$220.00' },
+    { name: 'Correa Ajustable', price: '$120.00' },
+    { name: 'Shampoo Hipoalergénico', price: '$95.00' },
+  ],
+  'BELLEZA': [
+    { name: 'Corte y Peinado', price: '$250.00' },
+    { name: 'Tratamiento Capilar', price: '$320.00' },
+    { name: 'Manicure Completo', price: '$180.00' },
   ],
   'default': [
     { name: 'Producto de Ejemplo 1', price: '$99.99' },
@@ -420,28 +434,65 @@ const mockProductsByNiche: Record<string, {name: string; price: string}[]> = {
 };
 
 const currentMockProducts = computed(() => {
-  const niche = settings.value.niche || '';
+  const niche = (settings.value.niche || '').toUpperCase();
   return (mockProductsByNiche[niche] || mockProductsByNiche['default']) || [];
 });
 
 const ticketProducts = computed(() => {
   const products = currentMockProducts.value || [];
-  return products.map((p, i) => ({
-    quantity: i + 1,
-    ...p
-  }));
+  return products.map((p, i) => {
+    const qty = i + 1;
+    const rawPriceStr = String(p.price || '');
+    const unitPriceNumber = parseFloat(rawPriceStr.replace(/[^\d.]/g, '')) || 0;
+    const lineTotalNumber = unitPriceNumber * qty;
+    const currencySymbolMatch = rawPriceStr.match(/^[^\d\s\-\(\)]*/);
+    const currencySymbol = (currencySymbolMatch && currencySymbolMatch[0]) ? currencySymbolMatch[0].trim() : (settings.value.currency ? settings.value.currency.split(' ')[0] : '$');
+    const unitPriceFormatted = rawPriceStr.trim() || (currencySymbol + unitPriceNumber.toFixed(2));
+    const lineTotalFormatted = currencySymbol + lineTotalNumber.toFixed(2);
+
+    return {
+      quantity: qty,
+      name: capitalizeFirstLetter(p.name || ''),
+      unitPriceNumber,
+      lineTotalNumber,
+      unitPriceFormatted,
+      lineTotalFormatted,
+    };
+  });
 });
 
 const ticketSubtotal = computed(() => {
-  return ticketProducts.value.reduce((sum, p) => {
-    const price = parseFloat(p.price.replace(/[^\d.]/g, ''));
-    return sum + (isNaN(price) ? 0 : price * p.quantity);
-  }, 0);
+  return ticketProducts.value.reduce((sum, p) => sum + (p.lineTotalNumber || 0), 0);
+});
+
+const ticketCash = computed(() => {
+  const total = ticketSubtotal.value;
+  if (total <= 0) return 0;
+  return Math.ceil(total / 100) * 100;
 });
 
 const ticketChange = computed(() => {
-  const cash = 300; // Mock efectivo
-  return Math.max(0, cash - ticketSubtotal.value);
+  return Math.max(0, ticketCash.value - ticketSubtotal.value);
+});
+
+// Short folio for ticket preview (take last 8 chars of a UUID) — frontend MVP hack
+const mockSaleUuid = '05F59484-F423-49DC-B124-00EE2BC2C024';
+const ticketFolio = computed(() => {
+  const raw = (mockSaleUuid || '').replace(/-/g, '');
+  return '#' + raw.slice(-8).toUpperCase();
+});
+
+const capitalizeFirstLetter = (value: string) => {
+  if (!value) return value;
+  const match = value.match(/[A-Za-z]/);
+  if (!match || match.index === undefined) return value;
+  const index = match.index;
+  return value.slice(0, index) + value.charAt(index).toUpperCase() + value.slice(index + 1);
+};
+
+const formattedThankYouMessage = computed(() => {
+  const raw = settings.value.thankYouMessage || '¡Gracias por su compra!';
+  return capitalizeFirstLetter(raw.trim());
 });
 
 // Ref for the hidden file input and selected logo file
@@ -461,6 +512,29 @@ const settings = ref({
   logoUrl: '' as string,
 });
 
+const initialSnapshot = ref('');
+
+const buildSnapshot = () => JSON.stringify({
+  storeName: settings.value.storeName.trim(),
+  taxId: settings.value.taxId.trim(),
+  niche: settings.value.niche,
+  currency: settings.value.currency,
+  address: settings.value.address.trim(),
+  countryCode: settings.value.countryCode,
+  phone: settings.value.phone.trim(),
+  thankYouMessage: settings.value.thankYouMessage.trim(),
+  logoUrl: settings.value.logoUrl,
+});
+
+const markClean = () => {
+  initialSnapshot.value = buildSnapshot();
+};
+
+const isDirty = computed(() => {
+  if (!initialSnapshot.value) return false;
+  return initialSnapshot.value !== buildSnapshot() || !!logoFile.value;
+});
+
 // ── Paper width preference (local storage) ────────────────────────────────────
 const paperWidth = ref<PaperWidth>(getStoredPaperWidth());
 
@@ -476,6 +550,24 @@ const onPaperWidthChange = () => {
 
 // ── Load store settings from backend ─────────────────────────────────────────
 const isLoading = ref(true);
+
+const applyStoreSettings = (data: StoreSettings) => {
+  if (!data) return;
+
+  if (settings.value.logoUrl?.startsWith('blob:')) {
+    URL.revokeObjectURL(settings.value.logoUrl);
+  }
+
+  settings.value.storeName = data.store_name || '';
+  settings.value.taxId = data.tax_id || '';
+  settings.value.niche = data.niche || '';
+  settings.value.currency = data.currency_symbol || '$ MXN';
+  settings.value.address = data.address || '';
+  settings.value.phone = data.phone || '';
+  settings.value.countryCode = data.country_code || '+52';
+  settings.value.thankYouMessage = data.ticket_message || '';
+  settings.value.logoUrl = data.logo_url || '';
+};
 
 onMounted(async () => {
   // Verificar RBAC
@@ -495,23 +587,17 @@ onMounted(async () => {
 
   isLoading.value = true;
   try {
-    const res = await apiClient.get<any>('/v1/accounts/store-profiles/');
+    const res = await storeSettingsService.getStoreSettings();
     if (res.success && res.data) {
-      const d = res.data;
-      settings.value.storeName      = d.store_name      ?? '';
-      settings.value.taxId          = d.identificador_fiscal ?? d.tax_id ?? ''; // From Wizard Step 1
-      settings.value.niche          = d.nicho ?? d.niche ?? ''; // From Wizard Step 2
-      settings.value.currency       = d.currency_symbol ?? '$ MXN';
-      settings.value.address        = d.address         ?? '';
-      settings.value.phone          = d.phone           ?? '';
-      settings.value.countryCode    = d.country_code    ?? '+52';
-      settings.value.thankYouMessage = d.ticket_message ?? '';
-      settings.value.logoUrl        = d.logo_url        ?? '';
+      applyStoreSettings(res.data);
+    } else {
+      console.warn('No se pudo cargar configuracion de tienda:', res.error);
     }
   } catch (err) {
     console.error('Error loading settings', err);
   } finally {
     isLoading.value = false;
+    markClean();
   }
 });
 
@@ -541,6 +627,9 @@ const onLogoFile = (e: Event) => {
   }
   logoFile.value = file;
   // Immediate local preview
+  if (settings.value.logoUrl?.startsWith('blob:')) {
+    URL.revokeObjectURL(settings.value.logoUrl);
+  }
   settings.value.logoUrl = URL.createObjectURL(file);
 };
 
@@ -552,7 +641,18 @@ const onLogoDrop = (e: DragEvent) => {
     return;
   }
   logoFile.value = file;
+  if (settings.value.logoUrl?.startsWith('blob:')) {
+    URL.revokeObjectURL(settings.value.logoUrl);
+  }
   settings.value.logoUrl = URL.createObjectURL(file);
+};
+
+const removeLogo = () => {
+  if (settings.value.logoUrl?.startsWith('blob:')) {
+    URL.revokeObjectURL(settings.value.logoUrl);
+  }
+  settings.value.logoUrl = '';
+  logoFile.value = null;
 };
 
 // ── Format address for ticket preview ────────────────────────────────────────
@@ -569,12 +669,13 @@ const formattedAddressLines = computed(() => {
 const isSaving = ref(false);
 
 const saveSettings = async () => {
+  if (!isDirty.value) return;
   isSaving.value = true;
   try {
     const formData = new FormData();
-    formData.append('store_name',      settings.value.storeName);
-    formData.append('identificador_fiscal', settings.value.taxId);
-    formData.append('nicho',           settings.value.niche);
+    formData.append('name', settings.value.storeName);
+    formData.append('tax_id', settings.value.taxId);
+    formData.append('niche', settings.value.niche);
     formData.append('currency_symbol', settings.value.currency);
     formData.append('address',         settings.value.address);
     formData.append('phone',           settings.value.phone);
@@ -585,14 +686,13 @@ const saveSettings = async () => {
       formData.append('logo_file', logoFile.value);
     }
 
-    const res = await apiClient.patch<any>('/v1/accounts/store-profiles/', formData);
+    const res = await storeSettingsService.updateStoreSettings(formData);
 
     if (res.success && res.data) {
       // Update logo URL with Cloudinary's final URL
-      if (res.data.logo_url) {
-        settings.value.logoUrl = res.data.logo_url;
-        logoFile.value = null; // already uploaded
-      }
+      applyStoreSettings(res.data as StoreSettings);
+      logoFile.value = null; // already uploaded
+      markClean();
       enqueueSnackbar({
         type: 'success',
         title: 'Configuración Guardada',
@@ -870,9 +970,37 @@ const saveSettings = async () => {
 
 /* Phone Layout */
 .phone-input-group {
-  display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 0.5rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  --phone-control-height: 42px;
+}
+
+.country-code-select {
+  flex: 0 0 180px;
+  min-width: 140px;
+}
+
+.phone-number-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.country-code-select :deep(.app-select-wrapper),
+.country-code-select :deep(.app-select-container),
+.phone-number-field :deep(.app-input-wrapper),
+.phone-number-field :deep(.app-input-container) {
+  width: 100%;
+}
+
+.country-code-select :deep(.app-select-button) {
+  width: 100%;
+  min-height: var(--phone-control-height);
+}
+
+.phone-number-field :deep(.app-input-container) {
+  min-height: var(--phone-control-height);
 }
 
 /* Textarea */
@@ -1049,6 +1177,12 @@ textarea:focus {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
   font-family: inherit;
   margin-bottom: 1.5rem;
+  font-style: normal;
+}
+
+/* Force normal font-style for ticket preview to avoid italics on thermal printers */
+.ticket-simulation, .ticket-simulation * {
+  font-style: normal !important;
 }
 
 .ticket-header {
@@ -1121,15 +1255,29 @@ textarea:focus {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.4rem;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
 .left-col {
   flex: 1;
   padding-right: 1rem;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .right-col {
   font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.unit-price {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-left: 0.35rem;
 }
 
 .ticket-total-section {
@@ -1160,11 +1308,11 @@ textarea:focus {
 }
 
 .ticket-thank-you {
-  font-size: 0.85rem;
-  font-style: italic;
+  font-size: 0.8rem;
   color: #374151;
   margin-bottom: 0.5rem;
   white-space: pre-line;
+  line-height: 1.4;
 }
 
 .ticket-number {
@@ -1263,10 +1411,24 @@ textarea:focus {
 
 .preview-actions {
   margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.full-width-btn {
-  width: 100%;
+.save-btn {
+  min-width: 220px;
+}
+
+:deep(.save-btn.app-button--fill) {
+  background: #fbbf24;
+  color: #111827;
+  box-shadow: 0 6px 10px rgba(217, 119, 6, 0.2);
+}
+
+:deep(.save-btn.app-button--fill:disabled) {
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
 }
 
 /* ── Dynamic Paper Width for Ticket Preview ─────────────────────────────────── */

@@ -158,6 +158,8 @@ const printTicket = () => {
     date: currentDate.value,
     paperWidth: getStoredPaperWidth(),
     isReprint: false,
+    amountPaid: props.amountPaid,
+    changeReturned: props.changeReturned,
   });
   openTicketPrint(html);
 };
@@ -362,7 +364,9 @@ const printTicket = () => {
 }
 
 .ticket-logo {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 0.5rem;
 }
 
