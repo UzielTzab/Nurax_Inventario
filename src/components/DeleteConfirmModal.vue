@@ -1,7 +1,7 @@
 <template>
   <!-- Backdrop overlay -->
   <Transition name="fade">
-    <div v-if="isOpen" @click="$emit('close')" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div v-if="isOpen" @click="$emit('close')" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style="z-index: 10120;">
       <!-- Modal -->
       <Transition name="modal">
         <div v-if="isOpen" @click.stop class="bg-white rounded-lg shadow-2xl max-w-md w-full">
@@ -13,14 +13,17 @@
             
             <!-- Content -->
             <div class="text-center">
-              <h3 class="text-lg font-bold text-gray-900 mb-2">¿Eliminar Producto?</h3>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">{{ titleText }}</h3>
               <p class="text-sm text-gray-600 mb-4">
-                ¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.
+                {{ messageText }}
               </p>
               
               <div v-if="product" class="bg-gray-50 rounded-lg p-4 mb-6">
                 <div class="flex items-center">
-                  <img :src="product.image" alt="" class="h-16 w-16 rounded-lg object-cover">
+                  <img v-if="product.image" :src="product.image" alt="" class="h-16 w-16 rounded-lg object-cover">
+                  <div v-else class="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500 text-xl font-bold">
+                    ?
+                  </div>
                   <div class="ml-4 text-left">
                     <p class="font-semibold text-gray-900">{{ product.name }}</p>
                     <p class="text-sm text-gray-500">SKU: {{ product.sku }}</p>
@@ -36,7 +39,7 @@
                 Cancelar
               </AppButton>
               <AppButton variant="fill" class="flex-1" @click="handleDelete">
-                Eliminar
+                {{ confirmLabelText }}
               </AppButton>
             </div>
           </div>
@@ -47,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 
 interface Product {
@@ -60,12 +64,19 @@ interface Product {
   image: string;
 }
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
   product: Product | null;
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
 }>();
 
 const emit = defineEmits(['close', 'confirm']);
+
+const titleText = computed(() => props.title || '¿Eliminar Producto?');
+const messageText = computed(() => props.message || '¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.');
+const confirmLabelText = computed(() => props.confirmLabel || 'Eliminar');
 
 const handleDelete = () => {
   emit('confirm');

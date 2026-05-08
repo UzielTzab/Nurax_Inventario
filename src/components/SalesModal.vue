@@ -733,6 +733,25 @@
     @shift-opened="handleShiftOpened"
   />
 
+  <DeleteConfirmModal
+    :isOpen="showDeleteParkedCartModal"
+    :product="parkedCartToDelete ? {
+      name: parkedCartToDelete.customer_name || parkedCartToDelete.customer?.name || 'Venta de Mostrador (General)',
+      category: parkedCartToDelete.store_name || 'Carrito aparcado',
+      sku: String(parkedCartToDelete.id || '-'),
+      quantity: Number(parkedCartToDelete.items_count || 0),
+      price: String(parkedCartToDelete.total || '0.00'),
+      supplier: 'POS',
+      status: 'Aparcado',
+      image: ''
+    } : null"
+    title="¿Eliminar carrito aparcado?"
+    message="¿Estás seguro de que deseas eliminar este carrito aparcado? Esta acción no se puede deshacer."
+    confirmLabel="Eliminar carrito"
+    @close="closeDeleteParkedCartModal"
+    @confirm="discardParkedCart"
+  />
+
   <Transition name="fade">
     <div v-if="showParkedCartsModal" class="modal-overlay" style="z-index: 10015; align-items: center; justify-content: center;" @click.self="showParkedCartsModal = false">
       <div class="modal-content" style="max-width: 640px; width: 92%; max-height: 80vh; overflow-y: auto; padding: 1.5rem; border-radius: 16px;">
@@ -743,24 +762,36 @@
           </button>
         </div>
 
-        <div v-if="parkedCarts.length === 0" style="padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 16px;">
-          No hay carritos aparcados todavía.
+        <div v-if="parkedCarts.length === 0" style="padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 16px; display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 48 48" width="48" height="48" style="opacity:0.9; color: #9ca3af;">
+            <path d="M8 12h32v24a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V12z" stroke="#cbd5e1" stroke-width="1.5"/>
+            <path d="M18 20v10" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M26 20v10" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div style="font-weight:700; color:#374151;">No hay ventas en espera</div>
+          <div style="color:#6b7280;">No hay ventas en espera en este momento.</div>
         </div>
 
         <div v-else style="display: flex; flex-direction: column; gap: 0.75rem;">
           <div v-for="parkedCart in parkedCarts" :key="parkedCart.id" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 16px; background: white;">
             <div style="min-width: 0;">
-              <div style="font-weight: 700; color: #111827;">{{ parkedCart.store_name }}</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">{{ parkedCart.items_count }} items · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
-              <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ parkedCart.parked_at ? new Date(parkedCart.parked_at).toLocaleString() : 'N/A' }}</div>
+              <div style="font-weight: 700; color: #111827;">Cliente: {{ parkedCart.customer_name || parkedCart.customer?.name || 'Venta de Mostrador (General)' }}</div>
+              <div style="font-size: 0.875rem; color: #6b7280;">{{ formatItemsLabel(parkedCart.items_count) }} · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
+              <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ formatParkedAt(parkedCart.parked_at) }}</div>
+              <div v-if="previewLine(parkedCart)" style="font-size:0.85rem; color:#9ca3af; margin-top:6px;">{{ previewLine(parkedCart) }}</div>
             </div>
-            <AppButton
-              variant="fill"
-              size="sm"
-              @click="restoreParkedCart(parkedCart.id)"
-            >
-              Recuperar
-            </AppButton>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button @click="openDeleteParkedCartModal(parkedCart)" title="Descartar carrito" style="background:none; border:none; padding:0.4rem; border-radius:8px; color:#ef4444; display:inline-flex; align-items:center; justify-content:center;">
+                <TrashIcon style="width:18px; height:18px;" />
+              </button>
+              <AppButton
+                variant="fill"
+                size="sm"
+                @click="restoreParkedCart(parkedCart.id)"
+              >
+                Recuperar
+              </AppButton>
+            </div>
           </div>
         </div>
       </div>
@@ -775,6 +806,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useProducts } from '@/composables/useProducts';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
 import OpenShiftModal from '@/components/OpenShiftModal.vue';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
 import { useShiftsStore } from '@/stores/shifts.store';
@@ -796,6 +828,8 @@ import {
   PauseIcon
 } from '@heroicons/vue/24/outline';
 import apiClient from '@/services/api';
+import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import type { Product } from '@/composables/useProducts';
 
@@ -854,6 +888,8 @@ const showParkedCartsModal = ref(false);
 const parkedCarts = ref<any[]>([]);
 const parkedCartsCount = ref(0);
 const activeCartId = ref('');
+const showDeleteParkedCartModal = ref(false);
+const parkedCartToDelete = ref<any | null>(null);
 
 const clients = ref<PosClient[]>([]);
 const clientSearch = ref('');
@@ -961,6 +997,73 @@ const loadParkedCarts = async () => {
   } catch (error) {
     console.error('Error cargando carritos aparcados:', error);
   }
+};
+
+const formatItemsLabel = (count: number) => {
+  if (!count && count !== 0) return '';
+  return Number(count) === 1 ? '1 artículo' : `${count} artículos`;
+};
+
+const formatParkedAt = (iso?: string | null) => {
+  if (!iso) return 'N/A';
+  try {
+    const d = new Date(iso);
+    if (isToday(d)) {
+      return formatDistanceToNow(d, { addSuffix: true, locale: es });
+    }
+    if (isYesterday(d)) {
+      return `Ayer a las ${format(d, 'p', { locale: es })}`;
+    }
+    return format(d, "d 'de' MMM yyyy 'a las' p", { locale: es });
+  } catch (e) {
+    return new Date(iso).toLocaleString();
+  }
+};
+
+const previewLine = (parkedCart: any) => {
+  // Prefer server-provided preview fields when available
+  if (parkedCart.preview_first_item) {
+    const more = parkedCart.items_count && parkedCart.items_count > 1 ? ` y ${parkedCart.items_count - 1} más...` : '';
+    return `Contiene: ${parkedCart.preview_first_item}${more}`;
+  }
+  // If full items array is present
+  if (Array.isArray(parkedCart.items) && parkedCart.items.length > 0) {
+    const first = parkedCart.items[0]?.name || parkedCart.items[0]?.product_name || 'Producto';
+    const more = parkedCart.items.length > 1 ? ` y ${parkedCart.items.length - 1} más...` : '';
+    return `Contiene: ${first}${more}`;
+  }
+  return '';
+};
+
+const openDeleteParkedCartModal = (parkedCart: any) => {
+  parkedCartToDelete.value = parkedCart;
+  showDeleteParkedCartModal.value = true;
+};
+
+const discardParkedCart = async () => {
+  const id = parkedCartToDelete.value?.id;
+  if (!id) return;
+  try {
+    const res: any = await apiClient.delete(`/v1/carts/carts/${id}/`);
+    if (res && (res.success || res.status === 204 || res.status === 200)) {
+      // Remove locally
+      parkedCarts.value = parkedCarts.value.filter((c: any) => c.id !== id);
+      parkedCartsCount.value = Math.max(0, parkedCartsCount.value - 1);
+      showDeleteParkedCartModal.value = false;
+      parkedCartToDelete.value = null;
+      enqueueSnackbar({ type: 'success', title: 'Eliminado', message: 'Carrito descartado correctamente.' });
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: res?.error || 'No se pudo eliminar el carrito.' });
+    }
+  } catch (e) {
+    console.error('Error eliminando carrito aparcado:', e);
+    enqueueSnackbar({ type: 'error', title: 'Error de red', message: 'No se pudo eliminar el carrito.' });
+  }
+};
+
+const closeDeleteParkedCartModal = () => {
+  showDeleteParkedCartModal.value = false;
+  parkedCartToDelete.value = null;
 };
 
 const openParkedCartsModal = async () => {
