@@ -76,7 +76,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="employee in visibleEmployees" :key="employee.id">
+                  <tr v-for="employee in visibleEmployees" :key="employee.id" :class="{ 'row-suspended': !employee.is_active }">
                     <td>
                       <div class="employee-cell">
                         <div class="employee-avatar" :class="roleAvatarClass(employee.membership_role)">
@@ -108,9 +108,34 @@
                         {{ formatLastLogin(employee.last_login) }}
                       </span>
                     </td>
+                    <td>
+                      <div class="kebab-wrap">
+                        <button class="icon-kebab-btn" :class="{ active: openMenuId === employee.id }" @click.stop="openMenuId = openMenuId === employee.id ? '' : employee.id">
+                          <EllipsisVerticalIcon class="kebab-icon" />
+                        </button>
+                        
+                        <transition name="fade">
+                          <div v-if="openMenuId === employee.id" class="kebab-menu">
+                            <button class="kebab-item" @click="openEditDrawer(employee)">
+                              <PencilIcon class="kebab-item-icon" /> Editar empleado
+                            </button>
+                            <button class="kebab-item" @click="confirmResetPassword(employee)">
+                              <KeyIcon class="kebab-item-icon" /> Restablecer contraseña
+                            </button>
+                            <div class="kebab-divider"></div>
+                            <button class="kebab-item" :class="employee.is_active ? 'text-danger' : 'text-success'" @click="toggleEmployeeStatus(employee)">
+                              <NoSymbolIcon v-if="employee.is_active" class="kebab-item-icon" /> 
+                              <PlayCircleIcon v-else class="kebab-item-icon" /> 
+                              {{ employee.is_active ? 'Suspender acceso' : 'Reactivar acceso' }}
+                            </button>
+                          </div>
+                        </transition>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
+              <div v-if="openMenuId" class="menu-overlay" @click="openMenuId = ''"></div>
             </div>
           </template>
         </div>
@@ -123,19 +148,35 @@
           <div class="drawer-panel">
             <div class="drawer-head">
               <div>
-                <p class="drawer-kicker">Nuevo miembro</p>
-                <h2>Crear acceso para el equipo</h2>
+                <p class="drawer-kicker" v-if="!isEditing">Nuevo miembro</p>
+                <p class="drawer-kicker" v-else>Editar miembro</p>
+                <h2 v-if="!isEditing">Crear acceso para el equipo</h2>
+                <h2 v-else>Actualizar empleado</h2>
               </div>
               <button class="icon-close-btn" @click="closeDrawer">
                 <XMarkIcon class="close-icon" />
               </button>
             </div>
 
-            <p class="drawer-description">
+            <p class="drawer-description" v-if="!isEditing">
               Completa los datos y genera accesos listos para entregar al instante.
+            </p>
+            <p class="drawer-description" v-else>
+              Modifica los detalles del empleado o suspende su acceso.
             </p>
 
             <form class="drawer-form" @submit.prevent="submitEmployee">
+              <div v-if="isEditing" class="field-stack" style="margin-bottom: 0.5rem;">
+                <label class="field-label">Estado de la cuenta</label>
+                <div class="toggle-status-wrap">
+                  <div class="toggle-status-text">
+                    <span :class="employeeStatusClass">{{ employeeStatusText }}</span>
+                  </div>
+                  <button type="button" class="switch-btn" :class="{ 'switch-active': currentEditIsActive }" @click="toggleEditStatus">
+                    <div class="switch-thumb"></div>
+                  </button>
+                </div>
+              </div>
               <AppInput
                 v-model="form.name"
                 label="Nombre completo"
@@ -150,17 +191,20 @@
                     v-model="form.username"
                     type="text"
                     class="text-input"
-                    placeholder="galileo_maria"
+                    :placeholder="isEditing ? '' : 'galileo_maria'"
                     @input="onUsernameInput"
+                    :disabled="isEditing"
+                    :class="{ 'input-disabled': isEditing }"
                   >
-                  <button type="button" class="ghost-button" @click="syncUsernameFromName">
+                  <button v-if="!isEditing" type="button" class="ghost-button" @click="syncUsernameFromName">
                     Recalcular
                   </button>
                 </div>
-                <p class="field-help">Se sugiere automáticamente con el formato tienda_empleado.</p>
+                <p class="field-help" v-if="!isEditing">Se sugiere automáticamente con el formato tienda_empleado.</p>
+                <p class="field-help" v-else>El usuario de ingreso no se puede cambiar por seguridad e historial.</p>
               </div>
 
-              <div class="field-stack">
+              <div class="field-stack" v-if="!isEditing">
                 <label class="field-label">Contraseña</label>
                 <div class="password-row">
                   <input
@@ -213,8 +257,8 @@
                 <AppButton variant="outline" type="button" @click="closeDrawer" :disabled="isSaving">
                   Cancelar
                 </AppButton>
-                <AppButton variant="fill" type="submit" :loading="isSaving" :disabled="!canAddMore">
-                  Crear empleado
+                <AppButton variant="fill" type="submit" :loading="isSaving" :disabled="!canAddMore && !isEditing">
+                  {{ isEditing ? 'Guardar cambios' : 'Crear empleado' }}
                 </AppButton>
               </div>
             </form>
@@ -259,6 +303,31 @@
         </div>
       </transition>
     </Teleport>
+
+    <Teleport to="body">
+      <transition name="fade">
+        <div v-if="showResetModal" class="success-backdrop" @click.self="cancelReset">
+          <div class="success-card">
+            <div class="success-icon-wrap" style="background: linear-gradient(135deg, #fee2e2, #fef9c3);">
+              <KeyIcon class="success-icon" style="color: #ea580c;" />
+            </div>
+            <h2>¿Restablecer contraseña?</h2>
+            <p class="success-copy">
+              Se generará una nueva contraseña segura para <strong>{{ resetTargetEmployee?.name }}</strong>. Podrás copiarla en el siguiente paso.
+            </p>
+            
+            <div class="success-actions" style="margin-top: 1.5rem;">
+              <AppButton variant="outline" @click="cancelReset" :disabled="isSaving">
+                Cancelar
+              </AppButton>
+              <AppButton variant="fill" @click="executeResetPassword" :loading="isSaving">
+                Generar nueva contraseña
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </DashboardLayout>
 </template>
 
@@ -280,6 +349,11 @@ import {
   PlusIcon,
   UserGroupIcon,
   XMarkIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  KeyIcon,
+  NoSymbolIcon,
+  PlayCircleIcon
 } from '@heroicons/vue/24/outline';
 
 const { currentUser } = useAuth();
@@ -294,6 +368,7 @@ interface TeamEmployee {
   role: string;
   role_label: string;
   membership_role: string;
+  is_active: boolean;
   last_login: string | null;
   created_at: string;
   initials: string;
@@ -345,6 +420,9 @@ const showRoleMenu = ref(false);
 const showPassword = ref(false);
 const usernameTouched = ref(false);
 const copiedEmployeeId = ref('');
+const openMenuId = ref('');
+const isEditing = ref(false);
+const editingEmployeeId = ref('');
 const employees = ref<TeamEmployee[]>([]);
 const planLimit = ref<number | null>(null);
 const storePlan = ref('basico');
@@ -482,6 +560,8 @@ const resetForm = () => {
   };
   usernameTouched.value = false;
   showPassword.value = false;
+  isEditing.value = false;
+  editingEmployeeId.value = '';
   generateSecurePassword();
 };
 
@@ -493,10 +573,101 @@ const openDrawer = () => {
 const closeDrawer = () => {
   showDrawer.value = false;
   showRoleMenu.value = false;
+  isEditing.value = false;
 };
 
 const closeSuccessModal = () => {
   showSuccessModal.value = false;
+};
+
+const openEditDrawer = (employee: TeamEmployee) => {
+  resetForm();
+  isEditing.value = true;
+  editingEmployeeId.value = employee.id;
+  form.value.name = employee.name;
+  form.value.username = employee.username;
+  form.value.role = employee.membership_role as 'cashier' | 'manager';
+  form.value.password = '';
+  openMenuId.value = '';
+  showDrawer.value = true;
+};
+
+const toggleEmployeeStatus = async (employee: TeamEmployee) => {
+  if (!currentStoreId.value) return;
+  
+  openMenuId.value = '';
+  const newState = !employee.is_active;
+  try {
+    const response = await apiClient.patch<{ success: boolean; data: TeamEmployee }>(
+      `/v1/stores/${currentStoreId.value}/employees/${employee.id}/`,
+      { is_active: newState }
+    );
+    if (response.success && response.data) {
+      await loadTeam();
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: `El acceso ha sido ${newState ? 'reactivado' : 'suspendido'}.`, duration: 4000 });
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 4000 });
+    }
+  } catch (error) {
+    console.error(error);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo actualizar el estado.', duration: 4000 });
+  }
+};
+
+const currentEditIsActive = computed(() => {
+  const emp = employees.value.find(e => e.id === editingEmployeeId.value);
+  return emp ? emp.is_active : false;
+});
+const employeeStatusText = computed(() => currentEditIsActive.value ? 'Activo' : 'Suspendido');
+const employeeStatusClass = computed(() => currentEditIsActive.value ? 'status-text-active' : 'status-text-suspended');
+
+const toggleEditStatus = async () => {
+  const emp = employees.value.find(e => e.id === editingEmployeeId.value);
+  if (emp) {
+    await toggleEmployeeStatus(emp);
+  }
+};
+
+const showResetModal = ref(false);
+const resetTargetEmployee = ref<TeamEmployee | null>(null);
+
+const confirmResetPassword = (employee: TeamEmployee) => {
+  openMenuId.value = '';
+  resetTargetEmployee.value = employee;
+  showResetModal.value = true;
+};
+
+const cancelReset = () => {
+  showResetModal.value = false;
+  resetTargetEmployee.value = null;
+};
+
+const executeResetPassword = async () => {
+  if (!currentStoreId.value || !resetTargetEmployee.value) return;
+  
+  isSaving.value = true;
+  try {
+    const response = await apiClient.post<{ success: boolean; new_password: string }>(
+      `/v1/stores/${currentStoreId.value}/employees/${resetTargetEmployee.value.id}/reset-password/`,
+      {}
+    );
+    if (response.success && response.data) {
+      createdCredentials.value = {
+        username: resetTargetEmployee.value.username,
+        password: response.data.new_password,
+        email: resetTargetEmployee.value.email
+      };
+      showResetModal.value = false;
+      showSuccessModal.value = true;
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo restablecer la contraseña.', duration: 4000 });
+    }
+  } catch (error) {
+    console.error(error);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo restablecer la contraseña.', duration: 4000 });
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const loadTeam = async () => {
@@ -538,29 +709,49 @@ const submitEmployee = async () => {
 
   isSaving.value = true;
   try {
-    const payload = {
-      name: form.value.name.trim(),
-      username: form.value.username.trim(),
-      password: form.value.password,
-      role: form.value.role,
-    };
+    if (isEditing.value) {
+      const payload = {
+        name: form.value.name.trim(),
+        role: form.value.role,
+      };
 
-    const response = await apiClient.post<{ employee: TeamEmployee; credentials: { username: string; password: string; email: string } }>(
-      `/v1/stores/${currentStoreId.value}/employees/`,
-      payload,
-    );
+      const response = await apiClient.patch<{ success: boolean; data: TeamEmployee }>(
+        `/v1/stores/${currentStoreId.value}/employees/${editingEmployeeId.value}/`,
+        payload,
+      );
 
-    if (response.success && response.data) {
-      createdCredentials.value = response.data.credentials;
-      showDrawer.value = false;
-      showSuccessModal.value = true;
-      await loadTeam();
+      if (response.success && response.data) {
+        showDrawer.value = false;
+        await loadTeam();
+        enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Empleado actualizado correctamente.', duration: 4000 });
+      } else {
+        enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el empleado.', duration: 4000 });
+      }
     } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el empleado.', duration: 4000 });
+      const payload = {
+        name: form.value.name.trim(),
+        username: form.value.username.trim(),
+        password: form.value.password,
+        role: form.value.role,
+      };
+
+      const response = await apiClient.post<{ employee: TeamEmployee; credentials: { username: string; password: string; email: string } }>(
+        `/v1/stores/${currentStoreId.value}/employees/`,
+        payload,
+      );
+
+      if (response.success && response.data) {
+        createdCredentials.value = response.data.credentials;
+        showDrawer.value = false;
+        showSuccessModal.value = true;
+        await loadTeam();
+      } else {
+        enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el empleado.', duration: 4000 });
+      }
     }
   } catch (error: any) {
-    console.error('Error creating employee:', error);
-    const message = error?.response?.data?.error || 'No se pudo crear el empleado.';
+    console.error('Error saving employee:', error);
+    const message = error?.response?.data?.error || 'No se pudo guardar el empleado.';
     enqueueSnackbar({ type: 'error', title: 'Error', message, duration: 4000 });
   } finally {
     isSaving.value = false;
@@ -1298,6 +1489,175 @@ onMounted(() => {
 
 .copy-access-btn:hover {
   filter: brightness(0.98);
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.kebab-wrap {
+  position: relative;
+  z-index: 11;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.icon-kebab-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-kebab-btn:hover, .icon-kebab-btn.active {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.kebab-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.kebab-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  padding: 0.5rem;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  z-index: 20;
+}
+
+.kebab-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kebab-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.kebab-item-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.kebab-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 0.25rem 0;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+.text-danger:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.text-success {
+  color: #10b981 !important;
+}
+
+.text-success:hover {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+}
+
+.row-suspended td {
+  opacity: 0.55;
+}
+
+.input-disabled {
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+  border-color: #e2e8f0 !important;
+}
+
+.toggle-status-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.toggle-status-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.status-text-active {
+  color: #16a34a;
+}
+
+.status-text-suspended {
+  color: #ef4444;
+}
+
+.switch-btn {
+  width: 48px;
+  height: 26px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.switch-btn.switch-active {
+  background: #16a34a;
+}
+
+.switch-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 999px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.switch-active .switch-thumb {
+  transform: translateX(22px);
 }
 
 @media (max-width: 980px) {
