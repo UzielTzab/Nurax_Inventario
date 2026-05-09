@@ -219,7 +219,7 @@
 
               <!-- Botón: Pausar Venta -->
               <AppButton 
-                variant="soft-warning"
+                variant="outline"
                 iconOnly
                 @click="parkCart" 
                 :disabled="cart.length === 0" 

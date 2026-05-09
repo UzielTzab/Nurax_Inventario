@@ -119,6 +119,8 @@ watch(() => route.path, (path) => {
     activeItem.value = 'receivables';
   } else if (path.includes('/dashboard/clients')) {
     activeItem.value = 'clients';
+  } else if (path.includes('/dashboard/team')) {
+    activeItem.value = 'team';
   } else if (path.includes('/dashboard/settings')) {
     activeItem.value = 'settings';
   }
@@ -196,15 +198,28 @@ const allMenuSections: MenuSection[] = [
         id: 'clients',
         label: 'Clientes',
         route: '/dashboard/clients',
-        roles: ['admin', 'propietario'],
+        roles: ['admin'],
         iconOutline: UserGroupOutline,
         iconSolid: UserGroupSolid,
+      },
+      {
+        id: 'team',
+        label: 'Equipo',
+        route: '/dashboard/team',
+        roles: ['propietario'],
+        iconOutline: UsersOutline,
+        iconSolid: UsersSolid,
       }
     ]
   }
 ];
 
 const normalizeRole = (role?: string) => {
+  const membershipRole = ((currentUser.value as any)?.store_profile?.membership_role || '').toLowerCase();
+  if (membershipRole === 'owner') return 'propietario';
+  if (membershipRole === 'manager') return 'gerente';
+  if (membershipRole === 'cashier') return 'cajero';
+
   const normalized = (role || '').toLowerCase();
   if (normalized === 'owner') return 'propietario';
   if (normalized === 'manager') return 'gerente';

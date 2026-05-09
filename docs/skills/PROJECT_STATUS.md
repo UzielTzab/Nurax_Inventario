@@ -1,7 +1,7 @@
 # 📊 PROJECT_STATUS.md — Nurax Inventario Frontend
 
 > Documento de estado del proyecto frontend. Ayuda a alinear el trabajo entre desarrollo y agentes AI.
-> Última actualización: **29 de Marzo 2026** — Sesión de corrección de conexión B/F
+> Última actualización: **09 de Mayo 2026** — Auditoría de arquitectura y Clean Code (Generación de `reporte_problemas_nurax.md`)
 
 ---
 

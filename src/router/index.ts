@@ -14,6 +14,7 @@ import Settings from '@/views/Settings.vue'
 import Shifts from '@/views/Shifts.vue'
 import Expenses from '@/views/Expenses.vue'
 import AccountsReceivable from '@/views/AccountsReceivable.vue'
+import Team from '@/views/Team.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -32,7 +33,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/dashboard/onboarding',
     component: OnboardingWizard,
-    meta: { title: 'Configuración Inicial', roles: ['cliente'] }
+    meta: { title: 'Configuración Inicial', roles: ['cliente', 'propietario'] }
   },
   {
     path: '/dashboard/inventory',
@@ -67,12 +68,17 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/dashboard/clients',
     component: AdminClients,
-    meta: { title: 'Clientes', roles: ['admin', 'propietario'] }
+    meta: { title: 'Clientes', roles: ['admin'] }
   },
   {
     path: '/dashboard/settings',
     component: Settings,
     meta: { title: 'Configuración', roles: ['cliente', 'propietario', 'admin'] }
+  },
+  {
+    path: '/dashboard/team',
+    component: Team,
+    meta: { title: 'Equipo', roles: ['propietario'] }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -89,6 +95,11 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const { isAuthenticated, currentUser, initSession } = useAuth()
   const normalizeRole = (role?: string) => {
+    const membershipRole = ((currentUser.value as any)?.store_profile?.membership_role || '').toLowerCase()
+    if (membershipRole === 'owner') return 'propietario'
+    if (membershipRole === 'manager') return 'gerente'
+    if (membershipRole === 'cashier') return 'cajero'
+
     const normalized = (role || '').toLowerCase()
     if (normalized === 'owner') return 'propietario'
     if (normalized === 'manager') return 'gerente'
@@ -97,7 +108,7 @@ router.beforeEach(async (to) => {
   }
 
   // Esperar a que se restaure la sesión desde los tokens guardados.
-  // initSession() usa un singleton → solo llama al backend UNA vez,
+  // initSession() usa un singleton -> solo llama al backend UNA vez,
   // sin importar cuántas veces el guard se ejecute.
   await initSession()
 
@@ -116,16 +127,24 @@ router.beforeEach(async (to) => {
   // ⭐ Detectar si cliente no completó el setup y redirigir al onboarding
   if (currentUser.value?.role === 'cliente') {
     const storeProfile = (currentUser.value as any).store_profile
+    const membershipRole = (storeProfile?.membership_role || '').toLowerCase()
     const isOnboardingRoute = to.path === '/dashboard/onboarding'
     
-    if (storeProfile && !storeProfile.is_first_setup_completed && !isOnboardingRoute) {
-      // Cliente no completó setup → mandarlo al onboarding
-      return '/dashboard/onboarding'
-    }
-    
-    if (storeProfile && storeProfile.is_first_setup_completed && isOnboardingRoute) {
-      // Cliente ya completó setup pero intenta volver al onboarding → al inventory
-      return '/dashboard/inventory'
+    if (membershipRole === 'owner' || membershipRole === '') {
+      if (storeProfile && !storeProfile.is_first_setup_completed && !isOnboardingRoute) {
+        // Cliente no completó setup → mandarlo al onboarding
+        return '/dashboard/onboarding'
+      }
+      
+      if (storeProfile && storeProfile.is_first_setup_completed && isOnboardingRoute) {
+        // Cliente ya completó setup pero intenta volver al onboarding → al inventory
+        return '/dashboard/inventory'
+      }
+    } else {
+      // Empleados no deben ver el onboarding
+      if (isOnboardingRoute) {
+        return '/dashboard/inventory'
+      }
     }
   }
 

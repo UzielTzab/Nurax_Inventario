@@ -11,9 +11,10 @@ export interface LoginBackendResponse {
 }
 
 export interface StoreProfileResponse {
-  id: number
+  id: number | string
   store_name?: string
   name?: string
+  membership_role?: string
   currency_symbol: string
   address: string
   phone: string
@@ -32,11 +33,11 @@ export interface StoreProfileResponse {
 }
 
 export interface UserProfileResponse {
-  id: number
+  id: number | string
   username: string
   name: string
   email: string
-  role: 'admin' | 'cliente'
+  role: 'admin' | 'cliente' | string
   avatar_url?: string
   store_profile?: StoreProfileResponse | null
 }

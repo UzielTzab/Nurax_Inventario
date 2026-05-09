@@ -748,6 +748,8 @@ Set-Cookie: access_token=eyJhbGci...;
 ---
 
 ⚠️ **NOTA CRÍTICA:** Este cambio es URGENTE para la seguridad de datos de usuarios y negocio.
+
+```typescript
 import { z } from 'zod'
 
 const ProductSchema = z.object({
