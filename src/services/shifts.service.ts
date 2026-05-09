@@ -14,6 +14,7 @@ export interface Shift {
   user?: number;
   store?: number | string;
   opened_by?: number | string | null;
+  opened_by_name?: string;
   starting_cash: number | string;
   expected_cash: number | string | null;
   actual_cash: number | string | null;

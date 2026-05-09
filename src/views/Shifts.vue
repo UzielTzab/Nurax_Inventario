@@ -40,7 +40,7 @@
     <!-- Turno Abierto -->
     <div class="active-shift-card card">
       <div class="card-header">
-        <h2 class="card-title">💵 Turno en progreso: {{ currentUser?.first_name || currentUser?.name || currentUser?.username || 'Cajero' }} {{ currentUser?.last_name || '' }}</h2>
+        <h2 class="card-title">💵 Turno en progreso: {{ currentUser?.name || currentUser?.username || 'Cajero' }}</h2>
         <span class="badge badge-success">Abierto</span>
       </div>
       <div class="card-body">
@@ -191,7 +191,7 @@
                 </td>
               </tr>
               <tr v-if="completedShifts.length === 0">
-                <td colspan="8" class="text-center text-muted py-4">No hay turnos registrados</td>
+                <td colspan="9" class="text-center text-muted py-4">No hay turnos registrados</td>
               </tr>
             </template>
           </tbody>
