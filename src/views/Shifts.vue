@@ -40,7 +40,7 @@
     <!-- Turno Abierto -->
     <div class="active-shift-card card">
       <div class="card-header">
-        <h2 class="card-title">💵 Turno en progreso</h2>
+        <h2 class="card-title">💵 Turno en progreso: {{ currentUser?.first_name || currentUser?.name || currentUser?.username || 'Cajero' }} {{ currentUser?.last_name || '' }}</h2>
         <span class="badge badge-success">Abierto</span>
       </div>
       <div class="card-body">
@@ -52,10 +52,16 @@
           <div class="stat-box">
             <span class="stat-label">Entradas (+)</span>
             <span class="stat-value text-success">${{ formatMoney(turnKpis.entries) }}</span>
+            <button @click="openMovementModal('in')" class="btn-ghost mt-2 border-success text-success text-xs px-2 py-1 rounded">
+              + Ingresar dinero
+            </button>
           </div>
           <div class="stat-box">
             <span class="stat-label">Salidas (-)</span>
             <span class="stat-value text-warning">${{ formatMoney(turnKpis.exits) }}</span>
+            <button @click="openMovementModal('out')" class="btn-ghost mt-2 border-warning text-warning text-xs px-2 py-1 rounded">
+              - Retirar efectivo
+            </button>
           </div>
           <div class="stat-box expected-box">
             <div class="expected-label-row">
@@ -137,6 +143,7 @@
           <thead>
             <tr>
               <th>ID</th>
+              <th>Cajero</th>
               <th>Apertura</th>
               <th>Cierre</th>
               <th>Inicial</th>
@@ -150,6 +157,7 @@
             <template v-if="shiftsStore.isLoading">
               <tr v-for="i in 5" :key="'sk-shft-'+i">
                 <td><AppSkeleton width="40px" height="1rem" /></td>
+                <td><AppSkeleton width="60px" height="1rem" /></td>
                 <td><AppSkeleton width="100px" height="1rem" /></td>
                 <td><AppSkeleton width="100px" height="1rem" /></td>
                 <td><AppSkeleton width="70px" height="1rem" /></td>
@@ -161,7 +169,8 @@
             </template>
             <template v-else>
               <tr v-for="shift in paginatedShifts" :key="shift.id" class="clickable-row" @click="openShiftDetail(shift)">
-                <td>#{{ shift.id }}</td>
+                <td>#{{ typeof shift.id === 'string' ? shift.id.slice(-6).toUpperCase() : shift.id }}</td>
+                <td>{{ shift.opened_by_name || 'Desconocido' }}</td>
                 <td>{{ formatDate(shift.opened_at) }}</td>
                 <td>{{ shift.closed_at ? formatDate(shift.closed_at) : 'N/A' }}</td>
                 <td>${{ shift.starting_cash }}</td>
@@ -199,17 +208,18 @@
   </div>
   </div>
 
-  <!-- Modal Arqueo de Caja -->
+  <!-- Modal Declaración de Efectivo -->
   <teleport to="body">
     <transition name="modal-fade">
       <div v-if="showCloseShiftModal" class="modal-overlay" @click.self="closeArqueoModal">
         <div class="modal-card">
           <div class="modal-header">
-            <h3 class="modal-title">Arqueo de Caja</h3>
+            <h3 class="modal-title">Declaración de Efectivo</h3>
           </div>
           <div class="modal-body">
+            <p class="mb-4 text-gray-700">Cuenta el dinero físico que tienes en el cajón y escribe el monto total a continuación.</p>
             <div class="form-group">
-              <label>Dinero contado</label>
+              <label>Real Contado</label>
               <input
                 type="number"
                 step="0.01"
@@ -240,9 +250,58 @@
                 :loading="shiftsStore.isLoading"
                 @click="handleCloseShift"
               >
-                Confirmar Cierre de Turno
+                Confirmar Cierre
               </AppButton>
             </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+
+  <!-- Modal Movimiento de Efectivo -->
+  <teleport to="body">
+    <transition name="modal-fade">
+      <div v-if="showMovementModal" class="modal-overlay" @click.self="showMovementModal = false">
+        <div class="modal-card movement-card">
+          <div class="modal-header">
+            <h3 class="modal-title">{{ movementForm.type === 'in' ? 'Ingresar Dinero' : 'Retirar Efectivo' }}</h3>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="handleCashMovement" class="form-grid">
+              <div class="form-group">
+                <label>Monto</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  v-model.number="movementForm.amount"
+                  required
+                  class="input input-lg"
+                  placeholder="$ 0.00"
+                />
+              </div>
+              <div class="form-group">
+                <label>Motivo</label>
+                <input
+                  type="text"
+                  v-model="movementForm.reason"
+                  required
+                  class="input"
+                  :placeholder="movementForm.type === 'in' ? 'Ej. Cambio en monedas' : 'Ej. Pago de garrafones'"
+                />
+              </div>
+              <div class="modal-actions mt-4">
+                <AppButton variant="outline" type="button" @click="showMovementModal = false">Cancelar</AppButton>
+                <AppButton
+                  variant="fill"
+                  type="submit"
+                  :style="movementForm.type === 'in' ? 'background-color: #059669; border-color: #059669;' : 'background-color: #d97706; border-color: #d97706;'"
+                  :loading="isSubmittingMovement"
+                >
+                  Registrar {{ movementForm.type === 'in' ? 'Ingreso' : 'Retiro' }}
+                </AppButton>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -356,6 +415,62 @@ const closeForm = ref({
   expected_cash: null as number | null,
   actual_cash: null as number | null
 });
+
+// Modal de Movimientos de Efectivo
+const showMovementModal = ref(false);
+const isSubmittingMovement = ref(false);
+const movementForm = ref({
+  type: 'in' as 'in' | 'out',
+  amount: null as number | null,
+  reason: ''
+});
+
+const openMovementModal = (type: 'in' | 'out') => {
+  movementForm.value = {
+    type,
+    amount: null,
+    reason: ''
+  };
+  showMovementModal.value = true;
+};
+
+const handleCashMovement = async () => {
+  if (!movementForm.value.amount || movementForm.value.amount <= 0) {
+    enqueueSnackbar({ type: 'warning', title: 'Monto inválido', message: 'Ingresa un monto mayor a cero.' });
+    return;
+  }
+  if (!movementForm.value.reason.trim()) {
+    enqueueSnackbar({ type: 'warning', title: 'Motivo requerido', message: 'Ingresa el motivo del movimiento.' });
+    return;
+  }
+  if (!currentShift.value) {
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No hay turno abierto.' });
+    return;
+  }
+
+  isSubmittingMovement.value = true;
+  try {
+    const payload = {
+      cash_shift: currentShift.value.id,
+      movement_type: movementForm.value.type,
+      amount: movementForm.value.amount,
+      reason: movementForm.value.reason
+    };
+    
+    await apiClient.post('/v1/expenses/cash-movements/', payload);
+    
+    enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Movimiento registrado correctamente.' });
+    showMovementModal.value = false;
+    
+    // Recargar KPIs para actualizar contadores
+    await loadCurrentShiftKpis();
+  } catch (error: any) {
+    console.error('Error registering cash movement:', error);
+    enqueueSnackbar({ type: 'error', title: 'Error', message: error.message || 'No se pudo registrar el movimiento.' });
+  } finally {
+    isSubmittingMovement.value = false;
+  }
+};
 
 onMounted(async () => {
   await initSession();
@@ -637,6 +752,21 @@ const formatDate = (dateStr: string | undefined | null) => {
   justify-content: space-between;
   gap: 0.5rem;
 }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.btn-ghost:hover {
+  background: rgba(0,0,0,0.05);
+}
+.border-success { border-color: #059669; }
+.border-warning { border-color: #d97706; }
+.text-success { color: #059669; }
+.text-warning { color: #d97706; }
+
 .blind-toggle {
   display: inline-flex;
   align-items: center;
@@ -819,6 +949,9 @@ const formatDate = (dateStr: string | undefined | null) => {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+.movement-card {
+  width: min(400px, 95vw);
 }
 
 .drawer-backdrop {
