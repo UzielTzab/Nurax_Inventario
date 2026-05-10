@@ -761,7 +761,6 @@
             <XMarkIcon style="width: 24px; height: 24px; color: #6b7280;"/>
           </button>
         </div>
-
         <div v-if="parkedCarts.length === 0" style="padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 16px; display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 48 48" width="48" height="48" style="opacity:0.9; color: #9ca3af;">
             <path d="M8 12h32v24a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V12z" stroke="#cbd5e1" stroke-width="1.5"/>
