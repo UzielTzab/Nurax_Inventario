@@ -140,7 +140,7 @@ export const useSalesStore = defineStore('sales', () => {
     status: string;
     device_id?: string;
     amount_paid?: number;
-    amount_tendered?: number | string;
+    amount_tendered: number | string;
     customer?: string | number | null;
     cash_shift?: string | number | null;
   }) => {

@@ -1588,16 +1588,18 @@ const confirmPayment = async () => {
     const trxId = `TRX-${Date.now()}`;
 
     // Capturar datos del pago para pasarlos a SaleSuccessModal o backend
-    lastAmountPaid.value = Number(amountPaid.value.toFixed(2));
+    const tenderedAmount = Number((Number(amountPaid.value) || 0).toFixed(2));
+    lastAmountPaid.value = tenderedAmount;
     lastChangeReturned.value = Number(calculateChange.value.toFixed(2));
     const amountPaidForBackend = paymentMethod.value === 'completed'
       ? Number(total.value.toFixed(2))
-      : Number(amountPaid.value.toFixed(2));
+      : tenderedAmount;
 
     const result = await salesStore.addSale({
       transaction_id: trxId,
       status: paymentMethod.value === 'layaway' ? 'partial' : 'paid',
       amount_paid: amountPaidForBackend,
+      amount_tendered: tenderedAmount,
       customer: selectedClientId.value || null,
       total_amount: lastTotal.value,
       cash_shift: shiftsStore.currentShift?.id || null,
