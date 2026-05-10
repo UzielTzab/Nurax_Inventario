@@ -140,6 +140,7 @@ export const useSalesStore = defineStore('sales', () => {
     status: string;
     device_id?: string;
     amount_paid?: number;
+    amount_tendered?: number | string;
     customer?: string | number | null;
     cash_shift?: string | number | null;
   }) => {
@@ -162,6 +163,8 @@ export const useSalesStore = defineStore('sales', () => {
 
       const response = await salesService.createSale({
         ...saleData,
+        // Si el frontend envía `amount_tendered` lo usamos; si no, usamos `amount_paid` como fallback
+        amount_tendered: saleData.amount_tendered ?? saleData.amount_paid,
         store: storeId,
         status: normalizedStatus,
       });

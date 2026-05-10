@@ -54,14 +54,14 @@
               <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.total_amount) }}</span>
             </div>
             
-            <div v-if="sale.amount_paid" class="ticket-payment-info">
-              <div style="display: flex; justify-content: space-between;">
-                <span>Efectivo:</span>
-                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.amount_paid) }}</span>
+            <div class="ticket-payment-info" style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Pagó con (Efectivo):</span>
+                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.amount_tendered || sale.amount_paid) }}</span>
               </div>
-              <div v-if="Number(sale.amount_paid) > Number(sale.total_amount)" style="display: flex; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between;">
                 <span>Cambio:</span>
-                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney((Number(sale.amount_paid) || 0) - (Number(sale.total_amount) || 0)) }}</span>
+                <span>{{ settings?.currency_symbol || '$' }} {{ formatMoney(sale.change || 0) }}</span>
               </div>
             </div>
             
@@ -73,7 +73,7 @@
           <div class="drawer-info-group">
             <div class="info-row">
               <span class="info-label">Cajero</span>
-              <span class="info-value">Usuario (ID: {{ sale.cash_shift || 'N/A' }})</span>
+              <span class="info-value">{{ sale.cashier?.name || sale.cashier?.username || 'Desconocido' }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Estado</span>
@@ -96,9 +96,9 @@
           </button>
           
           <button 
-            v-if="sale.status !== 'cancelled'"
+            v-if="sale.status !== 'cancelled' && !isCashier"
             class="btn-ghost-cancel" 
-            @click="$emit('cancel', sale.id)" 
+            @click="confirmCancel" 
             title="Cancelar venta">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
@@ -109,12 +109,35 @@
       </div>
     </Transition>
     </div>
+
+    <!-- Modal de Confirmación de Cancelación -->
+    <Transition name="modal-fade">
+      <div v-if="showCancelConfirm" class="drawer-overlay" style="z-index: 10002; display: flex; align-items: center; justify-content: center;">
+        <div class="cancel-modal">
+          <div class="cancel-modal-header">
+            <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3>Confirmar Cancelación</h3>
+          </div>
+          <div class="cancel-modal-body">
+            <p>¿Estás seguro de cancelar el Ticket <strong>{{ formatShortId(sale?.id, sale?.transaction_id) }}</strong>?</p>
+            <p class="text-danger mt-2 text-sm">Los productos regresarán al inventario y el dinero se restará del corte de caja actual.</p>
+          </div>
+          <div class="cancel-modal-actions">
+            <button class="btn-cancel-outline" @click="showCancelConfirm = false">No, mantener venta</button>
+            <button class="btn-cancel-danger" @click="executeCancel">Sí, cancelar venta</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
     </Teleport>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { Sale } from '@/stores/sales.store';
+import { useAuth } from '@/composables/useAuth';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -127,6 +150,25 @@ const emit = defineEmits<{
   print: [sale: Sale];
   cancel: [saleId: string | number];
 }>();
+
+const { currentUser } = useAuth();
+const isCashier = computed(() => {
+  const role = String(currentUser.value?.role || '').toLowerCase();
+  return role === 'cashier' || role === 'cajero';
+});
+
+const showCancelConfirm = ref(false);
+
+const confirmCancel = () => {
+  showCancelConfirm.value = true;
+};
+
+const executeCancel = () => {
+  if (props.sale) {
+    emit('cancel', props.sale.id);
+  }
+  showCancelConfirm.value = false;
+};
 
 const formatShortId = (id: string | number | undefined, trxId: string | undefined) => {
   if (!id) return '#NX-UNK';
@@ -467,5 +509,108 @@ onUnmounted(() => {
 .btn-ghost-reprint svg, .btn-ghost-cancel svg {
   width: 18px;
   height: 18px;
+}
+
+/* Cancel Modal */
+.cancel-modal {
+  background: white;
+  width: min(400px, 90vw);
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  border: 1px solid #FECACA;
+}
+
+.cancel-modal-header {
+  padding: 1.25rem 1.5rem;
+  background: #FEF2F2;
+  border-bottom: 1px solid #FECACA;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cancel-modal-header h3 {
+  margin: 0;
+  color: #991B1B;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.alert-icon {
+  width: 24px;
+  height: 24px;
+  color: #DC2626;
+}
+
+.cancel-modal-body {
+  padding: 1.5rem;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.cancel-modal-body p {
+  margin: 0;
+}
+
+.text-danger {
+  color: #DC2626;
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.cancel-modal-actions {
+  padding: 1rem 1.5rem;
+  background: #F9FAFB;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cancel-outline {
+  padding: 0.6rem 1rem;
+  background: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-outline:hover {
+  background: #F3F4F6;
+}
+
+.btn-cancel-danger {
+  padding: 0.6rem 1rem;
+  background: #DC2626;
+  border: 1px solid #DC2626;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-danger:hover {
+  background: #B91C1C;
+}
+
+/* Transiciones para modal interior */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
 }
 </style>

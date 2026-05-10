@@ -33,10 +33,17 @@ export interface Sale {
   id: number;
   transaction_id?: string;
   user?: number;
+  cashier?: {
+    id: string;
+    name: string;
+    username: string;
+  };
   status: string; // 'completed', 'pending', 'cancelled', 'credit', 'layaway'
   total: string | number;
   total_amount?: string | number;
   amount_paid?: number | string;
+  amount_tendered?: number | string | null;
+  change?: number | string | null;
   cash_shift?: string | number;
   created_at: string;
   items: SaleItem[];
@@ -179,6 +186,7 @@ class SalesService {
     customer?: string | number | null;
     cash_shift?: string | number | null;
     amount_paid?: number | string;
+    amount_tendered?: number | string;
     store?: string | number;
   }) {
     try {
