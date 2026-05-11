@@ -2572,9 +2572,13 @@ watch(
 .cart-items-container::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 16px; }
 
 .cart-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "image info remove"
+    "image qty total";
   align-items: center;
-  gap: 1rem;
+  gap: 0.45rem 0.75rem;
   padding: 1.25rem 0;
   border-bottom: 1px solid #f3f4f6;
 }
@@ -2584,6 +2588,7 @@ watch(
 }
 
 .cart-item-image {
+  grid-area: image;
   width: 48px;
   height: 48px;
   border-radius: 16px;
@@ -2599,10 +2604,10 @@ watch(
 }
 
 .cart-item-info {
+  grid-area: info;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  flex: 1.5; /* slightly larger space for name relative to qty */
 }
 
 .cart-item-name {
@@ -2617,13 +2622,21 @@ watch(
 }
 
 .cart-item-unit-price {
+  display: block;
+  max-width: 100%;
   font-size: 0.75rem;
+  line-height: 1.2;
   color: #9ca3af;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Qty controls */
 .qty-controls {
+  grid-area: qty;
+  justify-self: start;
   display: flex;
   align-items: center;
   background: #f8fafc;
@@ -2662,6 +2675,8 @@ watch(
 }
 
 .remove-item-btn {
+  grid-area: remove;
+  justify-self: end;
   background: none;
   border: none;
   padding: 0.5rem;
@@ -2697,11 +2712,12 @@ watch(
 }
 
 .cart-item-total {
+  grid-area: total;
+  justify-self: end;
   font-weight: 800;
   color: #1f2937;
   font-size: 1rem;
-  margin-left: auto; /* Push to right */
-  min-width: 60px;
+  min-width: max-content;
   text-align: right;
 }
 
