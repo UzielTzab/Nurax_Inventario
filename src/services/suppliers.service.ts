@@ -56,13 +56,17 @@ class SuppliersService {
   /**
    * Actualiza un proveedor existente
    */
-  async updateSupplier(id: number | string, data: Partial<Supplier>) {
-    const payload = {
+  async updateSupplier(id: number | string, data: Partial<Supplier>, storeId?: string) {
+    const payload: any = {
       name: data.name,
       company: data.company,
       email: data.email,
       phone: data.phone,
     };
+    // El backend requiere el campo store en PUT
+    if (storeId) {
+      payload.store = storeId;
+    }
     return apiClient.put<Supplier>(`/v1/products/suppliers/${id}/`, payload);
   }
 

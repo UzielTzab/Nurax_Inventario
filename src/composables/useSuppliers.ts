@@ -15,6 +15,7 @@
 
 import { ref } from 'vue';
 import { suppliersService, type Supplier } from '@/services/suppliers.service';
+import { useAuth } from './useAuth';
 
 // Re-exportar tipos para conveniencia
 export type { Supplier };
@@ -82,7 +83,9 @@ export function useSuppliers() {
     error.value = null;
 
     try {
-      const response = await suppliersService.updateSupplier(id, supplierData);
+      const { currentUser } = useAuth();
+      const storeId = currentUser.value?.store_profile?.id ? String(currentUser.value.store_profile.id) : undefined;
+      const response = await suppliersService.updateSupplier(id, supplierData, storeId);
 
       if (response.success && response.data) {
         const index = suppliers.value.findIndex(s => String(s.id) === String(id));
