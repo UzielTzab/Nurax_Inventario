@@ -41,6 +41,8 @@ import AppInput from '@/components/ui/AppInput.vue';
 import WizardHeader from './WizardHeader.vue';
 import WizardBody from './WizardBody.vue';
 import { validateStep3 } from '@/utils/onboarding.schemas';
+import { onboardingService } from '@/services/onboarding.service';
+import { useOnboardingStore } from '@/stores/onboarding.store';
 
 interface Props {
   initialData?: {
@@ -56,7 +58,10 @@ const emit = defineEmits<{
   (e: 'update', data: any): void;
   (e: 'validate'): boolean;
   (e: 'skip'): void;
+  (e: 'success', data: any): void;
 }>();
+
+const store = useOnboardingStore();
 
 const form = ref({
   include_supplier: props.initialData?.include_supplier ?? true,
@@ -65,6 +70,7 @@ const form = ref({
 });
 
 const errors = ref<any[]>([]);
+const isProcessing = ref(false);
 
 // Sincronizar cambios con el padre EN TIEMPO REAL
 watch(
@@ -101,9 +107,46 @@ const validateForm = () => {
   return true;
 };
 
+/**
+ * Finalize: Envía todos los datos del onboarding al backend
+ */
+const finalize = async () => {
+  isProcessing.value = true;
+  try {
+    const payload = {
+      tienda: {
+        nombre: store.formData.step1.store_name,
+        identificador_fiscal: store.formData.step1.tax_id || '',
+        nicho: store.formData.step2.niche as 'ELECTRONICA' | 'ABARROTES' | 'FARMACIA' | 'FERRETERIA' | 'MASCOTAS' | 'BELLEZA'
+      },
+      configuracion: {
+        fondo_inicial_defecto: 0
+      },
+      proveedor_inicial: {
+        incluir: form.value.include_supplier,
+        nombre: form.value.supplier_name,
+        telefono: form.value.supplier_phone
+      }
+    };
+
+    const response = await onboardingService.submitWizard(payload);
+    if (!response.success) {
+      errors.value = [{ message: response.message || 'Error al crear la tienda' }];
+      return;
+    }
+
+    emit('success', response.data);
+  } catch (err: any) {
+    errors.value = [{ message: err.message || 'Error al crear la tienda' }];
+  } finally {
+    isProcessing.value = false;
+  }
+};
+
 defineExpose({
   validateForm,
   skipStep,
+  finalize,
   form
 });
 </script>

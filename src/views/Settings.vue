@@ -68,7 +68,6 @@
                     v-model="settings.taxId"
                     label="Identificador Fiscal (RFC/NIT)"
                     placeholder="Ej. ABC123456XYZ"
-                    :disabled="isReadOnly"
                   />
                 </div>
 

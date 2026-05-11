@@ -10,7 +10,7 @@
 
         <nav class="steps-nav">
           <div
-            v-for="step in 4"
+            v-for="step in 3"
             :key="step"
             :class="[
               'step-item',
@@ -59,22 +59,11 @@
             @update="updateStep3"
             @validate="validateStep3"
             @skip="skipStep3"
-          />
-
-          <!-- Step 4: Caja -->
-          <OnboardingStep4
-            v-if="store.currentStep === 4"
-            :step1-data="store.formData.step1"
-            :step2-data="store.formData.step2"
-            :step3-data="store.formData.step3"
-            :step4-data="store.formData.step4"
-            @back="goBack"
-            @update="updateStep4"
             @success="onSuccess"
           />
 
-          <!-- Footer con Botones (no visible en step 4) -->
-          <div v-if="store.currentStep !== 4" class="wizard-footer">
+          <!-- Footer con Botones -->
+          <div class="wizard-footer">
             <div class="footer-actions">
               <AppButton
                 v-if="store.currentStep === 3"
@@ -99,7 +88,8 @@
                 @click="goNext"
                 :disabled="isProcessing || !canProceed"
               >
-                <span v-if="!isProcessing">Siguiente</span>
+                <span v-if="store.currentStep < 3 && !isProcessing">Siguiente</span>
+                <span v-else-if="!isProcessing">¡Crear mi tienda!</span>
                 <span v-else><div class="spinner"></div></span>
               </AppButton>
             </div>
@@ -115,13 +105,14 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 import { useOnboardingStore } from '@/stores/onboarding.store';
+import { useSnackbar } from '@/composables/useSnackbar';
 import AppButton from '@/components/ui/AppButton.vue';
 import OnboardingStep1 from './OnboardingStep1.vue';
 import OnboardingStep2 from './OnboardingStep2.vue';
 import OnboardingStep3 from './OnboardingStep3.vue';
-import OnboardingStep4 from './OnboardingStep4.vue';
 
 const router = useRouter();
+const { enqueueSnackbar } = useSnackbar();
 const { currentUser } = useAuth();
 const store = useOnboardingStore();
 const step1Ref = ref<any>(null);
@@ -130,10 +121,9 @@ const step3Ref = ref<any>(null);
 const isProcessing = ref(false);
 
 const stepTitles: Array<{ title: string; subtitle: string }> = [
-  { title: 'Identidad', subtitle: 'Nombre y fiscal' },
+  { title: 'Identidad', subtitle: 'Vamos a configurar tu tienda' },
   { title: 'Giro Comercial', subtitle: 'Elige tu rubro' },
-  { title: 'Proveedor', subtitle: 'Opcional' },
-  { title: 'Caja', subtitle: 'Fondo inicial' }
+  { title: 'Proveedor', subtitle: 'Opcional' }
 ];
 
 const updateStep1 = (data: any) => {
@@ -146,10 +136,6 @@ const updateStep2 = (data: any) => {
 
 const updateStep3 = (data: any) => {
   store.setStep3Data(data);
-};
-
-const updateStep4 = (data: any) => {
-  store.setStep4Data(data);
 };
 
 const validateStep1 = () => {
@@ -177,6 +163,8 @@ const goNext = () => {
       console.warn('⚠️ Paso 1: Nombre de tienda requerido');
       return;
     }
+    store.nextStep();
+    return;
   }
 
   // Step 2: validar giro
@@ -186,16 +174,14 @@ const goNext = () => {
       console.warn('⚠️ Paso 2: Giro requerido');
       return;
     }
-  }
-
-  // Step 3: opcional, siempre avanzar
-  if (store.currentStep === 3) {
-    // Saltar sin validar
-  }
-
-  // Avanzar al siguiente step
-  if (store.currentStep < store.totalSteps) {
     store.nextStep();
+    return;
+  }
+
+  // Step 3: Crear la tienda (finalizar el wizard)
+  if (store.currentStep === 3) {
+    finalizeOnboarding();
+    return;
   }
 };
 
@@ -225,9 +211,23 @@ const goBack = () => {
 };
 
 const skipStep3 = () => {
-  step3Ref.value?.skipStep();
-  if (store.currentStep < store.totalSteps) {
-    store.nextStep();
+  // Al saltar el paso 3, ir directamente a finalizar el onboarding
+  finalizeOnboarding();
+};
+
+/**
+ * Finaliza el onboarding enviando los datos del paso 3 al backend
+ * y luego redirige a la página de inventario
+ */
+const finalizeOnboarding = async () => {
+  isProcessing.value = true;
+  try {
+    // Llamar al método de finalización del paso 3
+    // (que dispara el guardado al backend)
+    await step3Ref.value?.finalize();
+  } catch (err) {
+    console.error('❌ Error al finalizar onboarding:', err);
+    isProcessing.value = false;
   }
 };
 
@@ -251,6 +251,14 @@ const onSuccess = (wizardResponse: any) => {
       is_first_setup_completed: true
     };
   }
+
+  // Mostrar notificación de bienvenida
+  enqueueSnackbar({
+    type: 'success',
+    title: '¡Tu tienda está lista!',
+    message: 'El siguiente paso es agregar tu primer producto.',
+    duration: 4000
+  });
 
   store.reset();
   router.push('/dashboard/inventory');
