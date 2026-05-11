@@ -68,7 +68,7 @@ import type { Component } from 'vue';
 
 interface Props {
   type?:          'button' | 'submit' | 'reset';
-  variant?:       'fill' | 'outline' | 'pill' | 'ghost' | 'danger';
+  variant?:       'fill' | 'outline' | 'pill' | 'ghost' | 'danger' | 'success' | 'warning';
   size?:          'sm' | 'md' | 'lg';
   disabled?:      boolean;
   fullWidth?:     boolean;
@@ -253,14 +253,6 @@ const handleClick = (event: MouseEvent) => {
   background-color: rgba(0, 0, 0, 0.08); 
 }
 
-.app-button--fill:hover {
-  /* Sin sombra */
-}
-
-.app-button--fill:active {
-  /* Sin sombra */
-}
-
 .app-button--fill:disabled {
   color: rgba(0, 0, 0, 0.26);
   background: rgba(0, 0, 0, 0.12);
@@ -381,6 +373,65 @@ const handleClick = (event: MouseEvent) => {
   background: rgba(0, 0, 0, 0.12);
   box-shadow: none;
 }
+
+/* Variante: Success (Verde - Ingresos/Positivo) */
+.app-button--success {
+  color: #fff;
+  background: #059669;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.app-button--success::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.app-button--success:hover::before {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.app-button--success:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
+
+/* Variante: Warning (Naranja - Gastos/Negativo) */
+.app-button--warning {
+  color: #fff;
+  background: #d97706;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.app-button--warning::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.app-button--warning:hover::before {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.app-button--warning:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
+
 .app-btn-ripple-container {
   position: absolute;
   inset: 0;

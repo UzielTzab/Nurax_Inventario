@@ -52,16 +52,16 @@
           <div class="stat-box">
             <span class="stat-label">Entradas (+)</span>
             <span class="stat-value text-success">${{ formatMoney(turnKpis.entries) }}</span>
-            <button @click="openMovementModal('in')" class="btn-ghost mt-2 border-success text-success text-xs px-2 py-1 rounded">
+            <AppButton @click="openMovementModal('in')" variant="success" size="sm" class="mt-2 w-full justify-center">
               + Ingresar dinero
-            </button>
+            </AppButton>
           </div>
           <div class="stat-box">
             <span class="stat-label">Salidas (-)</span>
             <span class="stat-value text-warning">${{ formatMoney(turnKpis.exits) }}</span>
-            <button @click="openMovementModal('out')" class="btn-ghost mt-2 border-warning text-warning text-xs px-2 py-1 rounded">
+            <AppButton @click="openMovementModal('out')" variant="warning" size="sm" class="mt-2 w-full justify-center">
               - Retirar efectivo
-            </button>
+            </AppButton>
           </div>
           <div class="stat-box expected-box">
             <div class="expected-label-row">
@@ -684,6 +684,7 @@ const formatDate = (dateStr: string | undefined | null) => {
 .shifts-container {
   padding: 2rem;
   margin: 0 auto;
+  max-width: 1400px;
   background-color: var(--color-card-stats-fill);
 }
 .header {
@@ -891,28 +892,65 @@ const formatDate = (dateStr: string | undefined | null) => {
 .text-center { text-align: center; }
 
 /* Table */
-.data-table { width: 100%; border-collapse: collapse; }
+.data-table { 
+  width: 100%; 
+  border-collapse: collapse;
+  table-layout: auto;
+}
 .data-table th, .data-table td {
-  padding: 1rem 1.5rem;
+  padding: 2.125rem 1rem;
   text-align: left;
   border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 56px;
+  display: table-cell;
+  vertical-align: middle;
 }
 .data-table th {
   background: #f9fafb;
   font-weight: 600;
   color: #4b5563;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
 }
 .data-table td {
   color: #111827;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 .clickable-row {
   cursor: pointer;
+  transition: background-color 200ms ease;
 }
 .clickable-row:hover {
-  background: #f8fafc;
+  background: #f0f9ff;
+  box-shadow: inset 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+/* Wrapper scrollable para tabla en mobile */
+.card {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive table en mobile */
+@media (max-width: 768px) {
+  .data-table th, .data-table td {
+    padding: 0.875rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 48px;
+  }
+  .data-table th {
+    font-size: 0.6rem;
+  }
+  /* Priorizar columnas importantes en mobile */
+  .data-table th:nth-child(n+5),
+  .data-table td:nth-child(n+5) {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
 }
 
 .modal-overlay {
@@ -1058,7 +1096,11 @@ const formatDate = (dateStr: string | undefined | null) => {
   }
   .data-table th,
   .data-table td {
-    padding: 0.75rem;
+    padding: 0.5rem 0.375rem;
+    font-size: 0.7rem;
+  }
+  .data-table th {
+    font-size: 0.6rem;
   }
 }
 </style>
