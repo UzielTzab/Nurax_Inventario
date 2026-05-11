@@ -1,7 +1,20 @@
 <template>
   <div class="login-shell">
-    <section class="login-aside">
-    
+    <section class="login-aside" aria-label="Beneficios de Nurax">
+      <div class="aside-content">
+        <div class="aside-copy">
+          <p class="aside-kicker">Inventario, ventas y equipo sincronizados</p>
+          <h1>El control total de tu negocio, en un solo lugar.</h1>
+          <p>Rápido, seguro y siempre sincronizado.</p>
+        </div>
+
+        <div class="aside-visual device-stack">
+          <picture>
+            <source media="(min-width: 768px) and (max-width: 1024px)" srcset="/images/hero_dashboard_tablet.png">
+            <img src="/images/hero_dashboard.png" alt="Persona revisando el panel de ventas de Nurax en una tablet">
+          </picture>
+        </div>
+      </div>
     </section>
 
     <section class="login-main">
@@ -11,7 +24,6 @@
           <span class="login-brand-name">Nurax</span>
         </div>
         <header class="login-header">
-
           <div class="header-copy">
             <span class="title-text-header">Ingresa a tu cuenta</span>
             <p>¿No tienes cuenta? <a href="/#contact">Contactar soporte</a></p>
@@ -22,10 +34,10 @@
           <AppInput
             id="email"
             v-model="email"
-            type="email"
-            label="Email"
-            placeholder="nombre@ejemplo.com"
-            autocomplete="email"
+            type="text"
+            label="Correo o Nombre de Usuario"
+            placeholder="Ej: correo@tienda.com o galileo_maria"
+            autocomplete="username"
             :error="loginError ? ' ' : ''"
             @input="loginError = ''"
             required
@@ -52,7 +64,7 @@
             class="w-full"
             :disabled="isLoading"
           >
-            <span v-if="!isLoading">Iniciar Sesion</span>
+            <span v-if="!isLoading">Iniciar Sesión</span>
             <span v-else class="loading-spinner"></span>
           </AppButton>
 
@@ -67,7 +79,7 @@
         </form>
       </div>
 
-      <p class="login-footer">© 2024 Onux Technologies. Todos los derechos reservados.</p>
+      <p class="login-footer">© {{ currentYear }} Onux Technologies. Todos los derechos reservados.</p>
     </section>
   </div>
 </template>
@@ -87,9 +99,21 @@ const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const loginError = ref('')
+const currentYear = new Date().getFullYear()
+
+const emailOrUsernameSchema = z.string()
+  .trim()
+  .min(1, 'Ingresa tu correo o nombre de usuario.')
+  .refine((value) => {
+    if (value.includes('@')) {
+      return z.string().email().safeParse(value).success
+    }
+
+    return /^[a-zA-Z0-9._-]{3,50}$/.test(value)
+  }, 'Ingresa un correo válido o un nombre de usuario como galileo_maria.')
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Ingresa tu correo electrónico.').email('Ese correo no tiene un formato válido. Ej: nombre@empresa.com'),
+  email: emailOrUsernameSchema,
   password: z.string().min(1, 'Ingresa tu contraseña.')
 })
 
@@ -100,13 +124,13 @@ const loginSchema = z.object({
 const humanizeError = (raw: string): string => {
   const r = raw.toLowerCase()
   if (r.includes('no active account') || r.includes('credentials') || r.includes('invalid') || r.includes('unauthorized')) {
-    return 'El correo o la contraseña que ingresaste no son correctos. Revísalos e intenta de nuevo.'
+    return 'El correo, usuario o contraseña que ingresaste no son correctos. Revísalos e intenta de nuevo.'
   }
   if (r.includes('account') && r.includes('inactiv')) {
     return 'Tu cuenta está inactiva. Contacta con soporte para reactivarla.'
   }
   if (r.includes('not found') || r.includes('does not exist')) {
-    return 'No encontramos una cuenta con ese correo. Verifica que sea el correo correcto.'
+    return 'No encontramos una cuenta con esos datos. Verifica el correo o usuario.'
   }
   if (r.includes('too many') || r.includes('throttle') || r.includes('rate limit')) {
     return 'Demasiados intentos fallidos. Espera unos minutos antes de intentarlo de nuevo.'
@@ -114,9 +138,9 @@ const humanizeError = (raw: string): string => {
   if (r.includes('network') || r.includes('fetch') || r.includes('connection') || r.includes('timeout')) {
     return 'No pudimos conectar con el servidor en estos momentos, por favor contacta con soporte.'
   }
-  // Si ya viene en español o es un mensaje corto legible, lo mostramos tal cual
-  if (r.length < 100 && !r.includes('http') && /[áéíóúñ,. ]/.test(raw)) return raw;
-  // Fallback genérico amigable
+  // Si ya viene en español o es un mensaje corto legible, lo mostramos tal cual.
+  if (r.length < 100 && !r.includes('http') && /[áéíóúñ,. ]/.test(raw)) return raw
+  // Fallback genérico amigable.
   return 'Algo salió mal al iniciar sesión. Verifica tus datos e intenta de nuevo.'
 }
 
@@ -126,24 +150,25 @@ const handleLogin = async () => {
   const validationResult = loginSchema.safeParse({ email: email.value, password: password.value })
   
   if (!validationResult.success) {
-    loginError.value = validationResult.error.issues[0]?.message || 'Correo o contraseña no válidos.'
+    loginError.value = validationResult.error.issues[0]?.message || 'Correo, usuario o contraseña no válidos.'
     return
   }
   
   isLoading.value = true
   try {
-    const result = await login(email.value, password.value)
+    const credentials = validationResult.data
+    const result = await login(credentials.email, credentials.password)
     
     if (result.success && result.role) {
-      console.log('✅ Login exitoso! Rol:', result.role)
-      // Redirigir al dashboard según el rol
+      console.log('Login exitoso. Rol:', result.role)
+      // Redirigir al dashboard según el rol.
       const dashboardPath = result.role === 'admin' ? '/dashboard/clients' : '/dashboard/inventory'
       await router.push(dashboardPath)
     } else {
       loginError.value = humanizeError(result.error || '')
     }
   } catch (error) {
-    console.error('❌ Error en login:', error)
+    console.error('Error en login:', error)
     loginError.value = 'No pudimos conectar con el servidor en estos momentos, por favor contacta con soporte.'
   } finally {
     isLoading.value = false
@@ -152,53 +177,191 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-:root {
-  --login-mint: #d9f6e6;
-  --login-mint-strong: #bff0d6;
+.login-shell {
+  --login-brand: var(--color-brand-main, #e6ab17);
+  --login-brand-dark: #c97c0a;
   --login-ink: #1f2937;
   --login-muted: #6b7280;
   --login-card: #ffffff;
-  --login-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
-}
-
-.login-shell {
-  min-height: 100vh;
+  --login-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  height: 100vh;
+  overflow: visible;
   display: grid;
-  grid-template-columns: 1.25fr 0.75fr;
-  background: #f7faf9;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+  background: #f9fafb;
 }
 
 .login-aside {
-  background: var(--color-brand-main);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.28), transparent 24rem),
+    linear-gradient(135deg, var(--login-brand) 0%, #dd9914 48%, var(--login-brand-dark) 100%);
   position: relative;
-  overflow: hidden;
+  z-index: 10;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+  padding: clamp(3rem, 5vw, 4.5rem);
+}
+
+.login-aside::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 280px;
+  height: 280px;
+  background-image: url('/images/nurax_logo_app_192.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-aside::before {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.login-aside::before {
+  width: 34rem;
+  height: 34rem;
+  top: -12rem;
+  right: -12rem;
+}
+
+.aside-content {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 680px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(2rem, 4vw, 3rem);
+  min-height: 100%;
+}
+
+.aside-copy {
+  color: #ffffff;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+}
+
+.aside-kicker {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.aside-copy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3.5vw, 3.8rem);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.aside-copy p:not(.aside-kicker) {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: 400;
+}
+
+.aside-visual {
+  width: min(120%, 560px);
+  filter: drop-shadow(0 28px 34px rgba(92, 51, 6, 0.26));
+  animation: floatHero 6s ease-in-out infinite;
+  margin-top: auto;
+  position: relative;
+  z-index: 10;
+}
+
+.device-stack {
+  position: relative;
+  z-index: 0;
+  align-self: flex-end;
+   transform: translateX(180px) translateY(20px);
+    z-index: 20;
+  margin-right: -40px;
+  margin-top: -100px;
+}
+
+.aside-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.aside-visual picture {
+  display: block;
+  width: 100%;
 }
 
 .title-text-header {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.375rem;
+  line-height: 1.35;
+  margin-bottom: 0.25rem;
 }
 
 .login-main {
-  background: #fefefe;
+  background: #fefefe37;
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.9),   /* capa blanca con transparencia */
+    rgba(255, 255, 255, 0.9)
+  ),
+  url('/images/mobile_art.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 4rem 2.5rem 2.5rem;
+  padding: 2rem 2.5rem;
   gap: 1.5rem;
+  height: 100%;
+  overflow: visible;
+  position: relative;
 }
 
 .login-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 440px;
+  max-height: calc(100vh - 120px);
   background: var(--login-card);
-  border-radius: 20px;
-  padding: 2.5rem 2.25rem;
+  border-radius: 24px;
+  padding: 2.5rem 2.5rem 3rem;
   box-shadow: var(--login-shadow);
+  border: 1px solid rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.25rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+.mobile-art-img {
+  display: none;
+}
+
+.mobile-greeting {
+  display: none;
 }
 
 .login-brand {
@@ -225,25 +388,10 @@ const handleLogin = async () => {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
-.header-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: #e6f7ef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.header-logo-img {
-  width: 26px;
-  height: 26px;
-}
-
-.header-copy{
+.header-copy {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -253,41 +401,65 @@ const handleLogin = async () => {
   margin: 0;
   color: var(--login-muted);
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .header-copy a {
-  color: #0f6a42;
+  color: var(--login-brand);
   text-decoration: none;
   font-weight: 600;
+}
+
+.header-copy a:hover {
+  color: var(--login-brand-dark);
+  text-decoration: underline;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.75rem;
+}
+
+.login-form :deep(.app-input-focused) {
+  border-color: var(--login-brand);
+  box-shadow: 0 0 0 3px rgba(230, 171, 23, 0.18);
+}
+
+.login-form :deep(input) {
+  height: 3rem !important;
+  font-size: 1rem !important;
+}
+
+.login-form :deep(input::placeholder) {
+  color: #9ca3af !important;
+  font-size: 1rem !important;
 }
 
 .password-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: -0.5rem;
 }
 
 .password-label {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--login-ink);
 }
 
 .forgot-link {
-  font-size: 0.8rem;
-  color: #0f6a42;
+  font-size: 0.85rem;
+  color: var(--login-brand);
   text-decoration: none;
+  font-weight: 600;
 }
 
 .forgot-link:hover {
   text-decoration: underline;
+  color: var(--login-brand-dark);
 }
 
 .loading-spinner {
@@ -319,7 +491,12 @@ const handleLogin = async () => {
 .login-footer {
   margin: 0;
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #6b7280;
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 .shake-error-enter-active {
@@ -347,39 +524,41 @@ const handleLogin = async () => {
   to { transform: rotate(360deg); }
 }
 
-@keyframes nebulaDrift {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.04) translate(18px, -10px); }
+@keyframes floatHero {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
-
-@media (max-width: 960px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .login-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 44%) minmax(0, 56%);
   }
 
   .login-aside {
-    min-height: 300px;
+    padding: 3rem 2rem 2.5rem;
+  }
+
+  .aside-content {
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .aside-copy h1 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+  }
+
+  .device-stack {
+    width: min(494%, 560px);
+    margin-right: -192px;
   }
 
   .login-main {
-    padding-top: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .login-aside {
-    padding: 3rem 1.5rem;
+    padding: 2.5rem 1.75rem;
   }
 
   .login-card {
-    padding: 2rem 1.5rem;
-  }
-
-  .password-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
+    max-width: 500px;
+    padding: 2.5rem 2.25rem 2.75rem;
   }
 }
 </style>
