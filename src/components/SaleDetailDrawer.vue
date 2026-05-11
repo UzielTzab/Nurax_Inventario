@@ -16,7 +16,7 @@
         <div class="drawer-header">
           <div class="drawer-title-container">
             <h2 class="drawer-title">Detalle de Venta</h2>
-            <p class="drawer-subtitle">{{ formatShortId(sale?.id, sale?.transaction_id) }}</p>
+            <p class="drawer-subtitle">{{ formatSaleFolio(sale?.id, sale?.transaction_id) }}</p>
           </div>
           <button class="btn-close" @click="$emit('close')" title="Cerrar (Esc)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -36,7 +36,7 @@
             <div v-if="settings?.phone" class="ticket-store-detail">Tel: {{ settings.phone }}</div>
             <div class="ticket-info">
               <p>{{ formatDateTime(sale.created_at) }}</p>
-              <p>Ticket #{{ (sale.transaction_id || '').slice(-4) }}</p>
+              <p>Ticket {{ formatSaleFolio(sale.id, sale.transaction_id) }}</p>
             </div>
             <div class="ticket-divider"></div>
             
@@ -121,7 +121,7 @@
             <h3>Confirmar Cancelación</h3>
           </div>
           <div class="cancel-modal-body">
-            <p>¿Estás seguro de cancelar el Ticket <strong>{{ formatShortId(sale?.id, sale?.transaction_id) }}</strong>?</p>
+            <p>¿Estás seguro de cancelar el Ticket <strong>{{ formatSaleFolio(sale?.id, sale?.transaction_id) }}</strong>?</p>
             <p class="text-danger mt-2 text-sm">Los productos regresarán al inventario y el dinero se restará del corte de caja actual.</p>
           </div>
           <div class="cancel-modal-actions">
@@ -138,6 +138,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { Sale } from '@/stores/sales.store';
 import { useAuth } from '@/composables/useAuth';
+import { formatSaleFolio } from '@/utils/saleFolio';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -168,14 +169,6 @@ const executeCancel = () => {
     emit('cancel', props.sale.id);
   }
   showCancelConfirm.value = false;
-};
-
-const formatShortId = (id: string | number | undefined, trxId: string | undefined) => {
-  if (!id) return '#NX-UNK';
-  const strId = String(id);
-  const parts = strId.split('-');
-  const lastPart = parts[parts.length - 1] || '';
-  return `#NX-${lastPart.slice(0, 6).toUpperCase()}`;
 };
 
 const formatDateTime = (date: Date | string) => {

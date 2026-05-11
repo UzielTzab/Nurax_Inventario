@@ -12,6 +12,7 @@
  * @param opts.paperWidth  '58mm' | '80mm' | 'A4' (default '80mm')
  * @param opts.isReprint  Show "REIMPRESIÓN" footer badge
  */
+import { formatSaleFolio } from './saleFolio';
 
 export interface TicketItem {
   name: string;
@@ -57,12 +58,6 @@ function capitalizeFirstLetter(str: string): string {
   if (!match || match.index === undefined) return str;
   const idx = match.index;
   return str.slice(0, idx) + str.charAt(idx).toUpperCase() + str.slice(idx + 1);
-}
-
-// Helper: short folio from UUID (last 8 chars)
-function getShortFolio(uuid: string | number): string {
-  const raw = String(uuid).replace(/-/g, '');
-  return '#' + raw.slice(-8).toUpperCase();
 }
 
 export function buildTicketHtml(opts: BuildTicketOptions): string {
@@ -112,7 +107,7 @@ export function buildTicketHtml(opts: BuildTicketOptions): string {
   }).join('');
 
   // ── Ticket number formatted (short folio from UUID) ────────────────────────
-  const ticketNumFormatted = `NO. TICKET ${getShortFolio(ticketId)}`;
+  const ticketNumFormatted = `NO. TICKET ${formatSaleFolio(ticketId)}`;
 
   // ── Payment info HTML ──────────────────────────────────────────────────────
   const paymentHtml = (amountPaid || 0) > 0 || (changeReturned || 0) > 0 ? `

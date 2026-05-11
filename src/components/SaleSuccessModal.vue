@@ -28,7 +28,7 @@
             <div v-if="settings.phone" class="ticket-store-detail">Tel: {{ settings.phone }}</div>
             <div class="ticket-info">
               <p>{{ currentDate }}</p>
-              <p>Ticket #{{ ticketNumber }}</p>
+              <p>Ticket {{ ticketNumber }}</p>
             </div>
             <div class="ticket-divider"></div>
             <div class="ticket-items">
@@ -84,6 +84,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import { useStoreSettings } from '@/composables/useStoreSettings';
 import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
+import { formatSaleFolio } from '@/utils/saleFolio';
 
 interface CartItem {
   id: string | number;
@@ -112,7 +113,7 @@ onMounted(() => {
   loadSettings();
 });
 
-const ticketNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+const ticketNumber = computed(() => formatSaleFolio(props.saleId));
 
 const currentDate = computed(() => {
   return new Date().toLocaleString('es-MX', {

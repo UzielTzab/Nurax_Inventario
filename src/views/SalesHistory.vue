@@ -99,8 +99,8 @@
 
             <!-- Indicador de resultados globales -->
             <div class="results-info-compact" v-if="searchQuery || minAmount > 0 || selectedPeriod !== 'today'">
-              <span class="results-count">{{ filteredSales.length }} resultados</span>
-              <button class="clear-all-btn" @click="searchQuery = ''; minAmount = 0; selectedPeriod = 'today'; customStartDate = ''; customEndDate = ''">Restablecer</button>
+              <span class="results-count">{{ resultsCount }} resultados</span>
+              <button class="clear-all-btn" @click="resetFilters">Restablecer</button>
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@
                 <!-- Fila principal -->
                 <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
                   <td>{{ formatTime(sale.created_at) }}</td>
-                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-brand-main);">{{ formatShortId(sale.id, sale.transaction_id) }}</td>
+                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-brand-main);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
 
                   <!-- Columna de productos con cantidades -->
                   <td>
@@ -208,6 +208,7 @@ import SaleDetailDrawer from '@/components/SaleDetailDrawer.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useStoreSettings } from '@/composables/useStoreSettings';
 import { buildTicketHtml, openTicketPrint, getStoredPaperWidth } from '@/utils/ticketBuilder';
+import { formatSaleFolio } from '@/utils/saleFolio';
 
 import type { Sale } from '@/stores/sales.store';
 import { storeToRefs } from 'pinia';
@@ -218,7 +219,7 @@ const customStartDate = ref('');
 const customEndDate = ref('');
 
 onMounted(async () => {
-  await salesStore.fetchSales(1, 10); // Cargar primera página con 10 registros
+  await salesStore.fetchSales(1, pageSize.value, searchQuery.value.trim());
   loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
 });
 
@@ -232,14 +233,6 @@ const openDrawer = (sale: Sale) => {
   drawerOpen.value = true;
 };
 
-const formatShortId = (id: string | number | undefined, trxId: string | undefined) => {
-  if (!id) return '#NX-UNK';
-  const strId = String(id);
-  const parts = strId.split('-');
-  const lastPart = parts[parts.length - 1] || '';
-  return `#NX-${lastPart.slice(0, 6).toUpperCase()}`;
-};
-
 // ── Búsqueda y filtros ──
 const searchQuery = ref('');
 const minAmount = ref(0);
@@ -247,17 +240,41 @@ const minAmount = ref(0);
 // ── Paginación ──
 const currentPage = ref(1);
 const pageSize = ref(10);
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const fetchCurrentPage = () => {
+  return salesStore.fetchSales(currentPage.value, pageSize.value, searchQuery.value.trim());
+};
 
 // Watcher para cambios de página - refetchear desde el backend
 watch(currentPage, (newPage) => {
-  salesStore.fetchSales(newPage, pageSize.value);
+  salesStore.fetchSales(newPage, pageSize.value, searchQuery.value.trim());
 });
 
 // Watcher para cambios de pageSize - refetchear desde el backend
 watch(pageSize, (newSize) => {
   currentPage.value = 1; // Resetear a página 1
-  salesStore.fetchSales(1, newSize);
+  salesStore.fetchSales(1, newSize, searchQuery.value.trim());
 });
+
+watch(searchQuery, () => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+  searchDebounceTimer = setTimeout(() => {
+    currentPage.value = 1;
+    salesStore.fetchSales(1, pageSize.value, searchQuery.value.trim());
+  }, 350);
+});
+
+const resetFilters = () => {
+  searchQuery.value = '';
+  minAmount.value = 0;
+  selectedPeriod.value = 'today';
+  customStartDate.value = '';
+  customEndDate.value = '';
+  currentPage.value = 1;
+  fetchCurrentPage();
+};
 
 
 
@@ -337,7 +354,7 @@ const executeCancel = async () => {
         duration: 3000
       });
       // Refetchear la página actual
-      await salesStore.fetchSales(currentPage.value, pageSize.value);
+      await fetchCurrentPage();
     } else {
       enqueueSnackbar({
         type: 'error',
@@ -419,6 +436,7 @@ const filteredIncome = computed(() => {
 
 // salesCount es el número de ventas después de aplicar filtros locales
 const filteredSalesCount = computed(() => filteredSales.value.length);
+const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.value : filteredSales.value.length);
 const averageTicket = computed(() => {
   if (filteredSalesCount.value === 0) return 0;
   return filteredIncome.value / filteredSalesCount.value;
