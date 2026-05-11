@@ -64,6 +64,7 @@
             :products="products"
             :filters="apiFilters"
             :suppliers="supplierOptions"
+            :categories="sortedCategories"
             :user-role="currentUser?.role"
             :low-stock-count="lowStockProducts.length"
             :out-of-stock-count="outOfStockProducts.length"
@@ -149,6 +150,7 @@ import Pagination from '@/components/ui/Pagination.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
 import { useProducts } from '@/composables/useProducts';
+import { useCategories } from '@/composables/useCategories';
 import { useProductStore } from '@/stores/product.store';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSuppliers } from '@/composables/useSuppliers';
@@ -173,6 +175,13 @@ const {
   allSkus,
 } = useProducts();
 
+// Composable para categorías
+const {
+  categories: allCategories,
+  sortedCategories,
+  fetchCategories,
+} = useCategories();
+
 const { suppliers, fetchSuppliers } = useSuppliers();
 
 // Store para operaciones CRUD
@@ -188,6 +197,7 @@ let channel: any = null;
 onMounted(async () => {
   await fetchProducts();
   await fetchSuppliers();
+  await fetchCategories();
   
   await salesStore.fetchSales();
   
@@ -533,6 +543,9 @@ const handleInlineStockAdjustment = async (product: TableProduct, newStock: numb
 
 // Actualizar filtros y llamar API
 function onFiltersUpdate(newFilters: any) {
+  // Resetear a página 1 cuando cambian los filtros (para consistency)
+  pagination.value.currentPage = 1;
+  
   const mappedFilters: any = {
     search: newFilters.search ?? '',
     category: newFilters.category ?? '',

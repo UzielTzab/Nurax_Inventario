@@ -8,8 +8,8 @@
             type="text"
             class="search-input-header"
             placeholder="Buscar por nombre o codigo..."
-            :value="localFilters.search"
-            @input="onFilterChange('search', ($event.target as HTMLInputElement).value)"
+            :value="searchInput"
+            @input="onSearchChange(($event.target as HTMLInputElement).value)"
           />
         </div>
         <button class="btn-filter" @click="toggleFilterPanel" :class="{ active: filterPanelOpen }">
@@ -42,7 +42,7 @@
               placeholder="Selecciona categoría"
               :options="[
                 { value: '', label: 'Todas' },
-                ...categories.map((cat) => ({ value: cat, label: cat }))
+                ...displayCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))
               ]"
               @update:model-value="onFilterChange('category', $event)"
             />
@@ -200,12 +200,14 @@ interface Props {
   products: Product[];
   filters?: Filters;
   suppliers?: SupplierOption[];
+  categories?: Array<{ id: string | number; name: string }>;
   userRole?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   filters: () => ({ search: '', category: '', supplier: '', stockFilter: 'all' } as Filters),
   suppliers: () => [] as SupplierOption[],
+  categories: () => [] as Array<{ id: string | number; name: string }>,
   userRole: '',
 });
 
@@ -221,39 +223,72 @@ const emit = defineEmits<{
 
 const filterPanelOpen = ref(false);
 const localFilters = ref<Filters>({ ...props.filters });
+const searchInput = ref<string>(props.filters?.search || '');
 const editingProductId = ref<string | null>(null);
 const draftStock = ref<number>(0);
 const selectedProducts = ref<Set<string>>(new Set());
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Sincronizar props cuando cambian (pero sin resetear el input de búsqueda local)
 watch(
   () => props.filters,
   (newFilters) => {
-    localFilters.value = { ...localFilters.value, ...newFilters };
+    // Actualizar solo los filtros que no sean search (que se maneja localmente con debounce)
+    if (newFilters?.category !== undefined) localFilters.value.category = newFilters.category;
+    if (newFilters?.supplier !== undefined) localFilters.value.supplier = newFilters.supplier;
+    if (newFilters?.stockFilter !== undefined) localFilters.value.stockFilter = newFilters.stockFilter;
   },
   { deep: true }
+);
+
+// Sincronizar el search desde props (cuando viene del padre)
+watch(
+  () => props.filters?.search,
+  (newSearch) => {
+    if (newSearch !== undefined && newSearch !== searchInput.value) {
+      searchInput.value = newSearch;
+    }
+  }
 );
 
 const canViewCost = computed(() => {
   return ['propietario', 'gerente', 'admin'].includes((props.userRole || '').toLowerCase());
 });
 
-const categories = computed(() => {
-  const cats = new Set(
-    props.products.map((p) => p.category_name || String(p.category || 'Sin categoria'))
-  );
-  return Array.from(cats).sort((a, b) => a.localeCompare(b));
+// Las categorías vienen del padre (Inventory.vue) que las obtiene del backend
+// Esto asegura que se muestren TODAS las categorías disponibles, no solo las de los productos filtrados
+const displayCategories = computed(() => {
+  return props.categories || [];
 });
 
 const toggleFilterPanel = () => {
   filterPanelOpen.value = !filterPanelOpen.value;
 };
 
+// Manejar cambio en búsqueda con debounce
+const onSearchChange = (value: string) => {
+  searchInput.value = value;
+  
+  // Cancelar el timer anterior
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+  
+  // Establecer nuevo timer
+  debounceTimer = setTimeout(() => {
+    localFilters.value = { ...localFilters.value, search: value };
+    emit('update:filters', { ...localFilters.value });
+  }, 500);
+};
+
+// Manejar cambios en filtros inmediatamente (sin debounce)
 const onFilterChange = (key: keyof Filters, value: any) => {
   localFilters.value = { ...localFilters.value, [key]: value };
   emit('update:filters', { ...localFilters.value });
 };
 
 const clearFilters = () => {
+  searchInput.value = '';
   localFilters.value = { search: '', category: '', supplier: '', stockFilter: 'all' };
   emit('update:filters', { ...localFilters.value });
 };
