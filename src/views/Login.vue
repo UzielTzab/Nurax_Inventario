@@ -10,7 +10,7 @@
 
         <div class="aside-visual device-stack">
           <picture>
-            <source media="(min-width: 768px) and (max-width: 1024px)" srcset="/images/hero_dashboard_tablet.png">
+            <source media="(max-width: 1024px)" srcset="/images/hero_dashboard_tablet.png">
             <img src="/images/hero_dashboard.png" alt="Persona revisando el panel de ventas de Nurax en una tablet">
           </picture>
         </div>
@@ -185,7 +185,7 @@ const handleLogin = async () => {
   --login-card: #ffffff;
   --login-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
   height: 100vh;
-  overflow: visible;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
   background: #f9fafb;
@@ -201,7 +201,7 @@ const handleLogin = async () => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   height: 100%;
   padding: clamp(3rem, 5vw, 4.5rem);
 }
@@ -281,7 +281,7 @@ const handleLogin = async () => {
 }
 
 .aside-visual {
-  width: min(120%, 560px);
+  width: min(100%, 560px);
   filter: drop-shadow(0 28px 34px rgba(92, 51, 6, 0.26));
   animation: floatHero 6s ease-in-out infinite;
   margin-top: auto;
@@ -291,11 +291,9 @@ const handleLogin = async () => {
 
 .device-stack {
   position: relative;
-  z-index: 0;
-  align-self: flex-end;
-   transform: translateX(180px) translateY(20px);
-    z-index: 20;
-  margin-right: -40px;
+  align-self: center;
+  transform: translateY(20px);
+  z-index: 20;
   margin-top: -100px;
 }
 
@@ -550,6 +548,8 @@ const handleLogin = async () => {
   .device-stack {
     width: min(494%, 560px);
     margin-right: -192px;
+    align-self: flex-end;
+    transform: translateX(180px) translateY(20px);
   }
 
   .login-main {
@@ -559,6 +559,40 @@ const handleLogin = async () => {
   .login-card {
     max-width: 500px;
     padding: 2.5rem 2.25rem 2.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .login-shell {
+    grid-template-columns: minmax(0, 38%) minmax(0, 62%);
+  }
+
+  .login-aside {
+    padding: 2rem 1rem 1.5rem;
+  }
+
+  .aside-content {
+    gap: 1.5rem;
+  }
+
+  .aside-copy h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+  }
+
+  .login-main {
+    padding: 1rem;
+  }
+
+  .login-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .device-stack {
+    width: 220%;
+    max-width: 400px;
+    transform: translateX(25%) translateY(10px);
+    margin-right: -10%;
+    margin-top: -40px;
   }
 }
 </style>
