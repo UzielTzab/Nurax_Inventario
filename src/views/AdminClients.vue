@@ -47,18 +47,17 @@
           <table class="clients-table">
             <thead>
               <tr>
-                <th>Negocio</th>
                 <th>Propietario</th>
-                <th>Plan</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th>Negocio</th>
+                <th class="text-center">Plan</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               <!-- Skeleton rows while loading -->
               <template v-if="isLoading">
                 <tr v-for="i in 5" :key="'sk-'+i" class="table-row">
-                  <td><AppSkeleton width="140px" height="1.2rem" /></td>
                   <td>
                     <div class="client-info">
                       <AppSkeleton width="38px" height="38px" rounded />
@@ -68,11 +67,11 @@
                       </div>
                     </div>
                   </td>
-                  <td><AppSkeleton width="60px" height="1.4rem" radius="20px" /></td>
-                  <td><AppSkeleton width="80px" height="0.875rem" /></td>
-                  <td><AppSkeleton width="70px" height="1.4rem" radius="20px" /></td>
-                  <td>
-                    <div style="display:flex;gap:0.75rem;align-items:center;">
+                  <td><AppSkeleton width="140px" height="1.2rem" /></td>
+                  <td class="text-center"><AppSkeleton width="60px" height="1.4rem" radius="20px" style="margin: 0 auto;" /></td>
+                  <td class="text-center"><AppSkeleton width="80px" height="0.875rem" style="margin: 0 auto;" /></td>
+                  <td class="text-center">
+                    <div style="display:flex;gap:0.75rem;align-items:center;justify-content:center;">
                       <AppSkeleton width="44px" height="24px" radius="999px" />
                       <AppSkeleton width="32px" height="32px" radius="8px" />
                     </div>
@@ -81,9 +80,6 @@
               </template>
               <!-- Actual rows -->
               <tr v-else v-for="client in clients" :key="client.id" class="table-row">
-                <td>
-                  <p style="font-weight: 700; font-size: 1.125rem; color: #111827; margin: 0;">{{ client.company || 'Sin Empresa' }}</p>
-                </td>
                 <td>
                   <div class="client-info">
                     <div class="client-avatar" :style="{ background: client.avatarColor }">
@@ -96,15 +92,18 @@
                   </div>
                 </td>
                 <td>
+                  <p style="font-weight: 600; font-size: 1.125rem; color: #1F2937; margin: 0; text-transform: capitalize;">{{ client.company || 'Sin Empresa' }}</p>
+                </td>
+                <td class="text-center">
                   <span class="plan-badge" :class="'plan-' + (client.plan || 'basico').toLowerCase()">{{ client.plan || 'Básico' }}</span>
                 </td>
-                <td>
+                <td class="text-center">
                   <span class="status-badge" :class="client.is_active ? 'status-active' : 'status-inactive'">
                     <span class="status-dot"></span>
                     {{ client.is_active ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td>
+                <td class="text-center">
                   <div class="row-actions">
                     <!-- Toggle switch de activar/desactivar -->
                     <button
@@ -728,6 +727,11 @@ const addClient = async () => {
   vertical-align: middle;
 }
 
+.clients-table th.text-center,
+.clients-table td.text-center {
+  text-align: center;
+}
+
 .client-info {
   display: flex;
   align-items: center;
@@ -803,6 +807,7 @@ const addClient = async () => {
 .row-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
 }
 
