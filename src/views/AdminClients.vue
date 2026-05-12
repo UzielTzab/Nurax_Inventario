@@ -19,37 +19,37 @@
           </div>
         </div>
 
-        <!-- Search + Filter -->
-        <div class="toolbar">
-          <div class="search-wrapper">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/>
-            </svg>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Buscar cliente por nombre, correo o empresa..."
-              class="search-input"
+        <!-- Table Card -->
+        <div class="table-card">
+          <!-- Search + Filter inside card -->
+          <div class="toolbar" style="padding: 1.25rem; border-bottom: 1px solid #e5e7eb;">
+            <div class="search-wrapper">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/>
+              </svg>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Buscar cliente por nombre, correo o empresa..."
+                class="search-input"
+              />
+            </div>
+            <AppSelect
+              v-model="statusFilter"
+              :options="[
+                { value: 'all', label: 'Todos los estados' },
+                { value: 'active', label: 'Activos' },
+                { value: 'inactive', label: 'Inactivos' }
+              ]"
             />
           </div>
-          <AppSelect
-            v-model="statusFilter"
-            :options="[
-              { value: 'all', label: 'Todos los estados' },
-              { value: 'active', label: 'Activos' },
-              { value: 'inactive', label: 'Inactivos' }
-            ]"
-          />
-        </div>
 
-        <!-- Table -->
-        <div class="table-card">
           <table class="clients-table">
             <thead>
               <tr>
-                <th>Cliente</th>
-                <th>Rol</th>
-                <th>Fecha de alta</th>
+                <th>Negocio</th>
+                <th>Propietario</th>
+                <th>Plan</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -58,6 +58,7 @@
               <!-- Skeleton rows while loading -->
               <template v-if="isLoading">
                 <tr v-for="i in 5" :key="'sk-'+i" class="table-row">
+                  <td><AppSkeleton width="140px" height="1.2rem" /></td>
                   <td>
                     <div class="client-info">
                       <AppSkeleton width="38px" height="38px" rounded />
@@ -81,6 +82,9 @@
               <!-- Actual rows -->
               <tr v-else v-for="client in filteredClients" :key="client.id" class="table-row">
                 <td>
+                  <p style="font-weight: 700; font-size: 1.125rem; color: #111827; margin: 0;">{{ client.company || 'Sin Empresa' }}</p>
+                </td>
+                <td>
                   <div class="client-info">
                     <div class="client-avatar" :style="{ background: client.avatarColor }">
                       {{ client.name.charAt(0).toUpperCase() }}
@@ -91,10 +95,9 @@
                     </div>
                   </div>
                 </td>
-                <td class="td-secondary">
-                  <span class="plan-badge plan-pro">{{ client.role }}</span>
+                <td>
+                  <span class="plan-badge" :class="'plan-' + (client.plan || 'basico').toLowerCase()">{{ client.plan || 'Básico' }}</span>
                 </td>
-                <td class="td-secondary">{{ client.joinDate }}</td>
                 <td>
                   <span class="status-badge" :class="client.is_active ? 'status-active' : 'status-inactive'">
                     <span class="status-dot"></span>
@@ -115,17 +118,28 @@
                     >
                       <span class="toggle-thumb"></span>
                     </button>
-                    <!-- Eliminar -->
-                    <button
-                      class="action-btn action-delete"
-                      @click="confirmDelete(client)"
-                      :title="isCurrentAdminUser(client.id) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'"
-                      :disabled="isCurrentAdminUser(client.id)"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd"/>
-                      </svg>
-                    </button>
+                    <!-- Kebab Menu for Delete -->
+                    <div style="position: relative;" class="kebab-menu-container">
+                      <button
+                        class="action-btn"
+                        @click="toggleKebabMenu(client.id)"
+                        title="Opciones"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                        </svg>
+                      </button>
+                      <div v-if="activeKebabMenu === client.id" style="position: fixed; inset: 0; z-index: 40;" @click="toggleKebabMenu(null)"></div>
+                      <div v-if="activeKebabMenu === client.id" class="kebab-dropdown" style="z-index: 50;">
+                        <button
+                          class="kebab-item delete-item"
+                          @click="confirmDelete(client); toggleKebabMenu(null)"
+                          :disabled="isCurrentAdminUser(client.id)"
+                        >
+                          Eliminar Negocio
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -144,138 +158,147 @@
       </div>
     </div>
 
-    <!-- Modal Nuevo Cliente -->
+    <!-- Modal Nuevo Cliente / Éxito -->
     <Teleport to="body">
       <transition name="modal-fade">
-        <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
+        <div v-if="showAddModal" class="modal-backdrop" @click.self="closeModalOrSuccess()">
           <div class="modal-card">
-            <div class="modal-header">
-              <h3 class="modal-title">Nuevo Cliente</h3>
-              <button class="modal-close" @click="showAddModal = false">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                </svg>
-              </button>
-            </div>
-            <form @submit.prevent="addClient" class="modal-body">
-              <div class="modal-field">
-                <label class="modal-label">Nombre completo *</label>
-                <input v-model="newClient.name" type="text" class="modal-input" placeholder="Ej. Juan García" required />
+            
+            <template v-if="!createdClientData">
+              <div class="modal-header">
+                <h3 class="modal-title">Alta de Nuevo Negocio</h3>
+                <button class="modal-close" @click="showAddModal = false">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                  </svg>
+                </button>
               </div>
-              <div class="modal-field">
-                <label class="modal-label">Correo electrónico *</label>
-                <input v-model="newClient.email" type="email" class="modal-input" placeholder="juan@empresa.com" required />
-              </div>
-              <div class="modal-field">
-                <label class="modal-label">Empresa</label>
-                <input v-model="newClient.company" type="text" class="modal-input" placeholder="Nombre de la empresa" />
-              </div>
-              <div class="modal-field">
-                <label class="modal-label">Plan</label>
-                <AppSelect
-                  v-model="newClient.plan"
-                  placeholder="Selecciona un plan"
-                  :options="[
-                    { value: 'basico', label: 'Básico' },
-                    { value: 'pro', label: 'Pro' }
-                  ]"
+              <form @submit.prevent="addClient" class="modal-body">
+                <AppInput
+                  v-model="newClient.name"
+                  label="Nombre completo"
+                  placeholder="Ej. Juan García"
+                  required
                 />
+                <AppInput
+                  v-model="newClient.email"
+                  type="email"
+                  label="Correo electrónico"
+                  placeholder="juan@empresa.com"
+                  hint="La contraseña temporal se generará automáticamente de forma segura."
+                  required
+                />
+                <AppInput
+                  v-model="newClient.company"
+                  label="Empresa"
+                  placeholder="Nombre de la empresa"
+                  required
+                />
+                <div class="modal-field">
+                  <label class="modal-label">Plan</label>
+                  <AppSelect
+                    v-model="newClient.plan"
+                    placeholder="Selecciona un plan"
+                    :options="[
+                      { value: 'basico', label: 'Básico' },
+                      { value: 'pro', label: 'Pro' }
+                    ]"
+                  />
+                </div>
+                <div class="modal-footer">
+                  <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
+                  <AppButton variant="fill" type="submit" :loading="isSubmitting">Agregar Cliente</AppButton>
+                </div>
+              </form>
+            </template>
+
+            <template v-else>
+              <div class="modal-body" style="text-align: center; padding: 3rem 2rem;">
+                <div style="font-size: 3.5rem; color: #16a34a; margin-bottom: 1rem; display: flex; justify-content: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 64px; height: 64px;">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 11.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <h3 class="modal-title" style="margin-bottom: 1.5rem; font-size: 1.5rem;">¡Negocio creado exitosamente!</h3>
+                
+                <div style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left;">
+                  <p style="margin: 0; font-size: 1.125rem; color: #374151;"><strong>Correo:</strong> {{ createdClientData.email }}</p>
+                  <p style="margin: 0.5rem 0 0; font-size: 1.125rem; color: #374151;"><strong>Contraseña:</strong> {{ createdClientData.password }}</p>
+                </div>
+
+                <AppButton variant="fill" style="width: 100%; padding: 0.875rem; font-size: 1rem; justify-content: center;" @click="copyWelcomeMessage">
+                  Copiar mensaje de bienvenida
+                </AppButton>
+                <AppButton variant="outline" style="width: 100%; margin-top: 0.75rem; justify-content: center;" @click="closeModalOrSuccess()">
+                  Cerrar
+                </AppButton>
               </div>
-              <div class="modal-footer">
-                <AppButton variant="outline" @click="showAddModal = false" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-                <AppButton variant="fill" type="submit" :loading="isSubmitting">Agregar Cliente</AppButton>
-              </div>
-            </form>
+            </template>
           </div>
         </div>
       </transition>
     </Teleport>
 
     <!-- Modal Confirmar Cambio de Estado -->
-    <Teleport to="body">
-      <transition name="modal-fade">
-        <div v-if="toggleTarget" class="modal-backdrop" @click.self="toggleTarget = null">
-          <div class="modal-card modal-card-sm">
-            <div class="modal-header">
-              <div class="modal-title-row">
-                <!-- Ícono contextual -->
-                <div class="modal-icon-wrap" :class="toggleTarget.is_active ? 'icon-warn' : 'icon-warn'">
-                  <svg v-if="toggleTarget.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-                  </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
-                  </svg>
-                </div>
-                <h3 class="modal-title">{{ toggleTarget.is_active ? 'Desactivar cuenta' : 'Activar cuenta' }}</h3>
-              </div>
-              <button class="modal-close" @click="toggleTarget = null">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <!-- Preview del cliente -->
-              <div class="toggle-client-preview">
-                <div class="client-avatar" :style="{ background: toggleTarget.avatarColor }">
-                  {{ toggleTarget.name.charAt(0).toUpperCase() }}
-                </div>
-                <div>
-                  <p class="client-name">{{ toggleTarget.name }}</p>
-                  <p class="client-email">{{ toggleTarget.email }}</p>
-                </div>
-              </div>
-              <!-- Mensaje contextual -->
-              <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
-                Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
-              </p>
-              <p v-else class="toggle-msg toggle-msg-warn">
-                Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
-              </p>
-              <div class="modal-footer">
-                <AppButton variant="outline" @click="toggleTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-                <AppButton variant="fill" @click="applyToggle" type="button" :loading="isSubmitting">
-                  {{ toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar' }}
-                </AppButton>
-              </div>
-            </div>
+    <ConfirmationModal
+      :isOpen="!!toggleTarget"
+      :title="toggleTarget?.is_active ? 'Desactivar cuenta' : 'Activar cuenta'"
+      type="warning"
+      :confirmText="toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar'"
+      @close="toggleTarget = null"
+      @confirm="applyToggle"
+      :isLoading="isSubmitting"
+    >
+      <div v-if="toggleTarget">
+        <!-- Preview del cliente -->
+        <div class="toggle-client-preview">
+          <div class="client-avatar" :style="{ background: toggleTarget.avatarColor }">
+            {{ toggleTarget.name.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <p class="client-name">{{ toggleTarget.name }}</p>
+            <p class="client-email">{{ toggleTarget.email }}</p>
           </div>
         </div>
-      </transition>
-    </Teleport>
+        <!-- Mensaje contextual -->
+        <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
+          Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
+        </p>
+        <p v-else class="toggle-msg toggle-msg-warn">
+          Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
+        </p>
+      </div>
+    </ConfirmationModal>
 
     <!-- Confirm Delete Modal -->
-    <Teleport to="body">
-      <transition name="modal-fade">
-        <div v-if="deleteTarget" class="modal-backdrop" @click.self="deleteTarget = null">
-          <div class="modal-card modal-card-sm">
-            <div class="modal-header">
-              <h3 class="modal-title">Eliminar Cliente Permanentemente</h3>
-              <button class="modal-close" @click="deleteTarget = null">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <p class="delete-msg">¿Estás seguro de eliminar permanentemente a <strong>{{ deleteTarget?.name }}</strong>? Esta acción borra su cuenta de acceso y no se puede deshacer.</p>
-              <div class="modal-footer">
-                <AppButton variant="outline" @click="deleteTarget = null" type="button" :disabled="isSubmitting">Cancelar</AppButton>
-                <AppButton variant="fill" @click="deleteClient" type="button" :loading="isSubmitting">Sí, eliminar permanentemente</AppButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      </transition>
-    </Teleport>
+    <ConfirmationModal
+      :isOpen="!!deleteTarget"
+      title="Eliminar Cliente Permanentemente"
+      type="danger"
+      confirmText="Eliminar definitivamente"
+      @close="deleteTarget = null; deleteConfirmText = ''"
+      @confirm="deleteClient"
+      :isLoading="isSubmitting"
+      :isConfirmDisabled="deleteConfirmText !== (deleteTarget?.company || deleteTarget?.name)"
+    >
+      <div v-if="deleteTarget">
+        <p class="delete-msg" style="color: #dc2626; font-weight: 500;">
+          Esta acción borrará todas sus ventas e inventario y no se puede deshacer.
+        </p>
+        <AppInput
+          v-model="deleteConfirmText"
+          :label="`Escribe el nombre del negocio ${deleteTarget?.company || deleteTarget?.name} para confirmar la eliminación definitiva:`"
+          placeholder="Nombre del negocio"
+        />
+      </div>
+    </ConfirmationModal>
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import { AppButton, AppSelect } from '@/components/ui';
+import { AppButton, AppSelect, AppInput, ConfirmationModal } from '@/components/ui';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
@@ -318,6 +341,30 @@ const statusFilter = ref<'all' | 'active' | 'inactive'>('all');
 const showAddModal = ref(false);
 const deleteTarget = ref<Client | null>(null);
 const toggleTarget = ref<Client | null>(null);
+const createdClientData = ref<{ email: string; password?: string } | null>(null);
+const activeKebabMenu = ref<string | number | null>(null);
+const deleteConfirmText = ref('');
+
+const toggleKebabMenu = (id: string | number | null) => {
+  activeKebabMenu.value = activeKebabMenu.value === id ? null : id;
+};
+
+const closeModalOrSuccess = () => {
+  showAddModal.value = false;
+  createdClientData.value = null;
+  newClient.value = { name: '', email: '', company: '', plan: 'basico' };
+};
+
+const copyWelcomeMessage = async () => {
+  if (!createdClientData.value) return;
+  const msg = `¡Hola! Tu Punto de Venta Nurax está listo. Ingresa en app.nurax.mx con tu correo: ${createdClientData.value.email} y esta contraseña temporal: ${createdClientData.value.password}`;
+  try {
+    await navigator.clipboard.writeText(msg);
+    enqueueSnackbar({ type: 'success', title: 'Copiado', message: 'Mensaje de bienvenida copiado al portapapeles.', duration: 3000 });
+  } catch (e) {
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo copiar el mensaje.', duration: 3000 });
+  }
+};
 
 const newClient = ref({
   name: '',
@@ -426,6 +473,7 @@ const deleteClient = async () => {
   } finally {
     isSubmitting.value = false;
     deleteTarget.value = null;
+    deleteConfirmText.value = '';
   }
 };
 
@@ -481,19 +529,13 @@ const addClient = async () => {
       owner_name: newClient.value.name,
     };
     
-    // POST /api/v1/accounts/stores/create-with-owner/ crea User + Store + StoreMembership(owner)
     const response = await apiClient.post<CreateWithOwnerResponse>('/v1/accounts/stores/create-with-owner/', payload);
     if (response.success) {
       const username = response.data?.credentials?.username || payload.owner_email;
-      enqueueSnackbar({
-        type: 'success',
-        title: 'Cliente creado',
-        message: `Cuenta lista. Usuario: ${username} | Password temporal: nurax123`,
-        duration: 6000
-      });
+      const password = response.data?.credentials?.password || 'nurax123';
+      
+      createdClientData.value = { email: username, password };
       await fetchClients(); // Recargar la lista con los IDs reales de la DB
-      newClient.value = { name: '', email: '', company: '', plan: 'basico' };
-      showAddModal.value = false;
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el cliente. Verifica los datos.', duration: 4000 });
     }
@@ -793,7 +835,51 @@ const addClient = async () => {
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-/* Delete button */
+/* Kebab Menu */
+.kebab-menu-container {
+  position: relative;
+}
+
+.kebab-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 50;
+  padding: 0.25rem 0;
+}
+
+.kebab-item {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.kebab-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kebab-item.delete-item {
+  color: #dc2626;
+}
+
+.kebab-item.delete-item:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* Action button */
 .action-btn {
   width: 32px;
   height: 32px;

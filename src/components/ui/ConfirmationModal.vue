@@ -26,14 +26,19 @@
 
         <!-- Content -->
         <h3 class="modal-title">{{ title }}</h3>
-        <p class="modal-message">{{ message }}</p>
+        <p v-if="message" class="modal-message">{{ message }}</p>
+        
+        <!-- Custom Content Slot -->
+        <div v-if="$slots.default" class="modal-custom-content">
+          <slot></slot>
+        </div>
 
         <!-- Actions -->
         <div class="modal-actions">
-          <AppButton variant="outline" v-if="showCancel" @click="handleCancel">
+          <AppButton variant="outline" v-if="showCancel" @click="handleCancel" :disabled="isLoading">
             {{ cancelText }}
           </AppButton>
-          <AppButton variant="fill" @click="handleConfirm">
+          <AppButton variant="fill" @click="handleConfirm" :disabled="isConfirmDisabled || isLoading" :loading="isLoading">
             {{ confirmText }}
           </AppButton>
         </div>
@@ -50,18 +55,23 @@ type ModalType = 'danger' | 'warning' | 'success' | 'info';
 interface Props {
   isOpen: boolean;
   title: string;
-  message: string;
+  message?: string;
   type?: ModalType;
   confirmText?: string;
   cancelText?: string;
   showCancel?: boolean;
+  isLoading?: boolean;
+  isConfirmDisabled?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
+  message: '',
   type: 'info',
   confirmText: 'Confirmar',
   cancelText: 'Cancelar',
-  showCancel: true
+  showCancel: true,
+  isLoading: false,
+  isConfirmDisabled: false,
 });
 
 const emit = defineEmits(['close', 'confirm']);
@@ -136,6 +146,11 @@ const handleConfirm = () => {
   font-size: 0.9375rem;
   line-height: 1.5;
   margin-bottom: 2rem;
+}
+
+.modal-custom-content {
+  margin-bottom: 2rem;
+  text-align: left;
 }
 
 /* Button Styles */
