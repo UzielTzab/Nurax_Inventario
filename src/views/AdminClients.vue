@@ -80,7 +80,7 @@
                 </tr>
               </template>
               <!-- Actual rows -->
-              <tr v-else v-for="client in filteredClients" :key="client.id" class="table-row">
+              <tr v-else v-for="client in clients" :key="client.id" class="table-row">
                 <td>
                   <p style="font-weight: 700; font-size: 1.125rem; color: #111827; margin: 0;">{{ client.company || 'Sin Empresa' }}</p>
                 </td>
@@ -143,7 +143,7 @@
                   </div>
                 </td>
               </tr>
-              <tr v-if="!isLoading && filteredClients.length === 0">
+              <tr v-if="!isLoading && clients.length === 0">
                 <td colspan="6" class="empty-state">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
@@ -153,6 +153,12 @@
               </tr>
             </tbody>
           </table>
+          <Pagination
+            v-if="!isLoading"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="totalItems"
+          />
         </div>
 
       </div>
@@ -161,7 +167,7 @@
     <!-- Modal Nuevo Cliente / Éxito -->
     <Teleport to="body">
       <transition name="modal-fade">
-        <div v-if="showAddModal" class="modal-backdrop" @click.self="closeModalOrSuccess()">
+        <div v-if="showAddModal" class="modal-backdrop">
           <div class="modal-card">
             
             <template v-if="!createdClientData">
@@ -296,9 +302,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import { AppButton, AppSelect, AppInput, ConfirmationModal } from '@/components/ui';
+import { AppButton, AppSelect, AppInput, ConfirmationModal, Pagination } from '@/components/ui';
 import apiClient from '@/services/api';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useAuth } from '@/composables/useAuth';
@@ -373,18 +379,21 @@ const newClient = ref({
   plan: 'basico',
 });
 
-const filteredClients = computed(() => {
-  let list = [...clients.value];
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase();
-    list = list.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q)
-    );
-  }
-  if (statusFilter.value === 'active') list = list.filter(c => c.is_active);
-  if (statusFilter.value === 'inactive') list = list.filter(c => !c.is_active);
-  return list;
+const currentPage = ref(1);
+const pageSize = ref(10);
+const totalItems = ref(0);
+
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch([searchQuery, statusFilter], () => {
+  currentPage.value = 1;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    fetchClients();
+  }, 300);
+});
+
+watch([currentPage, pageSize], () => {
+  fetchClients();
 });
 
 /**
@@ -480,13 +489,21 @@ const deleteClient = async () => {
 const fetchClients = async () => {
   isLoading.value = true;
   try {
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: searchQuery.value,
+      status: statusFilter.value
+    };
     // Consumir /api/v1/accounts/users/software-clients/ — dueños de tienda
-    const response = await apiClient.get<any>('/v1/accounts/users/software-clients/');
+    const response = await apiClient.get<any>('/v1/accounts/users/software-clients/', { params });
     if (response.success && response.data) {
       // Manejar formato paginado DRF: {count, next, previous, results}
       const clientsList = Array.isArray(response.data) 
         ? response.data 
         : (response.data.results || []);
+      
+      totalItems.value = response.data.count ?? clientsList.length;
       
       clients.value = clientsList.map((c: any, index: number) => ({
         id: c.id,

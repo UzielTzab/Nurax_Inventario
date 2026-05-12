@@ -1,6 +1,6 @@
 <template>
   <Transition name="modal-fade">
-    <div v-if="isOpen" class="modal-overlay" @click.self="handleCancel">
+    <div v-if="isOpen" class="modal-overlay">
       <div class="modal-container" :class="`modal-${type}`">
         <!-- Icon Header -->
         <div class="modal-icon-wrapper">
