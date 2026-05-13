@@ -16,7 +16,7 @@
               Nuevo Producto
             </AppButton>
             <AppButton variant="outline" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">
-              Importar Excel/CSV
+              Importar Excel
             </AppButton>
           </div>
         </div>

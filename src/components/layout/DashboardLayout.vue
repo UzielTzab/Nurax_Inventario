@@ -54,9 +54,9 @@
           </div>
 
           <!-- Vincular escaner movil -->
-          <button v-if="showPosActions" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary); box-shadow: none;">
+          <!-- <button v-if="showPosActions" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary); box-shadow: none;">
             <QrCodeIcon class="w-5 h-5" :style="{color: 'var(--color-brand-secondary)'}" />
-          </button>
+          </button> -->
 
           <!-- Divisor -->
           <div class="topbar-divider"></div>
@@ -152,7 +152,7 @@
     <!-- Profile Edit Modal -->
     <Teleport to="body">
       <transition name="modal-fade">
-        <div v-if="showProfileEdit" class="profile-modal-backdrop" @click.self="closeProfileEdit">
+        <div v-if="showProfileEdit" class="profile-modal-backdrop">
           <div class="profile-modal">
             <div class="pm-header">
               <h3 class="pm-title">Editar perfil</h3>
