@@ -197,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
@@ -218,9 +218,35 @@ const selectedPeriod = ref('today');
 const customStartDate = ref('');
 const customEndDate = ref('');
 
+// Watcher para refrescar cuando se completa una venta desde otra sección
+let unsubscribeSaleCompleted: (() => void) | null = null;
+
 onMounted(async () => {
   await salesStore.fetchSales(1, pageSize.value, searchQuery.value.trim());
   loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
+  
+  // Suscribirse a cambios de lastCompletedSaleTimestamp en el store
+  // Cuando una venta se completa desde otra sección, este timestamp cambia
+  unsubscribeSaleCompleted = watch(
+    () => salesStore.lastCompletedSaleTimestamp,
+    async (newTimestamp) => {
+      if (newTimestamp > 0) {
+        // Una venta fue completada, refrescar la página actual
+        try {
+          await fetchCurrentPage();
+        } catch (err) {
+          console.error('Error refreshing sales after sale-completed', err);
+        }
+      }
+    }
+  );
+});
+
+onUnmounted(() => {
+  // Limpiar el watcher al desmontar para evitar memory leaks
+  if (unsubscribeSaleCompleted) {
+    unsubscribeSaleCompleted();
+  }
 });
 
 // ── Búsqueda y filtros ──

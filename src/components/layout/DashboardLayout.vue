@@ -826,10 +826,13 @@ onUnmounted(() => {
   }
 });
 
-const handleSaleCompleted = (items: any[]) => {
+const handleSaleCompleted = async (items: any[]) => {
   items.forEach(item => {
     productStore.decreaseStock(item.id, item.quantity);
   });
+  // Emitir evento en el store para que cualquier vista escuchando se actualice
+  // Esto evita memory leaks de event listeners globales
+  await salesStore.notifySaleCompleted(items);
 };
 
 const { enqueueSnackbar } = useSnackbar();
