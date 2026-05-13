@@ -31,18 +31,21 @@
           </div>
         </template>
         <template v-else>
-          <div class="stat-card pending" style="border-left-color: #f97316;">
-            <div class="stat-label">Total a Cobrar (Pendiente)</div>
-            <div class="stat-value" style="color: #ea580c;">${{ Number(totalPending).toFixed(2) }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Clientes con Deuda</div>
-            <div class="stat-value" style="color: #1f2937;">{{ uniqueDebtorsCount }} clientes</div>
-          </div>
-          <div class="stat-card success" style="border-left-color: #10b981;">
-            <div class="stat-label">Abonos recibidos este mes</div>
-            <div class="stat-value" style="color: #059669;">${{ Number(totalPaymentsThisMonth).toFixed(2) }}</div>
-          </div>
+          <StatsCard
+            label="Total a Cobrar (Pendiente)"
+            :value="'$' + Number(totalPending).toFixed(2)"
+            subtitle=""
+          />
+          <StatsCard
+            label="Clientes con Deuda"
+            :value="uniqueDebtorsCount + ' clientes'"
+            subtitle=""
+          />
+          <StatsCard
+            label="Abonos recibidos este mes"
+            :value="'$' + Number(totalPaymentsThisMonth).toFixed(2)"
+            subtitle=""
+          />
         </template>
       </div>
 
@@ -370,6 +373,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import StatsCard from '@/components/dashboard/StatsCard.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -752,28 +756,6 @@ const submitManualDebt = async () => {
   background: var(--color-brand-main, #e6ab17);
   color: #111827;
   box-shadow: 0 8px 18px rgba(230, 171, 23, 0.22);
-}
-
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border-left: 4px solid #f59e0b;
-}
-
-.stat-label {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-  margin-top: 0.5rem;
 }
 
 .search-section {
