@@ -76,10 +76,10 @@
                   type="number"
                   label="Costo base ($)"
                   min="0"
-                  step="any"
+                  step="0.01"
                   placeholder="0.00"
                   required
-                  @input="onBaseCostInput"
+                  
                 />
                 <AppInput
                   id="salePrice"
@@ -87,7 +87,7 @@
                   type="number"
                   label="Precio de venta ($)"
                   min="0"
-                  step="any"
+                  step="0.01"
                   placeholder="0.00"
                   required
                   @input="onSalePriceInput"
@@ -99,10 +99,9 @@
                 v-model.number="formData.marginPercent"
                 type="number"
                 label="Margen (%)"
-                step="any"
+                step="0.01"
                 placeholder="0"
-                hint="Campo bidireccional: costo + margen recalcula precio"
-                @input="onMarginInput"
+                disabled
               />
             </AppFormSection>
 
@@ -398,13 +397,7 @@ const normalizeNumber = (value: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const recalcSaleFromMargin = () => {
-  const base = normalizeNumber(formData.baseCost);
-  const margin = normalizeNumber(formData.marginPercent);
-  const price = base * (1 + margin / 100);
-  formData.salePrice = Number(price.toFixed(2));
-};
-
+// Calcular margen automáticamente desde costo y precio
 const recalcMarginFromPrices = () => {
   const base = normalizeNumber(formData.baseCost);
   const sale = normalizeNumber(formData.salePrice);
@@ -415,20 +408,9 @@ const recalcMarginFromPrices = () => {
   formData.marginPercent = Number((((sale - base) / base) * 100).toFixed(2));
 };
 
-const onBaseCostInput = () => {
-  if (normalizeNumber(formData.marginPercent) > 0) {
-    recalcSaleFromMargin();
-    return;
-  }
-  recalcMarginFromPrices();
-};
-
+// Calcular margen cuando el usuario edita precio
 const onSalePriceInput = () => {
   recalcMarginFromPrices();
-};
-
-const onMarginInput = () => {
-  recalcSaleFromMargin();
 };
 
 const resetFormForCreate = (isChained = false) => {
@@ -1151,6 +1133,54 @@ watch(showCategoryModal, (open) => {
   }
 }
 
+.calc-mode-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.calc-mode-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.radio-option input[type='radio'] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.price-input-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.calc-indicator {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 600;
+  pointer-events: none;
+}
+
 @media (max-width: 640px) {
   .side-panel {
     width: 100vw;
@@ -1175,3 +1205,6 @@ watch(showCategoryModal, (open) => {
   }
 }
 </style>
+
+
+

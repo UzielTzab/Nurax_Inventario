@@ -447,22 +447,27 @@ onMounted(() => {
 });
 
 // Watcher para buscar con debounce
+// Watcher para cambiar de vista
+watch(activeView, async (view) => {
+  currentPage.value = 1;
+  
+  if (view === 'clients') {
+    searchQuery.value = ''; // Limpiar al cambiar a clientes
+    loadAllClients();
+    return;
+  }
+  
+  // En 'receivables', hacer refetch PRIMERO antes de limpiar searchQuery
+  await salesStore.fetchReceivables(1, pageSize.value, '');
+  searchQuery.value = ''; // Limpiar después de refetch
+});
+
+// Watcher para búsqueda con debounce - solo en receivables
 watch(searchQuery, debounce((newQ: string) => {
   if (activeView.value === 'clients') return;
   currentPage.value = 1;
   salesStore.fetchReceivables(1, pageSize.value, newQ);
 }, 400));
-
-watch(activeView, (view) => {
-  searchQuery.value = '';
-  if (view === 'clients') {
-    loadAllClients();
-    return;
-  }
-
-  currentPage.value = 1;
-  salesStore.fetchReceivables(1, pageSize.value);
-});
 
 // Watcher: refetch when page or page size changes via Pagination v-model
 watch(currentPage, (page) => {
