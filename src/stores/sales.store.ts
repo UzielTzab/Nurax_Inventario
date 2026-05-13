@@ -312,6 +312,7 @@ export const useSalesStore = defineStore('sales', () => {
   const isModalOpen = ref(false);
   const isScannerOpen = ref(false);
   const scannerMode = ref<'single' | 'continuous'>('single');  // Nuevo: rastrear el modo de escaneo
+  const lastCompletedSaleTimestamp = ref(0); // Track cuando se completa una venta para refresh reactivo
 
   const openModal = () => {
     isModalOpen.value = true;
@@ -335,6 +336,15 @@ export const useSalesStore = defineStore('sales', () => {
     scannerMode.value = 'single';
   };
 
+  /**
+   * Notifica que una venta fue completada para disparar refetch en otras vistas
+   * Actualiza lastCompletedSaleTimestamp para que watchers reaccionen
+   */
+  const notifySaleCompleted = async (items: any[]) => {
+    // Emitir un timestamp único para disparar watchers en otras vistas
+    lastCompletedSaleTimestamp.value = Date.now();
+  };
+
   return {
     // State
     sales,
@@ -348,6 +358,7 @@ export const useSalesStore = defineStore('sales', () => {
     isModalOpen,
     isScannerOpen,
     scannerMode,  // Nuevo: exportar modo de escaneo
+    lastCompletedSaleTimestamp, // Track para refrescar vistas cuando se completa venta
 
     // Methods
     fetchSales,
@@ -360,6 +371,7 @@ export const useSalesStore = defineStore('sales', () => {
     openScanner,
     openContinuousScanner,  // Nuevo: abrir escaneo en modo continuo
     closeModal,
+    notifySaleCompleted, // Notify cuando se completa venta para refetch en otras vistas
 
     // Computed
     weeklyData,
