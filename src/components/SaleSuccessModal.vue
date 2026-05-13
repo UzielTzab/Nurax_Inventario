@@ -1,6 +1,6 @@
 <template>
   <Transition name="fade">
-    <div v-if="isOpen" class="modal-overlay">
+    <div v-if="isOpen" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal-content">
 
         
