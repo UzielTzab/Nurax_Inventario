@@ -138,6 +138,7 @@ export const useSalesStore = defineStore('sales', () => {
     items: any[];
     total_amount: number | string;
     status: string;
+    sale_type?: 'cash' | 'credit' | 'layaway' | string;
     device_id?: string;
     amount_paid?: number;
     amount_tendered: number | string;
@@ -161,12 +162,19 @@ export const useSalesStore = defineStore('sales', () => {
           ? 'partial'
           : saleData.status;
 
+      const normalizedSaleType = saleData.sale_type
+        ? String(saleData.sale_type).toLowerCase()
+        : saleData.status === 'layaway'
+          ? 'layaway'
+          : undefined;
+
       const response = await salesService.createSale({
         ...saleData,
         // Si el frontend envía `amount_tendered` lo usamos; si no, usamos `amount_paid` como fallback
         amount_tendered: saleData.amount_tendered ?? saleData.amount_paid,
         store: storeId,
         status: normalizedStatus,
+        ...(normalizedSaleType ? { sale_type: normalizedSaleType } : {}),
       });
 
       if (response.success && response.data) {
@@ -249,8 +257,9 @@ export const useSalesStore = defineStore('sales', () => {
 
           // Actualizar estado si total pagado >= total
           const paid = sale.payments.reduce((acc, p) => acc + parseFloat(String(p.amount)), 0);
-          if (paid >= parseFloat(String(sale.total))) {
-            sale.status = 'completed';
+          const total = parseFloat(String((sale as any).total_amount ?? sale.total));
+          if (paid >= total) {
+            sale.status = 'paid';
           }
         }
         return { success: true, data: response.data };

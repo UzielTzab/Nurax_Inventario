@@ -39,6 +39,7 @@ export interface Sale {
     username: string;
   };
   status: string; // 'completed', 'pending', 'cancelled', 'credit', 'layaway'
+  sale_type?: 'cash' | 'credit' | 'layaway' | string;
   total: string | number;
   total_amount?: string | number;
   amount_paid?: number | string;
@@ -187,6 +188,7 @@ class SalesService {
     cash_shift?: string | number | null;
     amount_paid?: number | string;
     amount_tendered?: number | string;
+    sale_type?: 'cash' | 'credit' | 'layaway' | string;
     store?: string | number;
   }) {
     try {

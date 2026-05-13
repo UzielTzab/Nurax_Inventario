@@ -181,17 +181,32 @@
               class="customer-search-input"
               placeholder="Venta de Mostrador (General) o buscar cliente"
             />
-            <AppSelect
-              v-model="selectedClientId"
-              placeholder="Venta de Mostrador (General)"
-              :options="[
-                { value: '', label: 'Venta de Mostrador (General)' },
-                ...filteredClients.map((client) => ({
-                  value: String(client.id),
-                  label: client.name
-                }))
-              ]"
-            />
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <AppSelect
+                v-model="selectedClientId"
+                placeholder="Venta de Mostrador (General)"
+                style="flex: 1;"
+                :options="[
+                  { value: '', label: 'Venta de Mostrador (General)' },
+                  ...filteredClients.map((client) => ({
+                    value: String(client.id),
+                    label: client.name
+                  }))
+                ]"
+              />
+              <button 
+                @click="showNewClientModal = true" 
+                style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #4b5563;"
+                title="Nuevo Cliente"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </button>
+              <span v-if="selectedClient && Number(selectedClient.debt) > 0" style="background: #fef08a; color: #854d0e; padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; border: 1px solid #fde047;" title="Deuda actual">
+                Deuda actual: ${{ Number(selectedClient.debt).toFixed(2) }}
+              </span>
+            </div>
           </div>
           
           <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -447,17 +462,32 @@
                 class="customer-search-input"
                 placeholder="Venta de Mostrador (General) o buscar cliente"
               />
-              <AppSelect
-                v-model="selectedClientId"
-                placeholder="Venta de Mostrador (General)"
-                :options="[
-                  { value: '', label: 'Venta de Mostrador (General)' },
-                  ...filteredClients.map((client) => ({
-                    value: String(client.id),
-                    label: client.name
-                  }))
-                ]"
-              />
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <AppSelect
+                  v-model="selectedClientId"
+                  placeholder="Venta de Mostrador (General)"
+                  style="flex: 1;"
+                  :options="[
+                    { value: '', label: 'Venta de Mostrador (General)' },
+                    ...filteredClients.map((client) => ({
+                      value: String(client.id),
+                      label: client.name
+                    }))
+                  ]"
+                />
+                <button 
+                  @click="showNewClientModal = true" 
+                  style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #4b5563;"
+                  title="Nuevo Cliente"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+                <span v-if="selectedClient && Number(selectedClient.debt) > 0" style="background: #fef08a; color: #854d0e; padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; border: 1px solid #fde047;">
+                  Deuda actual: ${{ Number(selectedClient.debt).toFixed(2) }}
+                </span>
+              </div>
             </div>
 
             <!-- Cart Items -->
@@ -686,8 +716,15 @@
              </div>
            </div>
 
-           <div style="margin-bottom: 1rem;">
-             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Pago Inicial (Enganche)</label>
+           <div v-if="!selectedClientId" style="margin-bottom: 1rem; padding: 1rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; color: #991b1b; display: flex; align-items: center; gap: 0.5rem;">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px; flex-shrink: 0;">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+             </svg>
+             <span style="font-size: 0.875rem; font-weight: 600;">Debes seleccionar un cliente registrado para apartar o fiar. No se permite Público General.</span>
+           </div>
+
+           <div style="margin-bottom: 1rem;" :style="{ opacity: selectedClientId ? '1' : '0.5', pointerEvents: selectedClientId ? 'auto' : 'none' }">
+             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Abono Inicial (Enganche)</label>
              <div style="position: relative;">
                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: #6b7280; font-size: 1.125rem;">$</span>
                <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 1.125rem; font-weight: 600; border: 1px solid #e5e7eb; border-radius: 16px; outline: none;" min="0" step="0.01">
@@ -706,10 +743,11 @@
            fullWidth 
            size="lg"
            :loading="isSubmitting"
+           :disabled="paymentMethod === 'layaway' && !selectedClientId"
            @click="confirmPayment"
            style="padding: 1rem; font-size: 1.125rem; min-height: 56px;"
          >
-           Confirmar Venta
+           {{ paymentMethod === 'layaway' ? 'Registrar Fiado/Apartado' : 'Confirmar Venta' }}
            <ArrowRightIcon class="w-5 h-5 ml-2" />
          </AppButton>
        </div>
@@ -796,6 +834,39 @@
       </div>
     </div>
   </Transition>
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showNewClientModal" class="modal-overlay" style="z-index: 12020;" @click.self="showNewClientModal = false">
+        <div class="modal-content" style="max-width: 400px; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0;">Nuevo Cliente</h3>
+            <button @click="showNewClientModal = false" style="background: none; border: none; cursor: pointer; color: #9ca3af; padding: 0.25rem;">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Nombre del Cliente *</label>
+              <input type="text" v-model="newClientForm.name" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: Juan Pérez" />
+            </div>
+            <div>
+              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Teléfono (Opcional)</label>
+              <input type="text" v-model="newClientForm.phone" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: 5512345678" />
+            </div>
+            <div>
+              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Correo Electrónico (Opcional)</label>
+              <input type="email" v-model="newClientForm.email" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: juan@ejemplo.com" />
+            </div>
+          </div>
+          <div style="margin-top: 2rem;">
+            <AppButton variant="fill" fullWidth :loading="isCreatingClient" :disabled="!newClientForm.name.trim()" @click="submitNewClient">
+              Guardar Cliente
+            </AppButton>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -852,6 +923,7 @@ interface PosClient {
   name: string;
   credit_limit?: number | string;
   active?: boolean;
+  debt?: number | string;
 }
 
 interface RevertCartItem {
@@ -1217,9 +1289,41 @@ const fetchClients = async () => {
         name: client.name,
         credit_limit: client.credit_limit,
         active: client.active,
+        debt: client.debt,
       }));
   } catch (error) {
     console.warn('No se pudo cargar la lista de clientes para POS:', error);
+  }
+};
+
+const showNewClientModal = ref(false);
+const isCreatingClient = ref(false);
+const newClientForm = ref({ name: '', phone: '', email: '' });
+
+const submitNewClient = async () => {
+  if (!newClientForm.value.name.trim()) return;
+  isCreatingClient.value = true;
+  try {
+    const response = await apiClient.post<{ id?: string | number }>('/v1/accounts/clients/', {
+      name: newClientForm.value.name,
+      phone: newClientForm.value.phone,
+      email: newClientForm.value.email
+    });
+    if (response.success && response.data) {
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Cliente registrado correctamente.' });
+      showNewClientModal.value = false;
+      newClientForm.value = { name: '', phone: '', email: '' };
+      await fetchClients();
+      if (response.data.id) {
+        selectedClientId.value = String(response.data.id);
+      }
+    } else {
+      enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo crear el cliente.' });
+    }
+  } catch (err) {
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión.' });
+  } finally {
+    isCreatingClient.value = false;
   }
 };
 
@@ -1598,6 +1702,7 @@ const confirmPayment = async () => {
     const result = await salesStore.addSale({
       transaction_id: trxId,
       status: paymentMethod.value === 'layaway' ? 'partial' : 'paid',
+      sale_type: paymentMethod.value === 'layaway' ? 'credit' : 'cash',
       amount_paid: amountPaidForBackend,
       amount_tendered: tenderedAmount,
       customer: selectedClientId.value || null,
