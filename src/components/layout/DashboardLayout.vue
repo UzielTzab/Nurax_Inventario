@@ -313,11 +313,11 @@
     </Teleport>
 
     <!-- Excel Modal -->
-    <ExelModal 
-        :isOpen = isOpenExcelModal
-        @close="isOpenExcelModal = false" 
-      >
-    </ExelModal>
+    <ExelModal
+      v-if="isOpenExcelModal"
+      :is-open="isOpenExcelModal"
+      @close="isOpenExcelModal = false"
+    />
 
     <!-- Open Shift Auto-Prompt -->
     <Teleport to="body">
@@ -365,14 +365,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue';
 import Sidebar from './Sidebar.vue';
-import SalesModal from '@/components/SalesModal.vue';
 import NotificationPanel from '@/components/NotificationPanel.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useProductStore } from '@/stores/product.store';
 import { useShiftsStore } from '@/stores/shifts.store';
-import { watch } from 'vue';
 import type { Product } from '@/stores/product.store';
 import { useAuth } from '@/composables/useAuth';
 import { useRouter } from 'vue-router';
@@ -380,12 +378,9 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import { useChangePassword } from '@/composables/useChangePassword';
 import apiClient from '@/services/api';
 import type { UserProfileResponse } from '@/services/auth.service';
-import Pusher from 'pusher-js';
-import * as XLSX from 'xlsx';
-import QrcodeVue from 'qrcode.vue';
+import type Pusher from 'pusher-js';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
-import ExelModal from '@/components/ExcelModal.vue';
 
 import {
   Bars3Icon,
@@ -401,6 +396,11 @@ import {
   ShoppingCartIcon,
   ChevronDownIcon,
 } from '@heroicons/vue/24/outline';
+
+const SalesModal = defineAsyncComponent(() => import('@/components/SalesModal.vue'));
+const ExelModal = defineAsyncComponent(() => import('@/components/ExcelModal.vue'));
+const QrcodeVue = defineAsyncComponent(() => import('qrcode.vue'));
+
 const salesStore = useSalesStore();
 const productStore = useProductStore();
 const shiftsStore = useShiftsStore();
@@ -735,11 +735,14 @@ let globalPusher: Pusher | null = null;
 let globalChannel: any = null;
 let globalChannelName = '';
 
-const initPusher = () => {
+const initPusher = async () => {
   // Limpiar si ya existe
   if (globalPusher) {
     if (globalChannelName) globalPusher.unsubscribe(globalChannelName);
     globalPusher.disconnect();
+    globalPusher = null;
+    globalChannel = null;
+    globalChannelName = '';
   }
 
   const userId = currentUser.value?.id;
@@ -752,8 +755,9 @@ const initPusher = () => {
   
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+  const { default: PusherClient } = await import('pusher-js');
 
-  globalPusher = new Pusher(pusherKey, {
+  globalPusher = new PusherClient(pusherKey, {
     cluster: pusherCluster,
     forceTLS: true
   });
@@ -800,7 +804,7 @@ onMounted(async () => {
 // Vigilar al usuario por si la sesión tarda en cargar
 watch(currentUser, (newUser, oldUser) => {
   if (newUser && newUser.id !== oldUser?.id) {
-    initPusher();
+    void initPusher();
     
     // Cargas según el rol del usuario
     if (newUser.role === 'admin') {
@@ -823,6 +827,7 @@ onUnmounted(() => {
     console.log("[Pusher] Desconectando...");
     if (globalChannelName) globalPusher.unsubscribe(globalChannelName);
     globalPusher.disconnect();
+    globalPusher = null;
   }
 });
 

@@ -94,6 +94,7 @@
     <!-- SalesModal removed (handled by layout) -->
     
     <AddProductModal
+      v-if="showAddProductModal"
       ref="addProductModalRef"
       :isOpen="showAddProductModal"
       :product-to-edit="selectedProduct"
@@ -105,6 +106,7 @@
     />
 
     <ProductDetailDrawer
+      v-if="showDetailDrawer"
       :is-open="showDetailDrawer"
       :product-id="detailProductId"
       @close="showDetailDrawer = false"
@@ -136,8 +138,8 @@
 
 let unsubcribeSaleCompleted: (() => void) | null = null;
 
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
-import Pusher from 'pusher-js';
+import { computed, ref, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue';
+import type Pusher from 'pusher-js';
 import { 
   ArrowUpTrayIcon,
   PlusIcon,
@@ -145,9 +147,6 @@ import {
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import ProductTable, { type Product as TableProduct } from '@/components/dashboard/ProductTable.vue';
-import AddProductModal from '@/components/AddProductModal.vue';
-import ProductDetailDrawer from '@/components/ProductDetailDrawer.vue';
-import RestockModal from '@/components/RestockModal.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -157,6 +156,10 @@ import { useCategories } from '@/composables/useCategories';
 import { useProductStore } from '@/stores/product.store';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSuppliers } from '@/composables/useSuppliers';
+
+const AddProductModal = defineAsyncComponent(() => import('@/components/AddProductModal.vue'));
+const ProductDetailDrawer = defineAsyncComponent(() => import('@/components/ProductDetailDrawer.vue'));
+const RestockModal = defineAsyncComponent(() => import('@/components/RestockModal.vue'));
 
 // Snackbar
 const { enqueueSnackbar } = useSnackbar();
@@ -235,8 +238,9 @@ onMounted(async () => {
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+  const { default: PusherClient } = await import('pusher-js');
 
-  pusher = new Pusher(pusherKey, {
+  pusher = new PusherClient(pusherKey, {
     cluster: pusherCluster,
     forceTLS: true
   });
@@ -295,6 +299,8 @@ onUnmounted(() => {
     console.log("[Inventory] 🔌 Desconectando Pusher");
     pusher.unsubscribe(`pos-user-${currentUser.value?.id || 1}`);
     pusher.disconnect();
+    pusher = null;
+    channel = null;
   }
 });
 

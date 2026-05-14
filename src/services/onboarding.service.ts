@@ -1,5 +1,4 @@
 import apiClient from './api';
-import * as XLSX from 'xlsx';
 
 export interface ProductFromExcel {
   name: string;
@@ -51,6 +50,7 @@ class OnboardingService {
   }> {
     try {
       const arrayBuffer = await file.arrayBuffer();
+      const XLSX = await import('xlsx');
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0] as string];
       

@@ -38,7 +38,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}', 'images/nurax_logo*.png'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/via\.placeholder\.com\/.*/i,

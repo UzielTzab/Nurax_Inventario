@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Product } from '@/stores/product.store';
 import { useProductStore } from '@/stores/product.store';
-import * as XLSX from 'xlsx';
 import { ref } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import {
@@ -72,7 +71,8 @@ const confirmImport = () => {
   closeExcelModal();
 };
 
-const exportToExcel = () => {
+const exportToExcel = async () => {
+  const XLSX = await import('xlsx');
   const data = productStore.products.map(p => ({
     Nombre: p.name,
     SKU: p.sku,
@@ -99,8 +99,9 @@ const parseExcelFile = (file: File) => {
   importError.value = '';
   importFileName.value = file.name;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
+      const XLSX = await import('xlsx');
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];

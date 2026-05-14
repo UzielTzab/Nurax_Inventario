@@ -4,18 +4,6 @@ import { useAuth } from '@/composables/useAuth'
 // Views - Auth
 import Login from '@/views/Login.vue'
 
-// Views - Dashboard
-import Inventory from '@/views/Inventory.vue'
-import OnboardingWizard from '@/components/onboarding/OnboardingWizard.vue'
-import SalesHistory from '@/views/SalesHistory.vue'
-import Suppliers from '@/views/Suppliers.vue'
-import AdminClients from '@/views/AdminClients.vue'
-import Settings from '@/views/Settings.vue'
-import Shifts from '@/views/Shifts.vue'
-import Expenses from '@/views/Expenses.vue'
-import AccountsReceivable from '@/views/AccountsReceivable.vue'
-import Team from '@/views/Team.vue'
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -32,52 +20,52 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/dashboard/onboarding',
-    component: OnboardingWizard,
+    component: () => import('@/components/onboarding/OnboardingWizard.vue'),
     meta: { title: 'Configuración Inicial', roles: ['cliente', 'propietario'] }
   },
   {
     path: '/dashboard/inventory',
-    component: Inventory,
+    component: () => import('@/views/Inventory.vue'),
     meta: { title: 'Inventario', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/sales',
-    component: SalesHistory,
+    component: () => import('@/views/SalesHistory.vue'),
     meta: { title: 'Historial de Ventas', roles: ['cliente', 'propietario', 'gerente', 'admin'] }
   },
   {
     path: '/dashboard/suppliers',
-    component: Suppliers,
+    component: () => import('@/views/Suppliers.vue'),
     meta: { title: 'Proveedores', roles: ['cliente', 'propietario', 'gerente', 'admin'] }
   },
   {
     path: '/dashboard/shifts',
-    component: Shifts,
+    component: () => import('@/views/Shifts.vue'),
     meta: { title: 'Corte de Caja', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/expenses',
-    component: Expenses,
+    component: () => import('@/views/Expenses.vue'),
     meta: { title: 'Gastos', roles: ['cliente', 'propietario', 'admin'] }
   },
   {
     path: '/dashboard/receivables',
-    component: AccountsReceivable,
+    component: () => import('@/views/AccountsReceivable.vue'),
     meta: { title: 'Cuentas por Cobrar', roles: ['cliente', 'propietario', 'gerente', 'admin', 'cajero'] }
   },
   {
     path: '/dashboard/clients',
-    component: AdminClients,
+    component: () => import('@/views/AdminClients.vue'),
     meta: { title: 'Clientes', roles: ['admin'] }
   },
   {
     path: '/dashboard/settings',
-    component: Settings,
+    component: () => import('@/views/Settings.vue'),
     meta: { title: 'Configuración', roles: ['cliente', 'propietario', 'admin'] }
   },
   {
     path: '/dashboard/team',
-    component: Team,
+    component: () => import('@/views/Team.vue'),
     meta: { title: 'Equipo', roles: ['propietario'] }
   },
   {
