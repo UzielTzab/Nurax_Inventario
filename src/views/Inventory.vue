@@ -133,7 +133,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+
+let unsubcribeSaleCompleted: (() => void) | null = null;
+
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import Pusher from 'pusher-js';
 import { 
   ArrowUpTrayIcon,
@@ -201,6 +204,33 @@ onMounted(async () => {
   
   await salesStore.fetchSales();
   
+  // Suscribirse a cambios de ventas completadas en el store
+  // Cuando una venta se completa desde otra sección, este timestamp cambia
+  unsubcribeSaleCompleted = watch(
+    () => salesStore.lastCompletedSaleTimestamp,
+    async (newTs, oldTs) => {
+      if (!newTs || newTs === oldTs) return;
+
+      // Evitar refrescar si se está creando/editando un producto activamente
+      if (showAddProductModal?.value) return;
+
+      // Resetear a página 1 para mostrar cambios de stock
+      pagination.value.currentPage = 1;
+
+      try {
+        await fetchProducts();
+        enqueueSnackbar({
+          type: 'info',
+          title: 'Stock actualizado',
+          message: 'El inventario se refrescó tras completarse una venta.',
+          duration: 1400
+        });
+      } catch (err) {
+        console.error('[Inventory] Error refrescando tras venta:', err);
+      }
+    }
+  );
+  
   // Inicializar Pusher para escuchar cambios de inventario en tiempo real
   const userId = currentUser.value?.id || 1;
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
@@ -255,6 +285,12 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  // Limpiar watcher de ventas completadas para evitar memory leaks
+  if (unsubcribeSaleCompleted) {
+    unsubcribeSaleCompleted();
+    unsubcribeSaleCompleted = null;
+  }
+
   if (channel && pusher) {
     console.log("[Inventory] 🔌 Desconectando Pusher");
     pusher.unsubscribe(`pos-user-${currentUser.value?.id || 1}`);
