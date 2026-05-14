@@ -306,34 +306,12 @@
       </Teleport>
       <!-- Modals and Drawers placehoder -->
       <Teleport to="body">
-        <Transition name="slide-right">
-          <div v-if="showNewClientDrawer" class="drawer-overlay" @click.self="showNewClientDrawer = false">
-            <div class="drawer-content">
-              <div class="modal-header">
-                <h3 class="modal-title">Nuevo Cliente</h3>
-                <button @click="showNewClientDrawer = false" class="btn-close"><XMarkIcon class="w-6 h-6" /></button>
-              </div>
-              <div style="padding: 1rem 0;">
-                <p class="text-sm text-gray-500 mb-4">Registra rápidamente un cliente para asignarle una deuda o fiado.</p>
-                <div class="input-section">
-                  <label class="input-label">Nombre del Cliente *</label>
-                  <input type="text" v-model="newClientForm.name" class="payment-input" style="padding-left: 1rem;" placeholder="Ej: Juan Pérez" />
-                </div>
-                <div class="input-section">
-                  <label class="input-label">Teléfono (Opcional)</label>
-                  <input type="text" v-model="newClientForm.phone" class="payment-input" style="padding-left: 1rem;" placeholder="Ej: 5512345678" />
-                </div>
-                <div class="input-section">
-                  <label class="input-label">Correo Electrónico (Opcional)</label>
-                  <input type="email" v-model="newClientForm.email" class="payment-input" style="padding-left: 1rem;" placeholder="Ej: juan@ejemplo.com" />
-                </div>
-                <div style="margin-top: 2rem;">
-                  <AppButton variant="fill" fullWidth :loading="isCreatingClient" :disabled="!newClientForm.name.trim()" @click="submitNewClient">Guardar Cliente</AppButton>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Transition>
+        <AddClientModal
+          :is-open="showNewClientDrawer"
+          :is-drawer="true"
+          @close="showNewClientDrawer = false"
+          @client-created="handleNewClientCreated"
+        />
         <Transition name="fade">
           <div v-if="showManualDebtModal" class="modal-overlay" style="z-index: 12020;" @click.self="showManualDebtModal = false">
             <div class="modal-content">
@@ -374,6 +352,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import StatsCard from '@/components/dashboard/StatsCard.vue';
+import AddClientModal from '@/components/AddClientModal.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -601,9 +580,6 @@ const submitPayment = async () => {
 };
 
 // Modals State and Methods
-const newClientForm = ref({ name: '', phone: '', email: '' });
-const isCreatingClient = ref(false);
-
 const loadAllClients = async () => {
   try {
     const response = await apiClient.get<any>('/v1/accounts/clients/');
@@ -623,29 +599,12 @@ const loadAllClients = async () => {
   }
 };
 
-const submitNewClient = async () => {
-  if (!newClientForm.value.name.trim()) return;
-  isCreatingClient.value = true;
-  try {
-    const response = await apiClient.post('/v1/accounts/clients/', {
-      name: newClientForm.value.name,
-      phone: newClientForm.value.phone,
-      email: newClientForm.value.email
-    });
-    if (response.success) {
-      enqueueSnackbar({ type: 'success', title: 'Cliente creado', message: 'El cliente se registró correctamente.' });
-      showNewClientDrawer.value = false;
-      newClientForm.value = { name: '', phone: '', email: '' };
-      loadAllClients();
-    } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo crear el cliente.' });
-    }
-  } catch (err) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Hubo un error de conexión al crear cliente.' });
-  } finally {
-    isCreatingClient.value = false;
-  }
+const handleNewClientCreated = async (clientId: string | number) => {
+  // Recargar la lista de clientes cuando se crea uno nuevo
+  await loadAllClients();
 };
+
+
 
 const manualDebt = ref({ customer_id: '', total_amount: null as number | null, description: '' });
 const isCreatingDebt = ref(false);

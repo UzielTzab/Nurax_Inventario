@@ -132,7 +132,7 @@
                 <!-- Fila principal -->
                 <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
                   <td>{{ formatTime(sale.created_at) }}</td>
-                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-brand-main);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
+                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-text-product-name--color-text-main);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
 
                   <!-- Columna de productos con cantidades -->
                   <td>

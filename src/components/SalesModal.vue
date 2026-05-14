@@ -834,39 +834,12 @@
       </div>
     </div>
   </Transition>
-  <Teleport to="body">
-    <Transition name="fade">
-      <div v-if="showNewClientModal" class="modal-overlay" style="z-index: 12020;" @click.self="showNewClientModal = false">
-        <div class="modal-content" style="max-width: 400px; padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0;">Nuevo Cliente</h3>
-            <button @click="showNewClientModal = false" style="background: none; border: none; cursor: pointer; color: #9ca3af; padding: 0.25rem;">
-              <XMarkIcon class="w-6 h-6" />
-            </button>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div>
-              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Nombre del Cliente *</label>
-              <input type="text" v-model="newClientForm.name" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: Juan Pérez" />
-            </div>
-            <div>
-              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Teléfono (Opcional)</label>
-              <input type="text" v-model="newClientForm.phone" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: 5512345678" />
-            </div>
-            <div>
-              <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.5rem;">Correo Electrónico (Opcional)</label>
-              <input type="email" v-model="newClientForm.email" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s;" placeholder="Ej: juan@ejemplo.com" />
-            </div>
-          </div>
-          <div style="margin-top: 2rem;">
-            <AppButton variant="fill" fullWidth :loading="isCreatingClient" :disabled="!newClientForm.name.trim()" @click="submitNewClient">
-              Guardar Cliente
-            </AppButton>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+  <AddClientModal
+    :is-open="showNewClientModal"
+    :is-drawer="false"
+    @close="showNewClientModal = false"
+    @client-created="handleNewClientCreated"
+  />
 </template>
 
 <script setup lang="ts">
@@ -877,6 +850,7 @@ import { useProducts } from '@/composables/useProducts';
 import SaleSuccessModal from '@/components/SaleSuccessModal.vue';
 import OpenShiftModal from '@/components/OpenShiftModal.vue';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal.vue';
+import AddClientModal from '@/components/AddClientModal.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useSalesStore } from '@/stores/sales.store';
 import { useShiftsStore } from '@/stores/shifts.store';
@@ -1297,34 +1271,11 @@ const fetchClients = async () => {
 };
 
 const showNewClientModal = ref(false);
-const isCreatingClient = ref(false);
-const newClientForm = ref({ name: '', phone: '', email: '' });
 
-const submitNewClient = async () => {
-  if (!newClientForm.value.name.trim()) return;
-  isCreatingClient.value = true;
-  try {
-    const response = await apiClient.post<{ id?: string | number }>('/v1/accounts/clients/', {
-      name: newClientForm.value.name,
-      phone: newClientForm.value.phone,
-      email: newClientForm.value.email
-    });
-    if (response.success && response.data) {
-      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Cliente registrado correctamente.' });
-      showNewClientModal.value = false;
-      newClientForm.value = { name: '', phone: '', email: '' };
-      await fetchClients();
-      if (response.data.id) {
-        selectedClientId.value = String(response.data.id);
-      }
-    } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo crear el cliente.' });
-    }
-  } catch (err) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión.' });
-  } finally {
-    isCreatingClient.value = false;
-  }
+const handleNewClientCreated = async (clientId: string | number) => {
+  // Recargar lista de clientes y seleccionar el nuevo cliente
+  await fetchClients();
+  selectedClientId.value = String(clientId);
 };
 
 // Snapshot de la última venta (para poder revertirla)
