@@ -75,7 +75,7 @@
               />
               <img
                 v-else
-                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=06402b&color=fff`"
+                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e6ab17&color=1f2937`"
                 :alt="displayName"
               />
             </div>
@@ -102,7 +102,7 @@
                     />
                     <img
                       v-else
-                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=06402b&color=fff&size=80`"
+                      :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e6ab17&color=1f2937&size=80`"
                       :alt="displayName"
                     />
                   </div>
@@ -170,7 +170,7 @@
                 />
                 <img
                   v-else
-                  :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(profileForm.name || 'U')}&background=06402b&color=fff&size=80`"
+                  :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(profileForm.name || 'U')}&background=e6ab17&color=1f2937&size=80`"
                   :alt="profileForm.name"
                 />
                 <!-- Camera overlay -->
@@ -1087,7 +1087,7 @@ defineEmits(['quickSell']);
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid #e5e7eb;
+  border: 2px solid rgba(230, 171, 23, 0.35);
 }
 .topbar-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -1127,7 +1127,7 @@ defineEmits(['quickSell']);
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid rgba(6, 64, 43, 0.15);
+  border: 2px solid rgba(230, 171, 23, 0.35);
 }
 .dropdown-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -1305,7 +1305,7 @@ defineEmits(['quickSell']);
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(6,64,43,0.03) 0%, rgba(6,64,43,0.07) 100%);
+  background: linear-gradient(135deg, rgba(230, 171, 23, 0.08) 0%, rgba(31, 41, 55, 0.04) 100%);
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -1314,7 +1314,7 @@ defineEmits(['quickSell']);
   height: 52px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2.5px solid rgba(6, 64, 43, 0.2);
+  border: 2.5px solid rgba(230, 171, 23, 0.4);
   flex-shrink: 0;
   position: relative;
 }
@@ -1328,7 +1328,7 @@ defineEmits(['quickSell']);
 .pm-avatar-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(31, 41, 55, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
