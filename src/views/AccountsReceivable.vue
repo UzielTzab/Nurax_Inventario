@@ -304,7 +304,8 @@
         </div>
       </Transition>
       </Teleport>
-      <!-- Modals and Drawers placehoder -->
+      
+      <!-- Modals and Drawers placeholder -->
       <Teleport to="body">
         <AddClientModal
           :is-open="showNewClientDrawer"
@@ -312,6 +313,9 @@
           @close="showNewClientDrawer = false"
           @client-created="handleNewClientCreated"
         />
+      </Teleport>
+      
+      <Teleport to="body">
         <Transition name="fade">
           <div v-if="showManualDebtModal" class="modal-overlay" style="z-index: 12020;" @click.self="showManualDebtModal = false">
             <div class="modal-content">

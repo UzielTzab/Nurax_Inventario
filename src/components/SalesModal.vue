@@ -834,12 +834,15 @@
       </div>
     </div>
   </Transition>
-  <AddClientModal
-    :is-open="showNewClientModal"
-    :is-drawer="false"
-    @close="showNewClientModal = false"
-    @client-created="handleNewClientCreated"
-  />
+
+  <Teleport to="body">
+    <AddClientModal
+      :is-open="showNewClientModal"
+      :is-drawer="false"
+      @close="showNewClientModal = false"
+      @client-created="handleNewClientCreated"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
