@@ -166,7 +166,7 @@ const containerClass = computed(() => ({
 
 .app-input-focused { 
   border-color: var(--color-brand-main, #227d52);
-  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.1);
+  box-shadow: none;
 }
 
 .app-input-error-border {
