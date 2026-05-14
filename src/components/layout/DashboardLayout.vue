@@ -208,6 +208,12 @@
               </div>
             </div>
             <div class="pm-body">
+              <div class="pm-profile-section">
+                <div class="pm-section-header">
+                  <UserCircleIcon class="pm-section-icon" />
+                  <h4 class="pm-section-title">Datos del perfil</h4>
+                </div>
+              </div>
               <div class="pm-field">
                 <AppInput
                   v-model="profileForm.name"
@@ -229,31 +235,18 @@
               
               <!-- Change Password Section -->
               <div class="pm-password-section">
-                <button 
+                <div
                   class="pm-password-header"
-                  @click="togglePasswordSection"
-                  type="button"
                 >
                   <div class="pm-password-header-content">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="pm-password-icon">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>
-                    <span class="pm-password-label">Cambiar contraseña</span>
+                    <span class="pm-password-label">Seguridad</span>
                   </div>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2" 
-                    stroke="currentColor"
-                    class="pm-password-chevron"
-                    :class="{ 'pm-password-chevron-open': showPasswordSection }"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                </button>
+                </div>
 
-                <div v-if="showPasswordSection" class="pm-password-fields">
+                <div class="pm-password-fields">
                   <div class="pm-field">
                     <AppInput
                       v-model="passwordForm.current"
@@ -285,24 +278,26 @@
                     <p v-if="passwordErrors.confirm" class="pm-field-error">{{ passwordErrors.confirm }}</p>
                   </div>
                 </div>
+                <div class="pm-password-actions">
+                  <AppButton
+                    variant="outline"
+                    size="sm"
+                    @click="submitChangePassword"
+                    :loading="isChangingPassword"
+                    :disabled="!isPasswordReady"
+                  >
+                    Actualizar contraseña
+                  </AppButton>
+                </div>
               </div>
             </div>
             <div class="pm-footer">
-              <AppButton variant="outline" @click="showProfileEdit = false" :disabled="isSavingProfile || isChangingPassword">Cancelar</AppButton>
+              <AppButton variant="outline" @click="closeProfileEdit" :disabled="isSavingProfile || isChangingPassword">Cancelar</AppButton>
               <AppButton 
-                v-if="showPasswordSection" 
-                variant="fill" 
-                @click="submitChangePassword" 
-                :loading="isChangingPassword"
-                :disabled="!passwordForm.current || !passwordForm.new || passwordForm.new !== passwordForm.confirm"
-              >
-                Cambiar contraseña
-              </AppButton>
-              <AppButton 
-                v-else
                 variant="fill" 
                 @click="saveProfile" 
                 :loading="isSavingProfile"
+                :disabled="isChangingPassword"
               >
                 Guardar cambios
               </AppButton>
@@ -461,7 +456,6 @@ const openProfileEdit = () => {
 /** Cierra el modal y resetea el formulario + errores de contraseña */
 const closeProfileEdit = () => {
   showProfileEdit.value = false;
-  showPasswordSection.value = false;
   passwordForm.current = '';
   passwordForm.new     = '';
   passwordForm.confirm = '';
@@ -471,19 +465,6 @@ const closeProfileEdit = () => {
 };
 
 /** Toggle de la sección de contraseña limpiando errores al plegar */
-const togglePasswordSection = () => {
-  showPasswordSection.value = !showPasswordSection.value;
-  if (!showPasswordSection.value) {
-    // Al cerrar, limpiar campos y errores
-    passwordForm.current = '';
-    passwordForm.new     = '';
-    passwordForm.confirm = '';
-    passwordErrors.current = '';
-    passwordErrors.new     = '';
-    passwordErrors.confirm = '';
-  }
-};
-
 // ── Profile photo ──────────────────────────────────────────
 const profilePhotoInputRef    = ref<HTMLInputElement | null>(null);
 const profilePhotoPreview     = ref('');   // data-URL for local preview
@@ -881,13 +862,18 @@ const deleteExcelModal = () =>{
 }
 
 // ===== PASSWORD CHANGE - Usando Composable =====
-const showPasswordSection = ref(false);
 const { 
   passwordForm, 
   passwordErrors, 
   isChangingPassword, 
   changePassword: submitChangePassword
 } = useChangePassword();
+
+const isPasswordReady = computed(() => (
+  !!passwordForm.current &&
+  !!passwordForm.new &&
+  passwordForm.new === passwordForm.confirm
+));
 
 defineEmits(['quickSell']);
 </script>
@@ -1150,8 +1136,8 @@ defineEmits(['quickSell']);
   display: inline-block;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-brand-main, #06402B);
-  background: rgba(6, 64, 43, 0.08);
+  color: white;
+  background: var(--color-text-main);
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
   letter-spacing: 0.2px;
@@ -1261,7 +1247,7 @@ defineEmits(['quickSell']);
   background: white;
   border-radius: 20px;
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
   max-height: 90vh;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
@@ -1392,9 +1378,37 @@ defineEmits(['quickSell']);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
   overflow-y: auto;
   flex: 1;
+}
+
+.pm-body > .pm-field {
+  max-width: 100%;
+}
+
+.pm-profile-section {
+  margin-bottom: -0.375rem;
+}
+
+.pm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.pm-section-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-brand-main, #e6ab17);
+}
+
+.pm-section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .pm-field {
@@ -1428,16 +1442,22 @@ defineEmits(['quickSell']);
 .pm-footer {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid #f3f4f6;
+  background: #ffffff;
 }
 
 /* ===== PASSWORD CHANGE SECTION ===== */
 .pm-password-section {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.875rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fafbfc;
 }
 
 .pm-password-header {
@@ -1445,28 +1465,24 @@ defineEmits(['quickSell']);
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: default;
   font-family: inherit;
   font-size: 0.9375rem;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 700;
+  color: #1f2937;
   text-align: left;
 }
 
 .pm-password-header:hover {
-  border-color: #d1d5db;
-  background: #fafbfc;
+  background: transparent;
 }
 
 .pm-password-header:focus {
   outline: none;
-
-
 }
 
 .pm-password-header-content {
@@ -1480,35 +1496,26 @@ defineEmits(['quickSell']);
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #6b7280;
+  color: var(--color-brand-main, #e6ab17);
   stroke-width: 2;
 }
 
 .pm-password-label {
-  font-weight: 500;
-  color: #374151;
-}
-
-.pm-password-chevron {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  color: #9ca3af;
-  stroke-width: 2;
-  transition: transform 0.3s ease;
-}
-
-.pm-password-chevron-open {
-  transform: rotate(180deg);
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .pm-password-fields {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  animation: slideDown 0.2s ease;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.pm-password-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Error message shown below each password field */
@@ -1525,17 +1532,6 @@ defineEmits(['quickSell']);
 .pm-field-error::before {
   content: '⚠';
   font-size: 0.7rem;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .pm-btn-cancel {
