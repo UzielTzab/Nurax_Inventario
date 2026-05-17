@@ -68,7 +68,7 @@ class OnboardingService {
   }
 
   /**
-   * Wizard v2: crea tienda, configuracion inicial y proveedor.
+   * Wizard actual: crea tienda, configuracion inicial y proveedor.
    */
   async submitWizard(payload: OnboardingWizardPayload): Promise<OnboardingCompleteResponse> {
     try {
