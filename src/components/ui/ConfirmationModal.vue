@@ -97,7 +97,7 @@ const handleConfirm = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 12000;
 }
 
 .modal-container {

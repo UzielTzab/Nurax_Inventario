@@ -152,11 +152,11 @@
     <!-- Profile Edit Modal -->
     <Teleport to="body">
       <transition name="modal-fade">
-        <div v-if="showProfileEdit" class="profile-modal-backdrop">
+        <div v-if="showProfileEdit" class="profile-modal-backdrop" @click.self="requestCloseProfileEdit">
           <div class="profile-modal">
             <div class="pm-header">
               <h3 class="pm-title">Editar perfil</h3>
-              <button class="pm-close" @click="closeProfileEdit">
+              <button class="pm-close" @click="requestCloseProfileEdit" :disabled="isSavingProfile || isChangingPassword">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
@@ -192,18 +192,18 @@
                 <p class="pm-avatar-label">{{ profileForm.name }}</p>
                 <span class="dropdown-role-badge">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cliente' }}</span>
                 <div class="pm-photo-actions">
-                  <button class="pm-photo-btn" @click="profilePhotoInputRef?.click()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M1 8a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 8.07 3h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 16.07 6H17a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8Zm13.5 3a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM10 14a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" />
-                    </svg>
+                  <AppButton variant="outline" size="sm" :icon="ArrowUpTrayIcon" @click="profilePhotoInputRef?.click()">
                     Cambiar foto
-                  </button>
-                  <button class="pm-photo-btn pm-photo-btn-remove" 
+                  </AppButton>
+                  <AppButton
+                    variant="outline"
+                    size="sm"
+                    :icon="XMarkIcon"
                     v-if="profilePhotoPreview"
                     @click="removeProfilePhoto"
                   >
                     Quitar
-                  </button>
+                  </AppButton>
                 </div>
               </div>
             </div>
@@ -292,7 +292,7 @@
               </div>
             </div>
             <div class="pm-footer">
-              <AppButton variant="outline" @click="closeProfileEdit" :disabled="isSavingProfile || isChangingPassword">Cancelar</AppButton>
+              <AppButton variant="outline" @click="requestCloseProfileEdit" :disabled="isSavingProfile || isChangingPassword">Cancelar</AppButton>
               <AppButton 
                 variant="fill" 
                 @click="saveProfile" 
@@ -305,6 +305,20 @@
           </div>
         </div>
       </transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <ConfirmationModal
+        :is-open="showUnsavedProfileChangesModal"
+        type="warning"
+        title="Tienes cambios sin guardar"
+        message="Modificaste datos del perfil, contraseña o imagen. ¿Quieres guardar estos cambios antes de salir?"
+        confirm-text="Guardar cambios"
+        cancel-text="Descartar"
+        :is-loading="isSavingProfile"
+        @close="discardProfileChanges"
+        @confirm="saveAndCloseProfileChanges"
+      />
     </Teleport>
 
     <!-- Excel Modal -->
@@ -376,6 +390,7 @@ import type { UserProfileResponse } from '@/services/auth.service';
 import type Pusher from 'pusher-js';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 
 import {
   Bars3Icon,
@@ -418,10 +433,17 @@ const showPosActions = computed(() => {
   return !!currentUser.value && role !== 'admin';
 });
 
+const showUnsavedProfileChangesModal = ref(false);
+
 // Formulario de edición de perfil
 const profileForm = reactive({
   name: currentUser.value?.name ?? '',
   email: currentUser.value?.email ?? '',
+});
+const initialProfileSnapshot = reactive({
+  name: '',
+  email: '',
+  avatarUrl: '',
 });
 
 /**
@@ -443,18 +465,33 @@ const toggleProfileMenu = () => {
 
 const openProfileEdit = () => {
   // Use the sanitized displayName so 'string' placeholder never appears in the modal
-  profileForm.name  = displayName.value !== 'Usuario' ? displayName.value : '';
-  profileForm.email = currentUser.value?.email || '';
+  const initialName = displayName.value !== 'Usuario' ? displayName.value : '';
+  const initialEmail = currentUser.value?.email || '';
+  const initialAvatarUrl = currentUser.value?.avatar_url || '';
+
+  initialProfileSnapshot.name = initialName;
+  initialProfileSnapshot.email = initialEmail;
+  initialProfileSnapshot.avatarUrl = initialAvatarUrl;
+
+  profileForm.name = initialName;
+  profileForm.email = initialEmail;
   // Reset pending state
-  profilePhotoPreview.value = currentUser.value?.avatar_url || '';
+  profilePhotoPreview.value = initialAvatarUrl;
   profilePendingFile.value  = null;
   pendingRemovePhoto.value  = false;
+  showUnsavedProfileChangesModal.value = false;
   showProfileMenu.value = false;
   showProfileEdit.value = true;
 };
 
 /** Cierra el modal y resetea el formulario + errores de contraseña */
 const closeProfileEdit = () => {
+  profileForm.name = initialProfileSnapshot.name;
+  profileForm.email = initialProfileSnapshot.email;
+  profilePhotoPreview.value = initialProfileSnapshot.avatarUrl;
+  profilePendingFile.value = null;
+  pendingRemovePhoto.value = false;
+  showUnsavedProfileChangesModal.value = false;
   showProfileEdit.value = false;
   passwordForm.current = '';
   passwordForm.new     = '';
@@ -605,6 +642,47 @@ const removeProfilePhoto = () => {
 // ─────────────────────────────────────────────────────────────
 
 const isSavingProfile = ref(false);
+
+const hasPendingPasswordChanges = computed(() => (
+  !!passwordForm.current || !!passwordForm.new || !!passwordForm.confirm
+));
+
+const hasPendingProfileChanges = computed(() => (
+  profileForm.name.trim() !== initialProfileSnapshot.name.trim() ||
+  profileForm.email.trim() !== initialProfileSnapshot.email.trim()
+));
+
+const hasPendingPhotoChanges = computed(() => (
+  !!profilePendingFile.value ||
+  (pendingRemovePhoto.value && !!initialProfileSnapshot.avatarUrl)
+));
+
+const hasUnsavedProfileChanges = computed(() => (
+  hasPendingProfileChanges.value ||
+  hasPendingPasswordChanges.value ||
+  hasPendingPhotoChanges.value
+));
+
+const requestCloseProfileEdit = () => {
+  if (isSavingProfile.value || isChangingPassword.value) return;
+
+  if (!hasUnsavedProfileChanges.value) {
+    closeProfileEdit();
+    return;
+  }
+
+  showUnsavedProfileChangesModal.value = true;
+};
+
+const discardProfileChanges = () => {
+  showUnsavedProfileChangesModal.value = false;
+  closeProfileEdit();
+};
+
+const saveAndCloseProfileChanges = async () => {
+  showUnsavedProfileChangesModal.value = false;
+  await saveProfile();
+};
 
 const saveProfile = async () => {
   isSavingProfile.value = true;
@@ -1401,7 +1479,7 @@ defineEmits(['quickSell']);
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  color: var(--color-brand-main, #e6ab17);
+  color: #111827;
 }
 
 .pm-section-title {
@@ -1496,7 +1574,7 @@ defineEmits(['quickSell']);
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: var(--color-brand-main, #e6ab17);
+  color: #111827;
   stroke-width: 2;
 }
 
