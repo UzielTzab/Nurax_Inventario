@@ -443,7 +443,7 @@ const someProductsSelected = computed(() => {
 
 .search-input-header:focus {
   outline: none;
-  border-color: var(--color-brand-secondary);
+  border-color: var(--color-brand-main);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 

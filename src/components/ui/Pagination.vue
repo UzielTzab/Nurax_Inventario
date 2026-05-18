@@ -157,8 +157,8 @@ const onPageSizeChange = (value: string | number) => {
   color: #fff;
 }
 .page-btn--active:hover {
-  background: var(--color-brand-secondary, #06402B);
-  border-color: var(--color-brand-secondary, #06402B);
+  background: var(--color-brand-main, #06402B);
+  border-color: var(--color-brand-main, #06402B);
 }
 
 .page-ellipsis {

@@ -734,7 +734,7 @@ function onFiltersUpdate(newFilters: any) {
 }
 
 .view-active {
-  background: var(--color-brand-secondary) !important;
+  background: var(--color-brand-main) !important;
   color: white !important;
 }
 

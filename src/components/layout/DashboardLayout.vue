@@ -54,8 +54,8 @@
           </div>
 
           <!-- Vincular escaner movil -->
-          <!-- <button v-if="showPosActions" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-secondary); box-shadow: none;">
-            <QrCodeIcon class="w-5 h-5" :style="{color: 'var(--color-brand-secondary)'}" />
+          <!-- <button v-if="showPosActions" class="icon-btn scan-btn-premium" title="Vincular escaner movil" @click="openScannerPairingModal" style="color: var(--color-brand-main); box-shadow: none;">
+            <QrCodeIcon class="w-5 h-5" :style="{color: 'var(--color-brand-main)'}" />
           </button> -->
 
           <!-- Divisor -->
