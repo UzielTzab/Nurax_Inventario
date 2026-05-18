@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <DashboardLayout>
     <div class="sales-history-container">
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -10,7 +10,7 @@
           <div class="period-pills">
             <button class="period-pill" :class="{ active: selectedPeriod === 'today' }" @click="selectedPeriod = 'today'">Hoy</button>
             <button class="period-pill" :class="{ active: selectedPeriod === 'yesterday' }" @click="selectedPeriod = 'yesterday'">Ayer</button>
-            <button class="period-pill" :class="{ active: selectedPeriod === 'last7days' }" @click="selectedPeriod = 'last7days'">Últimos 7 días</button>
+            <button class="period-pill" :class="{ active: selectedPeriod === 'last7days' }" @click="selectedPeriod = 'last7days'">Ãšltimos 7 dÃ­as</button>
             <button class="period-pill" :class="{ active: selectedPeriod === 'custom' }" @click="selectedPeriod = 'custom'">
               Personalizado
               <svg xmlns="http://www.w3.org/2000/svg" class="calendar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -44,7 +44,7 @@
                   class="search-input-bar compact"
                   placeholder="Buscar ID o producto..."
                 />
-                <button v-if="searchQuery" class="clear-search" @click="searchQuery = ''" title="Limpiar búsqueda">
+                <button v-if="searchQuery" class="clear-search" @click="searchQuery = ''" title="Limpiar bÃºsqueda">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -60,7 +60,7 @@
                     min="0"
                     step="100"
                     class="amount-input compact"
-                    placeholder="Mínimo"
+                    placeholder="MÃ­nimo"
                   />
                 </div>
               </div>
@@ -91,7 +91,7 @@
               <tr>
                 <th>ID Venta</th>
                 <th>Hora</th>
-                <th>ID Transacción</th>
+                <th>ID TransacciÃ³n</th>
                 <th>Productos</th>
                 <th>Total</th>
                 <th>Estado</th>
@@ -104,17 +104,17 @@
                 <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
                   <td class="font-mono text-xs trx-id sale-id font-bold">#{{ getSaleDisplayId(sale) }}</td>
                   <td>{{ formatTime(sale.created_at) }}</td>
-                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-text-product-name--color-text-main);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
+                  <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-text-product-name);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
 
                   <!-- Columna de productos con cantidades -->
                   <td>
                     <div class="product-summary">
                       <span class="product-first">
-                        <span class="qty-pill">{{ sale.items?.[0]?.quantity ?? 1 }}×</span>
+                        <span class="qty-pill">{{ sale.items?.[0]?.quantity ?? 1 }}Ã—</span>
                         {{ sale.items?.[0]?.product_name || 'Venta General' }}
                       </span>
                       <span v-if="sale.items && sale.items.length > 1" class="more-items">
-                        +{{ sale.items.length - 1 }} producto{{ sale.items.length - 1 !== 1 ? 's' : '' }} más
+                        +{{ sale.items.length - 1 }} producto{{ sale.items.length - 1 !== 1 ? 's' : '' }} mÃ¡s
                       </span>
                     </div>
                   </td>
@@ -138,7 +138,7 @@
               </template>
             </tbody>
           </table>
-          <!-- Paginación usando el componente reutilizable -->
+          <!-- PaginaciÃ³n usando el componente reutilizable -->
           <Pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -189,7 +189,7 @@ const selectedPeriod = ref('today');
 const customStartDate = ref('');
 const customEndDate = ref('');
 
-// Watcher para refrescar cuando se completa una venta desde otra sección
+// Watcher para refrescar cuando se completa una venta desde otra secciÃ³n
 let unsubscribeSaleCompleted: (() => void) | null = null;
 
 onMounted(async () => {
@@ -197,12 +197,12 @@ onMounted(async () => {
   loadSettings(); // Pre-carga los datos del negocio para reimprimir tickets
   
   // Suscribirse a cambios de lastCompletedSaleTimestamp en el store
-  // Cuando una venta se completa desde otra sección, este timestamp cambia
+  // Cuando una venta se completa desde otra secciÃ³n, este timestamp cambia
   unsubscribeSaleCompleted = watch(
     () => salesStore.lastCompletedSaleTimestamp,
     async (newTimestamp) => {
       if (newTimestamp > 0) {
-        // Una venta fue completada, refrescar la página actual
+        // Una venta fue completada, refrescar la pÃ¡gina actual
         try {
           await fetchCurrentPage();
         } catch (err) {
@@ -220,7 +220,7 @@ onUnmounted(() => {
   }
 });
 
-// ── Búsqueda y filtros ──
+// â”€â”€ BÃºsqueda y filtros â”€â”€
 
 const drawerOpen = ref(false);
 const selectedSale = ref<Sale | null>(null);
@@ -230,11 +230,11 @@ const openDrawer = (sale: Sale) => {
   drawerOpen.value = true;
 };
 
-// ── Búsqueda y filtros ──
+// â”€â”€ BÃºsqueda y filtros â”€â”€
 const searchQuery = ref('');
 const minAmount = ref(0);
 
-// ── Paginación ──
+// â”€â”€ PaginaciÃ³n â”€â”€
 const currentPage = ref(1);
 const pageSize = ref(10);
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -243,14 +243,14 @@ const fetchCurrentPage = () => {
   return salesStore.fetchSales(currentPage.value, pageSize.value, searchQuery.value.trim());
 };
 
-// Watcher para cambios de página - refetchear desde el backend
+// Watcher para cambios de pÃ¡gina - refetchear desde el backend
 watch(currentPage, (newPage) => {
   salesStore.fetchSales(newPage, pageSize.value, searchQuery.value.trim());
 });
 
 // Watcher para cambios de pageSize - refetchear desde el backend
 watch(pageSize, (newSize) => {
-  currentPage.value = 1; // Resetear a página 1
+  currentPage.value = 1; // Resetear a pÃ¡gina 1
   salesStore.fetchSales(1, newSize, searchQuery.value.trim());
 });
 
@@ -304,7 +304,7 @@ const getSaleDisplayId = (sale: Sale): string | number => {
   return sale.id;
 };
 
-// ── Reimprimir ticket desde historial ──
+// â”€â”€ Reimprimir ticket desde historial â”€â”€
 const printSaleTicket = (sale: Sale) => {
   const html = buildTicketHtml({
     store: storeSettings.value,
@@ -322,7 +322,7 @@ const printSaleTicket = (sale: Sale) => {
   openTicketPrint(html);
 };
 
-// ── Revertir Venta ──
+// â”€â”€ Revertir Venta â”€â”€
 const { enqueueSnackbar } = useSnackbar();
 const confirmModal = ref({
   isOpen: false,
@@ -337,9 +337,9 @@ const handleCancel = (saleId: string | number) => {
   confirmModal.value = {
     isOpen: true,
     title: 'Revertir Venta',
-    message: '¿Estás seguro de que deseas revertir esta venta? Se actualizará el inventario sumando de vuelta el stock de los productos. Esta acción no se puede deshacer.',
+    message: 'Â¿EstÃ¡s seguro de que deseas revertir esta venta? Se actualizarÃ¡ el inventario sumando de vuelta el stock de los productos. Esta acciÃ³n no se puede deshacer.',
     type: 'danger',
-    confirmText: 'Sí, Revertir',
+    confirmText: 'SÃ­, Revertir',
     saleIdToCancel: saleId
   };
 };
@@ -357,7 +357,7 @@ const executeCancel = async () => {
         message: 'La venta ha sido cancelada y el stock restaurado exitosamente.',
         duration: 3000
       });
-      // Refetchear la página actual
+      // Refetchear la pÃ¡gina actual
       await fetchCurrentPage();
     } else {
       enqueueSnackbar({
@@ -370,7 +370,7 @@ const executeCancel = async () => {
   }
 };
 
-// ── Filtered Sales Logic ──
+// â”€â”€ Filtered Sales Logic â”€â”€
 const filteredSales = computed(() => {
   const now = new Date();
 
@@ -390,7 +390,7 @@ const filteredSales = computed(() => {
   return sales.value.filter(sale => {
     const saleDate = new Date(sale.created_at);
 
-    // 1. Filtro de período
+    // 1. Filtro de perÃ­odo
     let passesPeriod = true;
     if (selectedPeriod.value === 'today') passesPeriod = isSameDay(saleDate, now);
     else if (selectedPeriod.value === 'yesterday') passesPeriod = isSameDay(saleDate, startOfYesterday);
@@ -407,7 +407,7 @@ const filteredSales = computed(() => {
     }
     if (!passesPeriod) return false;
 
-    // 2. Filtro de búsqueda por ID o nombre de producto
+    // 2. Filtro de bÃºsqueda por ID o nombre de producto
     if (q) {
       const matchesId =
         String(sale.id).toLowerCase().includes(q) ||
@@ -417,7 +417,7 @@ const filteredSales = computed(() => {
       if (!matchesId && !matchesProduct) return false;
     }
 
-    // 3. Filtro de monto mínimo
+    // 3. Filtro de monto mÃ­nimo
     if (minAmount.value > 0) {
       const total = Number(sale.total_amount);
       if (isNaN(total) || total < minAmount.value) return false;
@@ -427,7 +427,7 @@ const filteredSales = computed(() => {
   });
 });
 
-// Ya no necesitamos paginación local porque el backend la maneja
+// Ya no necesitamos paginaciÃ³n local porque el backend la maneja
 // paginatedSales es lo que se muestra en la tabla
 const paginatedSales = computed(() => filteredSales.value);
 
@@ -436,7 +436,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
 
 <style scoped>
 .sales-history-container {
-  background: var(--color-card-stats-fill);
+  background: var(--color-background-secondary);
   padding: 1.75rem 2rem;
   max-width: 100%;
   min-height: 100vh;
@@ -568,7 +568,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   padding-top: 0.5rem;
 }
 
-/* ── Filtros de Píldoras (Pills) ── */
+/* â”€â”€ Filtros de PÃ­ldoras (Pills) â”€â”€ */
 .period-filter-section {
   display: flex;
   flex-direction: column;
@@ -614,7 +614,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   height: 16px;
 }
 
-/* ── Inputs Fechas Personalizadas ── */
+/* â”€â”€ Inputs Fechas Personalizadas â”€â”€ */
 .custom-dates {
   display: flex;
   align-items: center;
@@ -728,7 +728,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   height: 16px;
 }
 
-/* ── Columna de productos ── */
+/* â”€â”€ Columna de productos â”€â”€ */
 .product-summary {
   display: flex;
   align-items: center;
@@ -767,13 +767,13 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   flex-shrink: 0;
 }
 
-/* ── Total ── */
+/* â”€â”€ Total â”€â”€ */
 .total-cell {
   font-weight: 700;
   color: #111827;
 }
 
-/* ── TRX ID ── */
+/* â”€â”€ TRX ID â”€â”€ */
 .trx-id {
   font-family: 'Courier New', monospace;
   font-size: 0.78rem;
@@ -785,7 +785,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   color: #2563EB;
 }
 
-/* ── Fila principal ── */
+/* â”€â”€ Fila principal â”€â”€ */
 .main-row {
   transition: background 0.15s ease;
 }
@@ -796,7 +796,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   border-bottom: none;
 }
 
-/* ── Botón ojo ── */
+/* â”€â”€ BotÃ³n ojo â”€â”€ */
 .btn-icon {
   background: none;
   border: none;
@@ -823,7 +823,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   height: 20px;
 }
 
-/* ── Fila de detalle ── */
+/* â”€â”€ Fila de detalle â”€â”€ */
 .detail-row td {
   padding: 0;
   background: #F8FAFF;
@@ -869,7 +869,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   color: #1F2937;
 }
 
-/* ── Animación fila detalle ── */
+/* â”€â”€ AnimaciÃ³n fila detalle â”€â”€ */
 .detail-row-enter-active,
 .detail-row-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -886,7 +886,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Buscador y Monto Compacto ── */
+/* â”€â”€ Buscador y Monto Compacto â”€â”€ */
 .search-wrapper {
   position: relative;
   display: flex;
@@ -1010,7 +1010,7 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   color: #DC2626;
 }
 
-/* ── Detalle Header y Botón Reimprimir ── */
+/* â”€â”€ Detalle Header y BotÃ³n Reimprimir â”€â”€ */
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -1128,3 +1128,4 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   }
 }
 </style>
+

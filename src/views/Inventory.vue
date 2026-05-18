@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <DashboardLayout @quick-sell="handleQuickSell">
 
 
@@ -9,7 +9,7 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Inventario</h1>
-            <p class="page-subtitle">Administración de inventario y ventas</p>
+            <p class="page-subtitle">AdministraciÃ³n de inventario y ventas</p>
           </div>
           <div class="header-actions">
             <AppButton variant="fill" :icon="PlusIcon" @click="handleAddProduct">
@@ -48,10 +48,10 @@
         <!-- Product Table (with integrated filter panel) -->
         <template v-else>
           <div v-if="pagination.count === 0" class="inventory-empty-state">
-            <div class="empty-state-icon">📦</div>
+            <div class="empty-state-icon">ðŸ“¦</div>
             <h3 class="empty-state-title">Comienza con tu primer producto</h3>
             <p class="empty-state-text">
-              Tu inventario está vacío. Puedes crear un producto manualmente o importar un archivo Excel.
+              Tu inventario estÃ¡ vacÃ­o. Puedes crear un producto manualmente o importar un archivo Excel.
             </p>
             <div class="empty-state-actions">
               <AppButton variant="fill" :icon="PlusIcon" @click="handleAddProduct">Crear Producto</AppButton>
@@ -165,7 +165,7 @@ const RestockModal = defineAsyncComponent(() => import('@/components/RestockModa
 const { enqueueSnackbar } = useSnackbar();
 const { currentUser } = useAuth();
 
-// Composables para paginación y filtros
+// Composables para paginaciÃ³n y filtros
 const {
   products,
   isLoading,
@@ -181,7 +181,7 @@ const {
   allSkus,
 } = useProducts();
 
-// Composable para categorías
+// Composable para categorÃ­as
 const {
   categories: allCategories,
   sortedCategories,
@@ -208,16 +208,16 @@ onMounted(async () => {
   await salesStore.fetchSales();
   
   // Suscribirse a cambios de ventas completadas en el store
-  // Cuando una venta se completa desde otra sección, este timestamp cambia
+  // Cuando una venta se completa desde otra secciÃ³n, este timestamp cambia
   unsubcribeSaleCompleted = watch(
     () => salesStore.lastCompletedSaleTimestamp,
     async (newTs, oldTs) => {
       if (!newTs || newTs === oldTs) return;
 
-      // Evitar refrescar si se está creando/editando un producto activamente
+      // Evitar refrescar si se estÃ¡ creando/editando un producto activamente
       if (showAddProductModal?.value) return;
 
-      // Resetear a página 1 para mostrar cambios de stock
+      // Resetear a pÃ¡gina 1 para mostrar cambios de stock
       pagination.value.currentPage = 1;
 
       try {
@@ -225,7 +225,7 @@ onMounted(async () => {
         enqueueSnackbar({
           type: 'info',
           title: 'Stock actualizado',
-          message: 'El inventario se refrescó tras completarse una venta.',
+          message: 'El inventario se refrescÃ³ tras completarse una venta.',
           duration: 1400
         });
       } catch (err) {
@@ -248,13 +248,13 @@ onMounted(async () => {
   const channelName = `pos-user-${userId}`;
   channel = pusher.subscribe(channelName);
 
-  // Escuchar evento INVENTORY_UPDATED y refrescar productos automáticamente
+  // Escuchar evento INVENTORY_UPDATED y refrescar productos automÃ¡ticamente
   channel.bind('INVENTORY_UPDATED', async (data: any) => {
-    console.log("[Inventory] 📦 Evento INVENTORY_UPDATED recibido:", data);
-    console.log("[Inventory] 🔄 Reseteando a página 1 y limpiando filtros...");
+    console.log("[Inventory] ðŸ“¦ Evento INVENTORY_UPDATED recibido:", data);
+    console.log("[Inventory] ðŸ”„ Reseteando a pÃ¡gina 1 y limpiando filtros...");
     
     try {
-      // Resetear a página 1 para asegurar que el nuevo producto sea visible
+      // Resetear a pÃ¡gina 1 para asegurar que el nuevo producto sea visible
       pagination.value.currentPage = 1;
       
       // Limpiar filtros activos para mostrar TODOS los productos nuevos
@@ -264,28 +264,28 @@ onMounted(async () => {
       apiFilters.value.stock_status = '';
       apiFilters.value.min_price = '';
       apiFilters.value.max_price = '';
-      // Mantener el ordering por última creación
+      // Mantener el ordering por Ãºltima creaciÃ³n
       apiFilters.value.ordering = '-created_at';
       
-      console.log("[Inventory] ⏳ Refrescando tabla con: GET /api/products/?page=1&page_size=10&ordering=-created_at");
+      console.log("[Inventory] â³ Refrescando tabla con: GET /api/products/?page=1&page_size=10&ordering=-created_at");
       await fetchProducts();
       
-      console.log("[Inventory] ✅ Tabla actualizada exitosamente");
-      console.log("[Inventory] 📊 Total de productos:", pagination.value.count);
-      console.log("[Inventory] 👀 Productos en vista (página 1):", products.value.length);
+      console.log("[Inventory] âœ… Tabla actualizada exitosamente");
+      console.log("[Inventory] ðŸ“Š Total de productos:", pagination.value.count);
+      console.log("[Inventory] ðŸ‘€ Productos en vista (pÃ¡gina 1):", products.value.length);
       
       enqueueSnackbar({
         type: 'info',
         title: 'Inventario Actualizado',
-        message: 'Los productos se han refrescado automáticamente',
+        message: 'Los productos se han refrescado automÃ¡ticamente',
         duration: 2000
       });
     } catch (err) {
-      console.error("[Inventory] ❌ Error refrescando productos:", err);
+      console.error("[Inventory] âŒ Error refrescando productos:", err);
     }
   });
 
-  console.log(`[Inventory] 🎧 Listening para cambios en canal: ${channelName}`);
+  console.log(`[Inventory] ðŸŽ§ Listening para cambios en canal: ${channelName}`);
 });
 
 onUnmounted(() => {
@@ -296,7 +296,7 @@ onUnmounted(() => {
   }
 
   if (channel && pusher) {
-    console.log("[Inventory] 🔌 Desconectando Pusher");
+    console.log("[Inventory] ðŸ”Œ Desconectando Pusher");
     pusher.unsubscribe(`pos-user-${currentUser.value?.id || 1}`);
     pusher.disconnect();
     pusher = null;
@@ -360,8 +360,8 @@ const handleSaveNewProduct = async (newProduct: any) => {
     if (result.success) {
       enqueueSnackbar({
         type: 'success',
-        title: 'Producto guardado con éxito',
-        message: `${newProduct.name} se agregó al inventario.`,
+        title: 'Producto guardado con Ã©xito',
+        message: `${newProduct.name} se agregÃ³ al inventario.`,
         duration: 3000
       });
       if (!newProduct.saveAndCreateAnother) {
@@ -447,9 +447,9 @@ const handleDeleteProduct = (product: TableProduct) => {
   confirmationState.value = {
     isOpen: true,
     title: 'Eliminar Producto',
-    message: `¿Estás seguro de que deseas eliminar ${product.name}?`,
+    message: `Â¿EstÃ¡s seguro de que deseas eliminar ${product.name}?`,
     type: 'danger',
-    confirmText: 'Sí, eliminar',
+    confirmText: 'SÃ­, eliminar',
     onConfirm: async () => {
       const result = await productStore.deleteProduct(product.id);
       if (result.success) {
@@ -464,7 +464,7 @@ const handleDeleteProduct = (product: TableProduct) => {
             fetchProducts();
             enqueueSnackbar({
               type: 'info',
-              title: 'Acción deshecha',
+              title: 'AcciÃ³n deshecha',
               message: `El producto ${product.name} ha sido restaurado.`,
               duration: 3000
             });
@@ -489,9 +489,9 @@ const handleBulkDelete = (ids: string[]) => {
   confirmationState.value = {
     isOpen: true,
     title: 'Eliminar Productos',
-    message: `¿Estás seguro de que deseas eliminar ${ids.length} productos seleccionados?`,
+    message: `Â¿EstÃ¡s seguro de que deseas eliminar ${ids.length} productos seleccionados?`,
     type: 'danger',
-    confirmText: `Sí, eliminar ${ids.length} productos`,
+    confirmText: `SÃ­, eliminar ${ids.length} productos`,
     onConfirm: async () => {
       // Store products to restore before deleting
       const productsToRestore = products.value.filter(p => ids.includes(String(p.id)));
@@ -509,7 +509,7 @@ const handleBulkDelete = (ids: string[]) => {
             fetchProducts();
             enqueueSnackbar({
               type: 'info',
-              title: 'Acción deshecha',
+              title: 'AcciÃ³n deshecha',
               message: `Se han restaurado ${ids.length} productos.`,
               duration: 3000
             });
@@ -520,7 +520,7 @@ const handleBulkDelete = (ids: string[]) => {
       } else {
         enqueueSnackbar({
           type: 'error',
-          title: 'Error al eliminar múltiples',
+          title: 'Error al eliminar mÃºltiples',
           message: result.error || 'No se pudieron eliminar todos los productos seleccionados.',
           duration: 5000
         });
@@ -585,7 +585,7 @@ const handleInlineStockAdjustment = async (product: TableProduct, newStock: numb
 
 // Actualizar filtros y llamar API
 function onFiltersUpdate(newFilters: any) {
-  // Resetear a página 1 cuando cambian los filtros (para consistency)
+  // Resetear a pÃ¡gina 1 cuando cambian los filtros (para consistency)
   pagination.value.currentPage = 1;
   
   const mappedFilters: any = {
@@ -620,7 +620,7 @@ function onFiltersUpdate(newFilters: any) {
 }
 
 .inventory-inner {
-  background: var(--color-card-stats-fill);
+  background: var(--color-background-secondary);
   max-width: 100%;
   min-height: 100vh;
   margin: 0 auto;
@@ -1013,3 +1013,4 @@ function onFiltersUpdate(newFilters: any) {
   }
 }
 </style>
+

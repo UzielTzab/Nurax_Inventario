@@ -259,10 +259,10 @@ defineProps<{
 .sidebar {
   --nav-item-hover-bg: #4c5663;
   --nav-item-focus-bg: rgba(0, 0, 0, 0.35);
-  --nav-item-default-bg: var(--color-text-main);
+  --nav-item-default-bg: var(--color-sidebar-bg);
   --nav-item-text-color: rgba(255, 255, 255, 0.5);
   width: 100%;
-  background: var(--color-text-main);
+  background: var(--color-sidebar-bg);
   color: var(--color-background);
   display: flex;
   flex-direction: column;
@@ -314,7 +314,7 @@ defineProps<{
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--color-brand-main-dark);
+  color: var(--color-brand-main);
   line-height: 1;
 }
 

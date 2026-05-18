@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <DashboardLayout>
     <div class="receivables-container">
       <!-- Header -->
@@ -8,7 +8,7 @@
             <WalletIcon class="w-8 h-8 text-brand-main inline-block mr-2" />
             Cuentas por Cobrar
           </h1>
-          <p class="page-subtitle">Gestiona los apartados y créditos pendientes de tus clientes</p>
+          <p class="page-subtitle">Gestiona los apartados y crÃ©ditos pendientes de tus clientes</p>
         </div>
         <div style="display: flex; gap: 1rem;">
           <AppButton variant="outline" @click="showNewClientDrawer = true">
@@ -77,7 +77,7 @@
             <input 
               type="text" 
               v-model="searchQuery"
-              :placeholder="activeView === 'clients' ? 'Buscar cliente registrado...' : 'Buscar por cliente, teléfono o ticket...'" 
+              :placeholder="activeView === 'clients' ? 'Buscar cliente registrado...' : 'Buscar por cliente, telÃ©fono o ticket...'" 
               class="search-input"
             />
           </div>
@@ -119,7 +119,7 @@
           <WalletIcon class="empty-icon" style="width: 4rem; height: 4rem; color: #d1d5db; margin-bottom: 1rem;" />
           <h3 class="empty-title" style="font-size: 1.25rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">Todo liquidado o sin resultados</h3>
           <p class="empty-subtitle" style="color: #6b7280; text-align: center; max-width: 450px; margin-bottom: 1.5rem; line-height: 1.5;">
-            No hay apartados ni créditos vigentes. Los fiados que registres en el Punto de Venta aparecerán aquí.
+            No hay apartados ni crÃ©ditos vigentes. Los fiados que registres en el Punto de Venta aparecerÃ¡n aquÃ­.
           </p>
           <AppButton variant="outline" @click="$router.push('/dashboard/sales')">
             Ir al Punto de Venta
@@ -130,7 +130,7 @@
           <WalletIcon class="empty-icon" style="width: 4rem; height: 4rem; color: #d1d5db; margin-bottom: 1rem;" />
           <h3 class="empty-title" style="font-size: 1.25rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">Sin clientes registrados</h3>
           <p class="empty-subtitle" style="color: #6b7280; text-align: center; max-width: 450px; margin-bottom: 1.5rem; line-height: 1.5;">
-            Los clientes que registres para fiados y apartados aparecerán aquí.
+            Los clientes que registres para fiados y apartados aparecerÃ¡n aquÃ­.
           </p>
           <AppButton variant="fill" @click="showNewClientDrawer = true">
             + Nuevo Cliente
@@ -210,7 +210,7 @@
             <thead>
               <tr>
                 <th>Cliente</th>
-                <th>Límite de crédito</th>
+                <th>LÃ­mite de crÃ©dito</th>
                 <th>Deuda actual</th>
                 <th>Estado</th>
                 <th style="text-align: right;">Acciones</th>
@@ -336,8 +336,8 @@
                   </div>
                 </div>
                 <div class="input-section">
-                  <label class="input-label">Motivo o Descripción *</label>
-                  <input type="text" v-model="manualDebt.description" class="payment-input" style="padding-left: 1rem;" placeholder="Ej: Préstamo, Venta pasada" />
+                  <label class="input-label">Motivo o DescripciÃ³n *</label>
+                  <input type="text" v-model="manualDebt.description" class="payment-input" style="padding-left: 1rem;" placeholder="Ej: PrÃ©stamo, Venta pasada" />
                 </div>
                 <div style="margin-top: 2rem;">
                   <AppButton variant="fill" fullWidth :loading="isCreatingDebt" :disabled="!manualDebt.customer_id || !manualDebt.total_amount" @click="submitManualDebt">Crear Adeudo</AppButton>
@@ -442,10 +442,10 @@ watch(activeView, async (view) => {
   
   // En 'receivables', hacer refetch PRIMERO antes de limpiar searchQuery
   await salesStore.fetchReceivables(1, pageSize.value, '');
-  searchQuery.value = ''; // Limpiar después de refetch
+  searchQuery.value = ''; // Limpiar despuÃ©s de refetch
 });
 
-// Watcher para búsqueda con debounce - solo en receivables
+// Watcher para bÃºsqueda con debounce - solo en receivables
 watch(searchQuery, debounce((newQ: string) => {
   if (activeView.value === 'clients') return;
   currentPage.value = 1;
@@ -497,7 +497,7 @@ const getTicketId = (sale: any) => {
 };
 
 const getWhatsAppReminderUrl = (sale: any) => {
-  const message = `Hola ${sale.customer_name || ''}, te recordamos amablemente que tienes un saldo pendiente de $${Number(getBalanceDue(sale)).toFixed(2)} por tu apartado ${getTicketId(sale)}. ¡Gracias por tu preferencia!`;
+  const message = `Hola ${sale.customer_name || ''}, te recordamos amablemente que tienes un saldo pendiente de $${Number(getBalanceDue(sale)).toFixed(2)} por tu apartado ${getTicketId(sale)}. Â¡Gracias por tu preferencia!`;
   return `https://wa.me/${cleanPhone(sale.customer_phone)}?text=${encodeURIComponent(message)}`;
 };
 
@@ -513,7 +513,7 @@ const cleanPhone = (phone: string) => {
   return phone.replace(/\D/g, '');
 };
 
-// Función para determinar si un pago está completamente pagado
+// FunciÃ³n para determinar si un pago estÃ¡ completamente pagado
 const isPaid = (sale: any): boolean => {
   return getBalanceDue(sale) <= 0;
 };
@@ -657,7 +657,7 @@ const submitManualDebt = async () => {
       enqueueSnackbar({ type: 'error', title: 'Error', message: result.error || 'No se pudo registrar el adeudo.' });
     }
   } catch (err) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Hubo un error de conexión.' });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Hubo un error de conexiÃ³n.' });
   } finally {
     isCreatingDebt.value = false;
   }
@@ -666,7 +666,7 @@ const submitManualDebt = async () => {
 
 <style scoped>
 .receivables-container {
-  background: var(--color-card-stats-fill);
+  background: var(--color-background-secondary);
   padding: 1.75rem 2rem;
   max-width: 100%;
   min-height: 100vh;
@@ -1117,3 +1117,4 @@ const submitManualDebt = async () => {
   opacity: 0;
 }
 </style>
+

@@ -83,7 +83,7 @@ const trendClass = computed(() => {
 .stats-value {
   font-size: 2.1rem;
   font-weight: 800;
-  color: var(--color-brand-secondarys);
+  color: var(--color-text-main);
   line-height: 1;
 }
 

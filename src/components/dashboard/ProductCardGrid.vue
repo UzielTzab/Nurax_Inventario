@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="card-grid">
     <TransitionGroup name="card-appear" tag="div" class="card-grid-inner">
       <div
@@ -146,9 +146,9 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   padding: 1.5rem;
 }
 
-/* ── Card ── */
+/* â”€â”€ Card â”€â”€ */
 .product-card {
-  background: var(--color-card-stats-fill);
+  background: var(--color-background-secondary);
   border: 1.5px solid #e5e7eb;
   border-radius: 24px;
   overflow: hidden;
@@ -170,7 +170,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 }
 .card-out-of-stock { border-color: var(--color-card-border); background: #fef5f5; }
 
-/* ── Image area ── */
+/* â”€â”€ Image area â”€â”€ */
 .card-image-wrap {
   position: relative;
   width: 100%;
@@ -187,14 +187,14 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .card-empty-icon { width: 44px; height: 44px; color: #16a34a; }
 .card-status-badge { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.7rem; }
 
-/* ── Body ── */
+/* â”€â”€ Body â”€â”€ */
 .card-body { padding: 1.25rem 1.25rem 1.375rem; flex: 1; display: flex; flex-direction: column; gap: 0.875rem; }
 .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
 .card-titles { min-width: 0; }
 .card-name { font-size: 0.95rem; font-weight: 800; color: #06402B; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.5px 1px rgba(6, 64, 43, 0.08); }
 .card-category { font-size: 0.75rem; color: var(--color-text-secondary); font-weight: 500; }
 
-/* ── Meta grid ── */
+/* â”€â”€ Meta grid â”€â”€ */
 .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; padding-top: 0.625rem; border-top: 1.5px solid #f0fdf4; }
 .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
 .meta-sku { grid-column: 1 / -1; padding-top: 0.375rem; border-top: 1.5px solid #f0fdf4; margin-top: 0.375rem; }
@@ -204,7 +204,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .stock-zero { color: #dc2626; }
 .stock-low { color: #ea580c; }
 
-/* ── Restock button ── */
+/* â”€â”€ Restock button â”€â”€ */
 .btn-restock-card {
   display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.55rem 0.65rem; border-radius: 11px;
@@ -214,7 +214,7 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .btn-restock-card:hover { background: #dcfce7; border-color: #15803d; color: #15803d; }
 .restock-icon { width: 15px; height: 15px; }
 
-/* ── Dots menu ── */
+/* â”€â”€ Dots menu â”€â”€ */
 .card-menu-wrap { position: relative; }
 .btn-card-dots {
   display: flex; align-items: center; justify-content: center; gap: 3px;
@@ -239,14 +239,14 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
 .dd-danger .dd-icon { color: #ef4444; }
 .dd-danger:hover { background: #fef2f2; }
 
-/* ── Transitions ── */
+/* â”€â”€ Transitions â”€â”€ */
 .menu-pop-enter-active, .menu-pop-leave-active { transition: all 0.15s ease; }
 .menu-pop-enter-from, .menu-pop-leave-to { opacity: 0; transform: scale(0.92) translateY(-4px); }
 
 .card-appear-enter-active { transition: all 0.3s ease; }
 .card-appear-enter-from { opacity: 0; transform: translateY(12px); }
 
-/* ── Empty ── */
+/* â”€â”€ Empty â”€â”€ */
 .empty-cards { display: flex; flex-direction: column; align-items: center; padding: 4rem 2rem; color: #9ca3af; text-align: center; }
 .empty-cards .empty-icon { width: 56px; height: 56px; margin-bottom: 1rem; }
 .empty-cards h3 { font-size: 1.125rem; font-weight: 600; color: #6b7280; margin: 0 0 0.5rem; }
@@ -281,3 +281,4 @@ const getStatusText = (s: number) => s === 0 ? 'Sin Stock' : s <= 10 ? 'Stock Ba
   .card-name { font-size: 0.8rem; }
 }
 </style>
+

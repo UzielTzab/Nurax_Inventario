@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <DashboardLayout>
     <div class="settings-wrapper">
       <div class="settings-inner">
@@ -6,7 +6,7 @@
         <!-- Header -->
         <div class="page-header">
           <div>
-            <h1 class="page-title">Configuración del Negocio</h1>
+            <h1 class="page-title">ConfiguraciÃ³n del Negocio</h1>
             <p class="page-subtitle">Administra la identidad de tu tienda y personaliza la experiencia de tus clientes en los recibos.</p>
           </div>
         </div>
@@ -44,11 +44,11 @@
             </template>
 
             <template v-else>
-            <!-- SECTION 1: Información General -->
+            <!-- SECTION 1: InformaciÃ³n General -->
             <div class="settings-card">
               <div class="card-header">
                 <HomeModernIcon class="home-icon-style"/>
-                <h2>Información General</h2>
+                <h2>InformaciÃ³n General</h2>
               </div>
 
               <div class="form-grid">
@@ -75,21 +75,21 @@
                 <div class="input-group">
                   <AppSelect
                     v-model="settings.currency"
-                    label="Símbolo de Moneda"
+                    label="SÃ­mbolo de Moneda"
                     placeholder="Selecciona moneda"
                     :options="[
                       { value: '$ MXN', label: '$ MXN (Peso Mexicano)' },
-                      { value: '$ USD', label: '$ USD (Dólar Estadounidense)' },
-                      { value: '€ EUR', label: '€ EUR (Euro)' }
+                      { value: '$ USD', label: '$ USD (DÃ³lar Estadounidense)' },
+                      { value: 'â‚¬ EUR', label: 'â‚¬ EUR (Euro)' }
                     ]"
                   />
                 </div>
 
-                <!-- Dirección Física -->
+                <!-- DirecciÃ³n FÃ­sica -->
                 <div class="input-group full-width">
                   <AppInput
                     v-model="settings.address"
-                    label="Dirección Física"
+                    label="DirecciÃ³n FÃ­sica"
                     placeholder="Ej. Av. Reforma 123, Col. Centro, CDMX"
                   />
                 </div>
@@ -101,11 +101,11 @@
                     <div class="country-code-select">
                       <AppSelect
                         v-model="settings.countryCode"
-                        placeholder="Selecciona país"
+                        placeholder="Selecciona paÃ­s"
                         :options="[
-                          { value: '+52', label: '🇲🇽 México (+52)' },
-                          { value: '+1', label: '🇺🇸 USA (+1)' },
-                          { value: '+34', label: '🇪🇸 España (+34)' }
+                          { value: '+52', label: 'ðŸ‡²ðŸ‡½ MÃ©xico (+52)' },
+                          { value: '+1', label: 'ðŸ‡ºðŸ‡¸ USA (+1)' },
+                          { value: '+34', label: 'ðŸ‡ªðŸ‡¸ EspaÃ±a (+34)' }
                         ]"
                       />
                     </div>
@@ -121,7 +121,7 @@
               </div>
             </div>
 
-            <!-- SECTION 2: Personalización del Ticket -->
+            <!-- SECTION 2: PersonalizaciÃ³n del Ticket -->
             <div class="settings-card">
               <div class="card-header">
                 <div class="icon-box brand">
@@ -130,7 +130,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                   </svg>
                 </div>
-                <h2>Personalización del Ticket</h2>
+                <h2>PersonalizaciÃ³n del Ticket</h2>
               </div>
 
               <div class="form-grid">
@@ -168,7 +168,7 @@
                         </svg>
                       </div>
                       <p class="dropzone-text">Haz clic o arrastra tu logo</p>
-                      <span class="dropzone-hint">PNG, JPG, WebP · Máx. 2 MB</span>
+                      <span class="dropzone-hint">PNG, JPG, WebP Â· MÃ¡x. 2 MB</span>
                     </template>
                   </div>
                 </div>
@@ -178,14 +178,14 @@
                   <label>Mensaje de Agradecimiento</label>
                   <textarea 
                     v-model="settings.thankYouMessage" 
-                    placeholder="Ej. ¡Gracias por su preferencia!"
+                    placeholder="Ej. Â¡Gracias por su preferencia!"
                     rows="4"
                   ></textarea>
                 </div>
 
-                <!-- Tamaño de papel para impresión -->
+                <!-- TamaÃ±o de papel para impresiÃ³n -->
                 <div class="input-group full-width">
-                  <label>Formato de Papel para Impresión</label>
+                  <label>Formato de Papel para ImpresiÃ³n</label>
                   <div class="paper-size-options">
                     <label
                       v-for="opt in paperSizeOptions"
@@ -201,7 +201,7 @@
                         style="display:none"
                         @change="onPaperWidthChange"
                       />
-                      <span class="paper-icon">🖨️</span>
+                      <span class="paper-icon">ðŸ–¨ï¸</span>
                       <span class="paper-label"> {{ opt.label }}</span>
                       <span class="paper-desc"> {{ opt.desc }}</span>
                     </label>
@@ -262,7 +262,7 @@
                   </div>
                   <h3 class="ticket-store-name">{{ settings.storeName || 'Nombre de la Tienda' }}</h3>
                   <div class="ticket-address">
-                    <p>{{ formattedAddressLines[0] || 'Dirección de la Tienda' }}</p>
+                    <p>{{ formattedAddressLines[0] || 'DirecciÃ³n de la Tienda' }}</p>
                     <p v-if="formattedAddressLines[1]">{{ formattedAddressLines[1] }}</p>
                     <p>Tel: {{ settings.phone || '00 0000 0000' }}</p>
                   </div>
@@ -370,7 +370,7 @@ import { getStoredPaperWidth, savePaperWidth, type PaperWidth } from '@/utils/ti
 const { enqueueSnackbar } = useSnackbar();
 const { currentUser } = useAuth();
 
-// ── RBAC: Solo Propietario/Gerente/Admin pueden acceder ────────────────────
+// â”€â”€ RBAC: Solo Propietario/Gerente/Admin pueden acceder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const canAccessSettings = computed(() => {
   const role = (currentUser.value?.role || '').toLowerCase();
   const normalizedRole = 
@@ -389,25 +389,25 @@ const isReadOnly = computed(() => {
     role === 'cashier' ? 'cajero' : role;
   
   // Solo Propietario puede editar (full write)
-  // Gerente/Admin solo lectura en ciertos campos críticos
+  // Gerente/Admin solo lectura en ciertos campos crÃ­ticos
   return !['propietario', 'owner'].includes(normalizedRole);
 });
 
-// ── Mock Products por Nicho ────────────────────────────────────────────────
+// â”€â”€ Mock Products por Nicho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const mockProductsByNiche: Record<string, {name: string; price: string}[]> = {
   'ELECTRONICA': [
     { name: 'Cable USB-C 2m', price: '$150.00' },
-    { name: 'Audífonos Bluetooth V5', price: '$450.00' },
-    { name: 'Cargador Rápido 65W', price: '$280.00' },
+    { name: 'AudÃ­fonos Bluetooth V5', price: '$450.00' },
+    { name: 'Cargador RÃ¡pido 65W', price: '$280.00' },
   ],
   'ABARROTES': [
     { name: 'Leche Entera 1L', price: '$28.50' },
     { name: 'Pan de Caja', price: '$32.00' },
-    { name: 'Café Molido Premium', price: '$85.00' },
+    { name: 'CafÃ© Molido Premium', price: '$85.00' },
   ],
   'FARMACIA': [
     { name: 'Vitamina C Tabletas x30', price: '$95.00' },
-    { name: 'Analgésico Ibuprofeno 400mg', price: '$45.00' },
+    { name: 'AnalgÃ©sico Ibuprofeno 400mg', price: '$45.00' },
     { name: 'Protector Solar FPS 50', price: '$120.00' },
   ],
   'FERRETERIA': [
@@ -418,7 +418,7 @@ const mockProductsByNiche: Record<string, {name: string; price: string}[]> = {
   'MASCOTAS': [
     { name: 'Croquetas Premium 2kg', price: '$220.00' },
     { name: 'Correa Ajustable', price: '$120.00' },
-    { name: 'Shampoo Hipoalergénico', price: '$95.00' },
+    { name: 'Shampoo HipoalergÃ©nico', price: '$95.00' },
   ],
   'BELLEZA': [
     { name: 'Corte y Peinado', price: '$250.00' },
@@ -474,7 +474,7 @@ const ticketChange = computed(() => {
   return Math.max(0, ticketCash.value - ticketSubtotal.value);
 });
 
-// Short folio for ticket preview (take last 8 chars of a UUID) — frontend MVP hack
+// Short folio for ticket preview (take last 8 chars of a UUID) â€” frontend MVP hack
 const mockSaleUuid = '05F59484-F423-49DC-B124-00EE2BC2C024';
 const ticketFolio = computed(() => {
   const raw = (mockSaleUuid || '').replace(/-/g, '');
@@ -490,7 +490,7 @@ const capitalizeFirstLetter = (value: string) => {
 };
 
 const formattedThankYouMessage = computed(() => {
-  const raw = settings.value.thankYouMessage || '¡Gracias por su compra!';
+  const raw = settings.value.thankYouMessage || 'Â¡Gracias por su compra!';
   return capitalizeFirstLetter(raw.trim());
 });
 
@@ -498,7 +498,7 @@ const formattedThankYouMessage = computed(() => {
 const logoInputRef = ref<HTMLInputElement | null>(null);
 const logoFile = ref<File | null>(null);
 
-// Form Data — populated from backend on mount
+// Form Data â€” populated from backend on mount
 const settings = ref({
   storeName: '',
   taxId: '', // RFC / NIT (from Wizard Step 1)
@@ -534,12 +534,12 @@ const isDirty = computed(() => {
   return initialSnapshot.value !== buildSnapshot() || !!logoFile.value;
 });
 
-// ── Paper width preference (local storage) ────────────────────────────────────
+// â”€â”€ Paper width preference (local storage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const paperWidth = ref<PaperWidth>(getStoredPaperWidth());
 
 const paperSizeOptions: { value: PaperWidth; label: string; desc: string }[] = [
-  { value: '58mm', label: '58 mm', desc: ' Impresoras pequeñas' },
-  { value: '80mm', label: '80 mm', desc: ' Estándar (recomendado)' },
+  { value: '58mm', label: '58 mm', desc: ' Impresoras pequeÃ±as' },
+  { value: '80mm', label: '80 mm', desc: ' EstÃ¡ndar (recomendado)' },
   { value: 'A4',   label: 'A4',    desc: ' Impresora de escritorio' },
 ];
 
@@ -547,7 +547,7 @@ const onPaperWidthChange = () => {
   savePaperWidth(paperWidth.value);
 };
 
-// ── Load store settings from backend ─────────────────────────────────────────
+// â”€â”€ Load store settings from backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isLoading = ref(true);
 
 const applyStoreSettings = (data: StoreSettings) => {
@@ -574,7 +574,7 @@ onMounted(async () => {
     enqueueSnackbar({
       type: 'error',
       title: 'Acceso Denegado',
-      message: 'Solo propietarios y gerentes pueden acceder a esta sección.',
+      message: 'Solo propietarios y gerentes pueden acceder a esta secciÃ³n.',
       duration: 4000,
     });
     // Redirect after brief delay
@@ -600,7 +600,7 @@ onMounted(async () => {
   }
 });
 
-// ── Watch for real-time preview updates ────────────────────────────────────
+// â”€â”€ Watch for real-time preview updates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 watch(
   () => ({
     address: settings.value.address,
@@ -616,7 +616,7 @@ watch(
   { deep: true }
 );
 
-// ── Logo file handling ────────────────────────────────────────────────────────
+// â”€â”€ Logo file handling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const onLogoFile = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
@@ -654,7 +654,7 @@ const removeLogo = () => {
   logoFile.value = null;
 };
 
-// ── Format address for ticket preview ────────────────────────────────────────
+// â”€â”€ Format address for ticket preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const formattedAddressLines = computed(() => {
   if (!settings.value.address) return [];
   const parts = settings.value.address.split(',');
@@ -664,7 +664,7 @@ const formattedAddressLines = computed(() => {
   return [line1, line2];
 });
 
-// ── Save to backend ───────────────────────────────────────────────────────────
+// â”€â”€ Save to backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isSaving = ref(false);
 
 const saveSettings = async () => {
@@ -694,7 +694,7 @@ const saveSettings = async () => {
       markClean();
       enqueueSnackbar({
         type: 'success',
-        title: 'Configuración Guardada',
+        title: 'ConfiguraciÃ³n Guardada',
         message: 'Los ajustes del negocio se guardaron correctamente.',
         duration: 3500,
       });
@@ -702,12 +702,12 @@ const saveSettings = async () => {
       enqueueSnackbar({
         type: 'error',
         title: 'Error al guardar',
-        message: res.error || 'No se pudo guardar la configuración.',
+        message: res.error || 'No se pudo guardar la configuraciÃ³n.',
         duration: 4000,
       });
     }
   } catch (err) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexiÃ³n al servidor.', duration: 3000 });
   } finally {
     isSaving.value = false;
   }
@@ -736,7 +736,7 @@ const saveSettings = async () => {
 }
 
 .settings-inner {
-  background: var(--color-card-stats-fill);
+  background: var(--color-background-secondary);
   max-width: 100%;
   min-height: 100vh;
   margin: 0 auto;
@@ -1358,7 +1358,7 @@ textarea:focus {
   height: 24px;
 }
 
-/* ── Paper size selector ── */
+/* â”€â”€ Paper size selector â”€â”€ */
 .paper-size-options {
   display: flex;
   gap: 0.75rem;
@@ -1430,7 +1430,7 @@ textarea:focus {
   box-shadow: none;
 }
 
-/* ── Dynamic Paper Width for Ticket Preview ─────────────────────────────────── */
+/* â”€â”€ Dynamic Paper Width for Ticket Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ticket-simulation {
   margin-left: auto;
   margin-right: auto;
@@ -1450,3 +1450,4 @@ textarea:focus {
   max-width: 800px;
 }
 </style>
+

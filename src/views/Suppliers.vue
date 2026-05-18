@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <DashboardLayout>
     <div class="suppliers-container">
       <div class="page-header">
         <div>
           <h1 class="page-title">Proveedores</h1>
-          <p class="page-subtitle">Gestiona la relación con tus proveedores y surtido de productos</p>
+          <p class="page-subtitle">Gestiona la relaciÃ³n con tus proveedores y surtido de productos</p>
         </div>
         <AppButton variant="fill" @click="openDrawer()">
           <PlusIcon style="width: 20px; height: 20px;" />
@@ -29,7 +29,7 @@
       <div v-if="!isLoading && filteredSuppliers.length === 0" class="empty-state">
         <ArchiveBoxIcon class="empty-icon" />
         <h3>No se encontraron proveedores</h3>
-        <p>Aún no tienes proveedores registrados. Agrégalos para agilizar tus compras y reabastecimiento.</p>
+        <p>AÃºn no tienes proveedores registrados. AgrÃ©galos para agilizar tus compras y reabastecimiento.</p>
       </div>
 
       <!-- Suppliers Table (Contact Directory) -->
@@ -56,7 +56,7 @@
               </td>
               <td>
                 <div class="contact-cell">
-                  <span class="contact-info-text">{{ supplier.phone || supplier.email || 'Sin información de contacto' }}</span>
+                  <span class="contact-info-text">{{ supplier.phone || supplier.email || 'Sin informaciÃ³n de contacto' }}</span>
                   
                   <a v-if="isPhone(supplier.phone)" :href="getWhatsAppUrl(supplier.phone)" target="_blank" rel="noopener noreferrer" @click.stop class="whatsapp-btn" title="Contactar por WhatsApp">
                     <WhatsAppIcon class="whatsapp-icon" />
@@ -151,7 +151,7 @@ const getInitials = (name: string) => {
 
 <style scoped>
 .suppliers-container {
-background: var(--color-card-stats-fill);
+background: var(--color-background-secondary);
 padding: 1.75rem 2rem;
 max-width: 100%;
 min-height: 100vh;
@@ -785,3 +785,4 @@ margin: 0;
     font-size: 0.875rem;
 }
 </style>
+

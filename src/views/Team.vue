@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <DashboardLayout>
     <div class="team-shell">
       <div class="team-page">
@@ -57,7 +57,7 @@
               <div class="team-empty-illustration">
                 <UserGroupIcon class="team-empty-icon" />
               </div>
-              <h3>Aún no tienes empleados registrados.</h3>
+              <h3>AÃºn no tienes empleados registrados.</h3>
               <p>Agrega a tu equipo para llevar un mejor control de tus turnos de caja.</p>
               <AppButton variant="outline" @click="openDrawer" :disabled="!canAddMore">
                 <PlusIcon class="btn-icon" />
@@ -72,7 +72,7 @@
                     <th>Empleado</th>
                     <th>Usuario de ingreso</th>
                     <th>Rol</th>
-                    <th>Último acceso</th>
+                    <th>Ãšltimo acceso</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,7 +120,7 @@
                               <PencilIcon class="kebab-item-icon" /> Editar empleado
                             </button>
                             <button class="kebab-item" @click="confirmResetPassword(employee)">
-                              <KeyIcon class="kebab-item-icon" /> Restablecer contraseña
+                              <KeyIcon class="kebab-item-icon" /> Restablecer contraseÃ±a
                             </button>
                             <div class="kebab-divider"></div>
                             <button class="kebab-item" :class="employee.is_active ? 'text-danger' : 'text-success'" @click="toggleEmployeeStatus(employee)">
@@ -180,7 +180,7 @@
               <AppInput
                 v-model="form.name"
                 label="Nombre completo"
-                placeholder="Ej. María López"
+                placeholder="Ej. MarÃ­a LÃ³pez"
                 required
               />
 
@@ -200,21 +200,21 @@
                     Recalcular
                   </button>
                 </div>
-                <p class="field-help" v-if="!isEditing">Se sugiere automáticamente con el formato tienda_empleado.</p>
+                <p class="field-help" v-if="!isEditing">Se sugiere automÃ¡ticamente con el formato tienda_empleado.</p>
                 <p class="field-help" v-else>El usuario de ingreso no se puede cambiar por seguridad e historial.</p>
               </div>
 
               <div class="field-stack" v-if="!isEditing">
-                <label class="field-label">Contraseña</label>
+                <label class="field-label">ContraseÃ±a</label>
                 <div class="password-row">
                   <input
                     v-model="form.password"
                     :type="showPassword ? 'text' : 'password'"
                     class="text-input password-input"
-                    placeholder="Contraseña segura"
+                    placeholder="ContraseÃ±a segura"
                     required
                   >
-                  <button type="button" class="icon-toggle-btn" @click="showPassword = !showPassword" :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                  <button type="button" class="icon-toggle-btn" @click="showPassword = !showPassword" :title="showPassword ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a'">
                     <EyeIcon v-if="!showPassword" class="toggle-icon" />
                     <EyeSlashIcon v-else class="toggle-icon" />
                   </button>
@@ -274,7 +274,7 @@
             <div class="success-icon-wrap">
               <CheckCircleIcon class="success-icon" />
             </div>
-            <h2>¡Empleado creado exitosamente!</h2>
+            <h2>Â¡Empleado creado exitosamente!</h2>
             <p class="success-copy">
               Entrega estos accesos al cajero para que pueda entrar de inmediato.
             </p>
@@ -285,7 +285,7 @@
                 <span class="credential-value">{{ createdCredentials.username }}</span>
               </div>
               <div class="credential-box">
-                <span class="credential-label">Contraseña</span>
+                <span class="credential-label">ContraseÃ±a</span>
                 <span class="credential-value credential-password">{{ createdCredentials.password }}</span>
               </div>
             </div>
@@ -311,9 +311,9 @@
             <div class="success-icon-wrap" style="background: linear-gradient(135deg, #fee2e2, #fef9c3);">
               <KeyIcon class="success-icon" style="color: #ea580c;" />
             </div>
-            <h2>¿Restablecer contraseña?</h2>
+            <h2>Â¿Restablecer contraseÃ±a?</h2>
             <p class="success-copy">
-              Se generará una nueva contraseña segura para <strong>{{ resetTargetEmployee?.name }}</strong>. Podrás copiarla en el siguiente paso.
+              Se generarÃ¡ una nueva contraseÃ±a segura para <strong>{{ resetTargetEmployee?.name }}</strong>. PodrÃ¡s copiarla en el siguiente paso.
             </p>
             
             <div class="success-actions" style="margin-top: 1.5rem;">
@@ -321,7 +321,7 @@
                 Cancelar
               </AppButton>
               <AppButton variant="fill" @click="executeResetPassword" :loading="isSaving">
-                Generar nueva contraseña
+                Generar nueva contraseÃ±a
               </AppButton>
             </div>
           </div>
@@ -408,7 +408,7 @@ const roleOptions: RoleOption[] = [
   {
     value: 'manager',
     label: 'Admin',
-    helper: 'Acceso total a reportes, inventario y configuración.',
+    helper: 'Acceso total a reportes, inventario y configuraciÃ³n.',
   },
 ];
 
@@ -490,7 +490,7 @@ const visibleEmployees = computed(() => employees.value.filter((employee) => emp
 
 const planNameLabel = computed(() => {
   if (!storePlan.value) return 'Plan';
-  return storePlan.value === 'basico' ? 'Plan Básico' : 'Plan Pro';
+  return storePlan.value === 'basico' ? 'Plan BÃ¡sico' : 'Plan Pro';
 });
 
 const planUsagePercent = computed(() => {
@@ -547,7 +547,7 @@ const copyUsername = async (employee: TeamEmployee) => {
 };
 
 const copyAccesses = async () => {
-  const payload = `Usuario: ${createdCredentials.value.username}\nContraseña: ${createdCredentials.value.password}`;
+  const payload = `Usuario: ${createdCredentials.value.username}\nContraseÃ±a: ${createdCredentials.value.password}`;
   await copyText(payload, 'Accesos copiados.');
 };
 
@@ -604,7 +604,7 @@ const toggleEmployeeStatus = async (employee: TeamEmployee) => {
     );
     if (response.success && response.data) {
       await loadTeam();
-      enqueueSnackbar({ type: 'success', title: 'Éxito', message: `El acceso ha sido ${newState ? 'reactivado' : 'suspendido'}.`, duration: 4000 });
+      enqueueSnackbar({ type: 'success', title: 'Ã‰xito', message: `El acceso ha sido ${newState ? 'reactivado' : 'suspendido'}.`, duration: 4000 });
     } else {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 4000 });
     }
@@ -660,11 +660,11 @@ const executeResetPassword = async () => {
       showResetModal.value = false;
       showSuccessModal.value = true;
     } else {
-      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo restablecer la contraseña.', duration: 4000 });
+      enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo restablecer la contraseÃ±a.', duration: 4000 });
     }
   } catch (error) {
     console.error(error);
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo restablecer la contraseña.', duration: 4000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'No se pudo restablecer la contraseÃ±a.', duration: 4000 });
   } finally {
     isSaving.value = false;
   }
@@ -723,7 +723,7 @@ const submitEmployee = async () => {
       if (response.success && response.data) {
         showDrawer.value = false;
         await loadTeam();
-        enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Empleado actualizado correctamente.', duration: 4000 });
+        enqueueSnackbar({ type: 'success', title: 'Ã‰xito', message: 'Empleado actualizado correctamente.', duration: 4000 });
       } else {
         enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el empleado.', duration: 4000 });
       }
@@ -800,7 +800,7 @@ onMounted(() => {
 }
 
 .team-page {
-  background-color: var(--color-card-stats-fill);
+  background-color: var(--color-background-secondary);
   max-width: 1400px;
   margin: 0 auto;
   padding: 1.75rem 2rem 2rem;
@@ -1725,3 +1725,4 @@ onMounted(() => {
   }
 }
 </style>
+
