@@ -59,7 +59,32 @@ Tokens base en `src/style.css`:
 - Verde/sidebar legacy: `#06402b`.
 - Bordes: `#e5e7eb`.
 
-Antes de crear un control nuevo, revisar si existe en `src/components/ui`.
+## Protocolo obligatorio antes de codificar UI
+
+Antes de crear o pegar UI nueva en una vista, hay que verificar reutilizacion.
+Este paso es obligatorio para devs y agentes.
+
+1. Buscar componentes base en `src/components/ui`:
+   - `rg --files src/components/ui`
+2. Buscar si ya existe un patron equivalente en el proyecto:
+   - `rg "<AppButton|<AppInput|<AppSelect|<ConfirmationModal|<AppModal|<AppEmptyState|<Pagination|<Badge" src/views src/components -n`
+3. Decidir con esta regla:
+   - Si ya existe un componente que cubre >= 80% del caso, reutilizar.
+   - Si faltan props menores, extender el componente existente.
+   - Solo crear componente nuevo si el patron se repetira en 2 o mas pantallas.
+4. Si se crea componente nuevo:
+   - Debe vivir en `src/components/ui`.
+   - Debe exportarse en `src/components/ui/index.ts`.
+   - Debe usarse al menos en 1 vista del cambio actual (no dejarlo muerto).
+5. Validar antes de cerrar:
+   - `npx vue-tsc -b`
+   - `npm run build` (cuando el entorno lo permita)
+
+### Que no se debe hacer
+
+- Duplicar modales, empty states, switches o toolbars sin revisar `ui/`.
+- Dejar `<button>`, `<input>` o `<select>` sueltos si hay equivalente UI.
+- Crear variantes locales con estilos inline que ya existen en componentes base.
 
 ## Checklist antes de cerrar una tarea
 
@@ -81,4 +106,3 @@ La documentacion activa se limita a:
 
 La carpeta `docs/skills` fue retirada por exceso de documentos duplicados y
 obsoletos. No debe recrearse como deposito de notas.
-

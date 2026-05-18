@@ -120,6 +120,8 @@ El design system esta en `src/components/ui/`:
 - `AppFormSection`
 - `AppSkeleton`
 - `ConfirmationModal`
+- `AppModal`
+- `AppEmptyState`
 - `Pagination`
 - `Badge`
 - `WhatsAppIcon`
