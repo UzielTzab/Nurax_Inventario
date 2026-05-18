@@ -1,6 +1,6 @@
 ﻿
 <template>
-  <!-- Desktop: Modal clÃ¡sico -->
+  <!-- Desktop: Modal clásico -->
   <div v-if="isOpen && !isMobileOrTablet" class="modal-overlay">
     <div class="modal-content">
       <!-- Modal Header with Terminal Indicator -->
@@ -8,7 +8,7 @@
         <div style="display: flex; flex-direction: column; gap: 0.25rem;">
           <h2 class="modal-title">Punto de Venta</h2>
           <div v-if="currentUser && currentUser.store_profile" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">
-            ðŸ“¦ {{ currentUser.store_profile.name || currentUser.store_profile.company_name || 'Tienda' }} ({{ currentUser.name || currentUser.username }})
+            📦 {{ currentUser.store_profile.name || currentUser.store_profile.company_name || 'Tienda' }} ({{ currentUser.name || currentUser.username }})
           </div>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -49,7 +49,7 @@
                 class="search-input"
               />
             </div>
-            <button class="icon-btn scan-btn-premium" title="Escanear con CÃ¡mara" @click="isScanning = true">
+            <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
               <QrCodeIcon class="w-5 h-5" />
             </button>
             <div class="filter-menu-wrapper" ref="filterMenuRef">
@@ -88,15 +88,15 @@
               class="pairing-indicator" 
               :class="{ paired: isScannerPaired }" 
               style="background: white; border-radius: 16px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;"
-              title="Estado del escÃ¡ner"
+              title="Estado del escáner"
             >
-              <span v-if="isScannerPaired" style="color: #10b981;">ðŸŸ¢ Celular Conectado</span>
-              <span v-else style="color: #4b5563;">ðŸ“± Vincular Celular</span>
+              <span v-if="isScannerPaired" style="color: #10b981;">🟢 Celular Conectado</span>
+              <span v-else style="color: #4b5563;">📱 Vincular Celular</span>
             </button>
           </div>
 
           <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }">
-              <span>âš ï¸ Tu turno no ha iniciado.</span>
+              <span>⚠️ Tu turno no ha iniciado.</span>
               <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
@@ -216,7 +216,7 @@
             </div>
 
             <div style="display: flex; gap: 8px; align-items: center;">
-              <!-- BotÃ³n: Ventas en espera con Badge -->
+              <!-- Botón: Ventas en espera con Badge -->
               <div v-if="parkedCartsCount > 0" style="position: relative; display: inline-flex;">
                 <AppButton 
                   variant="outline"
@@ -232,7 +232,7 @@
                 </span>
               </div>
 
-              <!-- BotÃ³n: Pausar Venta -->
+              <!-- Botón: Pausar Venta -->
               <AppButton 
                 variant="outline"
                 iconOnly
@@ -243,7 +243,7 @@
                 <PauseIcon style="width: 20px; height: 20px;" />
               </AppButton>
 
-              <!-- BotÃ³n: Vaciar Venta -->
+              <!-- Botón: Vaciar Venta -->
               <button class="clear-cart-btn" @click="clearCart" :disabled="cart.length === 0" title="Vaciar venta">
                 <TrashIcon class="w-5 h-5" />
               </button>
@@ -357,13 +357,13 @@
                 class="search-input"
               />
             </div>
-            <button class="icon-btn scan-btn-premium" title="Escanear con CÃ¡mara" @click="isScanning = true">
+            <button class="icon-btn scan-btn-premium" title="Escanear con Cámara" @click="isScanning = true">
               <QrCodeIcon class="w-5 h-5" />
             </button>
           </div>
 
           <div v-if="!shiftsStore.hasOpenShift" class="shift-warning-banner" :class="{ 'shift-banner-pulse': shiftBannerPulse }" style="margin: 0 1rem 1rem 1rem;">
-            <span>âš ï¸ Tu turno no ha iniciado.</span>
+            <span>⚠️ Tu turno no ha iniciado.</span>
             <button type="button" class="shift-cta" @click="openShiftModalFromBanner">Abrir turno ahora</button>
           </div>
 
@@ -527,7 +527,7 @@
                       @click="updateQuantity(item.id, -1)"
                       style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280; font-size: 1.1rem;"
                     >
-                      âˆ’
+                      −
                     </button>
                     <span style="width: 32px; text-align: center; font-weight: 600; color: #1f2937;">{{ item.quantity }}</span>
                     <button 
@@ -570,7 +570,7 @@
     </div>
   </div>
 
-  <!-- Scanner Overlay para SalesModal - FULLSCREEN en mÃ³vil/tablet -->
+  <!-- Scanner Overlay para SalesModal - FULLSCREEN en móvil/tablet -->
   <Transition v-if="isMobileOrTablet" name="fade">
     <div v-if="isScanning" style="position: fixed; inset: 0; background: white; z-index: 10005; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch;">
       <!-- Header -->
@@ -595,16 +595,16 @@
         <!-- Cooldown Overlay para Continuous Mode -->
         <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 16px; backdrop-filter: blur(3px); z-index: 10;">
           <div style="text-align: center; color: white;">
-            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">â±</div>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
             <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
-            <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el prÃ³ximo producto</p>
+            <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el próximo producto</p>
           </div>
         </div>
       </div>
 
       <!-- Footer -->
       <div style="padding: 1.5rem; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0 0 1rem 0;">{{ scanCooldownActive && scannerMode === 'continuous' ? 'â¸ EscÃ¡ner en pausa...' : 'Apunta usando la cÃ¡mara de tu dispositivo' }}</p>
+        <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0 0 1rem 0;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
         <button @click="isScanning = false" style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 16px; font-weight: 600; width: 100%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
           <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
           {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
@@ -632,13 +632,13 @@
            <!-- Cooldown Overlay para Continuous Mode -->
            <div v-if="scanCooldownActive && scannerMode === 'continuous'" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; border-radius: 16px; backdrop-filter: blur(3px); z-index: 10;">
              <div style="text-align: center; color: white;">
-               <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">â±</div>
+               <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">⏱</div>
                <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">Espera 2 segundos</p>
-               <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el prÃ³ximo producto</p>
+               <p style="font-size: 0.875rem; color: #d1d5db;">para escanear el próximo producto</p>
              </div>
            </div>
          </div>
-         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">{{ scanCooldownActive && scannerMode === 'continuous' ? 'â¸ EscÃ¡ner en pausa...' : 'Apunta usando la cÃ¡mara de tu dispositivo' }}</p>
+         <p style="color: #6b7280; font-size: 0.875rem; text-align: center;">{{ scanCooldownActive && scannerMode === 'continuous' ? '⏸ Escáner en pausa...' : 'Apunta usando la cámara de tu dispositivo' }}</p>
          <button @click="isScanning = false" style="background: #f1f5f9; padding: 0.75rem; border-radius: 16px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
            <XMarkIcon class="icon" style="width:20px; height:20px;" /> 
            {{ scannerMode === 'continuous' ? 'Desbloquear Escaneo' : 'Cancelar' }}
@@ -690,7 +690,7 @@
                <input type="number" v-model.number="amountPaid" style="width: 100%; padding: 1rem 1rem 1rem 2.5rem; font-size: 1.25rem; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 16px; outline: none; transition: border-color 0.2s;" min="0" step="0.01">
              </div>
              
-             <!-- Botones rÃ¡pidos de dinero -->
+             <!-- Botones rápidos de dinero -->
              <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; overflow-x: auto; padding-bottom: 4px;">
                <button v-for="amount in quickAmounts" :key="amount" @click="amountPaid = amount" style="padding: 0.5rem 1rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 16px; font-weight: 600; color: #374151; cursor: pointer; white-space: nowrap;">
                  ${{ amount }}
@@ -720,7 +720,7 @@
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px; flex-shrink: 0;">
                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
              </svg>
-             <span style="font-size: 0.875rem; font-weight: 600;">Debes seleccionar un cliente registrado para apartar o fiar. No se permite PÃºblico General.</span>
+             <span style="font-size: 0.875rem; font-weight: 600;">Debes seleccionar un cliente registrado para apartar o fiar. No se permite Público General.</span>
            </div>
 
            <div style="margin-bottom: 1rem;" :style="{ opacity: selectedClientId ? '1' : '0.5', pointerEvents: selectedClientId ? 'auto' : 'none' }">
@@ -783,8 +783,8 @@
       status: 'Aparcado',
       image: ''
     } : null"
-    title="Â¿Eliminar carrito aparcado?"
-    message="Â¿EstÃ¡s seguro de que deseas eliminar este carrito aparcado? Esta acciÃ³n no se puede deshacer."
+    title="¿Eliminar carrito aparcado?"
+    message="¿Estás seguro de que deseas eliminar este carrito aparcado? Esta acción no se puede deshacer."
     confirmLabel="Eliminar carrito"
     @close="closeDeleteParkedCartModal"
     @confirm="discardParkedCart"
@@ -813,7 +813,7 @@
           <div v-for="parkedCart in parkedCarts" :key="parkedCart.id" style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 16px; background: white;">
             <div style="min-width: 0;">
               <div style="font-weight: 700; color: #111827;">Cliente: {{ parkedCart.customer_name || parkedCart.customer?.name || 'Venta de Mostrador (General)' }}</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">{{ formatItemsLabel(parkedCart.items_count) }} Â· ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
+              <div style="font-size: 0.875rem; color: #6b7280;">{{ formatItemsLabel(parkedCart.items_count) }} · ${{ Number(parkedCart.total || 0).toFixed(2) }}</div>
               <div style="font-size: 0.75rem; color: #9ca3af;">Aparcado: {{ formatParkedAt(parkedCart.parked_at) }}</div>
               <div v-if="previewLine(parkedCart)" style="font-size:0.85rem; color:#9ca3af; margin-top:6px;">{{ previewLine(parkedCart) }}</div>
             </div>
@@ -886,7 +886,7 @@ const salesStore = useSalesStore();
 const shiftsStore = useShiftsStore();
 const router = useRouter();
 
-// Usar mismo composable que Inventario para sincronizar stock con paginaciÃ³n
+// Usar mismo composable que Inventario para sincronizar stock con paginación
 const { products: apiProducts, fetchProducts, pagination, goToPage, setPageSize } = useProducts();
 
 interface CartItem extends Product {
@@ -943,7 +943,7 @@ const clients = ref<PosClient[]>([]);
 const clientSearch = ref('');
 const selectedClientId = ref('');
 
-const scannerPairingLabel = ref('ðŸ“± Sin emparejar');
+const scannerPairingLabel = ref('📱 Sin emparejar');
 const isScannerPaired = ref(false);
 
 const quickAmounts = computed(() => {
@@ -1017,7 +1017,7 @@ const parkCart = async () => {
     const response: any = await apiClient.post(`/v1/carts/carts/${activeCartId.value}/park/`);
     if (response && response.success) {
       const actualData = response.data?.data || response.data;
-      enqueueSnackbar({ type: 'success', title: 'Ã‰xito', message: 'Carrito aparcado. Puedes recuperarlo despuÃ©s.' });
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito aparcado. Puedes recuperarlo después.' });
       cart.value = [];
       cartSessionId.value = actualData?.new_active_cart?.session_id || '';
       activeCartId.value = actualData?.new_active_cart?.id || '';
@@ -1049,7 +1049,7 @@ const loadParkedCarts = async () => {
 
 const formatItemsLabel = (count: number) => {
   if (!count && count !== 0) return '';
-  return Number(count) === 1 ? '1 artÃ­culo' : `${count} artÃ­culos`;
+  return Number(count) === 1 ? '1 artículo' : `${count} artículos`;
 };
 
 const formatParkedAt = (iso?: string | null) => {
@@ -1071,13 +1071,13 @@ const formatParkedAt = (iso?: string | null) => {
 const previewLine = (parkedCart: any) => {
   // Prefer server-provided preview fields when available
   if (parkedCart.preview_first_item) {
-    const more = parkedCart.items_count && parkedCart.items_count > 1 ? ` y ${parkedCart.items_count - 1} mÃ¡s...` : '';
+    const more = parkedCart.items_count && parkedCart.items_count > 1 ? ` y ${parkedCart.items_count - 1} más...` : '';
     return `Contiene: ${parkedCart.preview_first_item}${more}`;
   }
   // If full items array is present
   if (Array.isArray(parkedCart.items) && parkedCart.items.length > 0) {
     const first = parkedCart.items[0]?.name || parkedCart.items[0]?.product_name || 'Producto';
-    const more = parkedCart.items.length > 1 ? ` y ${parkedCart.items.length - 1} mÃ¡s...` : '';
+    const more = parkedCart.items.length > 1 ? ` y ${parkedCart.items.length - 1} más...` : '';
     return `Contiene: ${first}${more}`;
   }
   return '';
@@ -1135,7 +1135,7 @@ const restoreParkedCart = async (parkedCartId: string) => {
       if (actualData.active_cart_id) {
         activeCartId.value = actualData.active_cart_id;
       }
-      enqueueSnackbar({ type: 'success', title: 'Ã‰xito', message: 'Carrito restaurado' });
+      enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Carrito restaurado' });
       showParkedCartsModal.value = false;
       await loadParkedCarts();
     } else {
@@ -1177,7 +1177,7 @@ const subscribeToCartChannel = (sessionId: string) => {
     cartChannel = pusher.subscribe(`private-cart-${sessionId}`);
     cartChannel.bind('CART_UPDATED', async (data: any) => {
       const fromDeviceId = data.device_id;
-      // Ignorar si el evento vino de esta misma sesiÃ³n
+      // Ignorar si el evento vino de esta misma sesión
       if (fromDeviceId === localDeviceId) return;
       // Refetch silencioso del carrito para mantener fuente de la verdad
       try {
@@ -1239,7 +1239,7 @@ const syncCartToBackend = async () => {
       }
     } else {
       cart.value = prev;
-      enqueueSnackbar({ type: 'error', title: 'Error de sincronizaciÃ³n', message: res?.error || 'No se pudo sincronizar el carrito.' });
+      enqueueSnackbar({ type: 'error', title: 'Error de sincronización', message: res?.error || 'No se pudo sincronizar el carrito.' });
     }
   } catch (error) {
     cart.value = prev;
@@ -1281,7 +1281,7 @@ const handleNewClientCreated = async (clientId: string | number) => {
   selectedClientId.value = String(clientId);
 };
 
-// Snapshot de la Ãºltima venta (para poder revertirla)
+// Snapshot de la última venta (para poder revertirla)
 const lastSaleId = ref<string | number>('');
 const lastCartSnapshot = ref<CartItem[]>([]);
 const lastTotal = ref(0);
@@ -1297,15 +1297,15 @@ const isScanning = computed({
 const scannerMode = computed(() => salesStore.scannerMode);
 
 const scanCooldownActive = ref(false); // Cooldown visual para continuous mode
-const scannerResetKey = ref(0); // Key para remount del escÃ¡ner
+const scannerResetKey = ref(0); // Key para remount del escáner
 
-// Detectar si es mÃ³vil o tablet (viewport menor a 1024px)
+// Detectar si es móvil o tablet (viewport menor a 1024px)
 const isMobileOrTablet = ref(false);
 const checkDeviceSize = () => {
   isMobileOrTablet.value = window.innerWidth < 1024;
 };
 
-// Carrito colapsable en mÃ³vil/tablet
+// Carrito colapsable en móvil/tablet
 const isCartExpanded = ref(false);
 
 const barcodeFormats = ref<any[]>([
@@ -1314,11 +1314,11 @@ const barcodeFormats = ref<any[]>([
 
 const onError = (err: any) => {
   isScanning.value = false;
-  let errMsg = 'Error con la cÃ¡mara: ';
+  let errMsg = 'Error con la cámara: ';
   if (err.name === 'NotAllowedError') errMsg += 'Permiso denegado.';
-  else if (err.name === 'NotFoundError') errMsg += 'No se encontrÃ³ cÃ¡mara.';
+  else if (err.name === 'NotFoundError') errMsg += 'No se encontró cámara.';
   else if (err.name === 'NotSupportedError') errMsg += 'Contexto no seguro (HTTPS requerido).';
-  else if (err.name === 'NotReadableError') errMsg += 'CÃ¡mara en uso.';
+  else if (err.name === 'NotReadableError') errMsg += 'Cámara en uso.';
   else errMsg += err.message || err.name;
   alert(errMsg);
 };
@@ -1347,7 +1347,7 @@ const handleScanSubmit = () => {
 };
 
 const onDecodeSku = (detectedCodes: any[]) => {
-  // Si estÃ¡ en cooldown y es continuous mode, no procesar
+  // Si está en cooldown y es continuous mode, no procesar
   if (scanCooldownActive.value && scannerMode.value === 'continuous') {
     return;
   }
@@ -1355,7 +1355,7 @@ const onDecodeSku = (detectedCodes: any[]) => {
   if (detectedCodes.length > 0) {
     const sku = detectedCodes[0].rawValue;
     
-    // En modo single: detener cÃ¡mara
+    // En modo single: detener cámara
     // En modo continuous: seguir escaneando pero activar cooldown
     if (scannerMode.value === 'single') {
       isScanning.value = false;
@@ -1364,7 +1364,7 @@ const onDecodeSku = (detectedCodes: any[]) => {
       scanCooldownActive.value = true;
       setTimeout(() => {
         scanCooldownActive.value = false;
-        // Reiniciar el componente del escÃ¡ner cuando termina el cooldown
+        // Reiniciar el componente del escáner cuando termina el cooldown
         scannerResetKey.value++;
       }, 2000);
     }
@@ -1375,10 +1375,10 @@ const onDecodeSku = (detectedCodes: any[]) => {
 
 const processScan = async (sku: string, isRemoteScan: boolean = false) => {
   try {
-    // 1. Intento de bÃºsqueda local (rÃ¡pido y a prueba de fallos con cÃ³digos de barra largos)
+    // 1. Intento de búsqueda local (rápido y a prueba de fallos con códigos de barra largos)
     let productFound = apiProducts.value?.find((p: any) => p.sku === sku || p.name.toLowerCase() === sku.toLowerCase() || String(p.barcode) === sku);
 
-    // 2. Si no estÃ¡ en memoria local, buscarlo en el backend vÃ­a GET
+    // 2. Si no está en memoria local, buscarlo en el backend vía GET
     if (!productFound) {
       const res = await apiClient.get<any>(`/v1/products/products/?search=${sku}`);
       if (res.success && res.data && res.data.results && res.data.results.length > 0) {
@@ -1393,10 +1393,10 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
       // Agregar al carrito
       addToCart(productFound);
       
-      // SOLO hacer POST si es un escaneo local (no remoto vÃ­a websocket)
+      // SOLO hacer POST si es un escaneo local (no remoto vía websocket)
       // Esto previene duplicados cuando el backend dispara el evento Pusher
       if (!isRemoteScan) {
-        // En modo continuo: timeout mÃ¡s largo (5s) | En modo single: timeout normal (3s)
+        // En modo continuo: timeout más largo (5s) | En modo single: timeout normal (3s)
         const timeoutDuration = scannerMode.value === 'continuous' ? 5000 : 3000;
         if (scannerMode.value !== 'continuous') {
           searchQuery.value = '';
@@ -1405,7 +1405,7 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
         scanState.isLocal = true;
         setTimeout(() => scanState.isLocal = false, timeoutDuration);
 
-        // Avisar a otras pestaÃ±as con device_id para evitar duplicaciÃ³n
+        // Avisar a otras pestañas con device_id para evitar duplicación
         apiClient.post<any>('/v1/products/products/scan/', { 
           sku: productFound.sku,
           device_id: localDeviceId 
@@ -1415,7 +1415,7 @@ const processScan = async (sku: string, isRemoteScan: boolean = false) => {
       enqueueSnackbar({
         type: 'error',
         title: 'Producto no encontrado',
-        message: 'AsegÃºrate de que el cÃ³digo de barras o SKU estÃ©n registrados correctamente.',
+        message: 'Asegúrate de que el código de barras o SKU estén registrados correctamente.',
         duration: 4000
       });
     }
@@ -1482,7 +1482,7 @@ const addToCart = (product: Product) => {
       enqueueSnackbar({
         type: 'warning',
         title: 'Stock Insuficiente',
-        message: `No hay mÃ¡s stock disponible de ${product.name}`,
+        message: `No hay más stock disponible de ${product.name}`,
         duration: 2000
       });
       return; 
@@ -1495,7 +1495,7 @@ const addToCart = (product: Product) => {
       enqueueSnackbar({
         type: 'success',
         title: 'Cantidad Actualizada',
-        message: `Se agregÃ³ una unidad mÃ¡s de ${product.name}`,
+        message: `Se agregó una unidad más de ${product.name}`,
         duration: 1500
       });
   } else {
@@ -1508,7 +1508,7 @@ const addToCart = (product: Product) => {
     });
   }
   
-  // Limpiar barra de bÃºsqueda tras agregar producto
+  // Limpiar barra de búsqueda tras agregar producto
   searchQuery.value = '';
   focusSearchInput();
   
@@ -1612,7 +1612,7 @@ const setPaymentMethod = (method: 'completed' | 'layaway') => {
     enqueueSnackbar({
       type: 'warning',
       title: 'Cliente requerido',
-      message: 'Por favor, selecciona o registra un cliente para dar crÃ©dito.',
+      message: 'Por favor, selecciona o registra un cliente para dar crédito.',
       duration: 3500,
     });
     paymentMethod.value = 'completed';
@@ -1631,7 +1631,7 @@ const confirmPayment = async () => {
   }
   
     if (paymentMethod.value === 'layaway' && !selectedClientId.value) {
-      enqueueSnackbar({ type: 'warning', title: 'Cliente requerido', message: 'Por favor, selecciona o registra un cliente para dar crÃ©dito.', duration: 3000 });
+      enqueueSnackbar({ type: 'warning', title: 'Cliente requerido', message: 'Por favor, selecciona o registra un cliente para dar crédito.', duration: 3000 });
       return;
   }
   
@@ -1679,7 +1679,7 @@ const confirmPayment = async () => {
       enqueueSnackbar({
         type: 'error',
         title: 'Venta Fallida',
-        message: result.error || 'OcurriÃ³ un error al procesar la venta.',
+        message: result.error || 'Ocurrió un error al procesar la venta.',
         duration: 5000
       });
     }
@@ -1690,12 +1690,12 @@ const confirmPayment = async () => {
 
 const handleCloseSuccess = async () => {
   showSuccessModal.value = false;
-  clearCart(); // Usamos clearCart para detonar el sync vacÃ­o al servidor
+  clearCart(); // Usamos clearCart para detonar el sync vacío al servidor
   
-  // Refrescar stock de productos localmente despuÃ©s de una venta
+  // Refrescar stock de productos localmente después de una venta
   await fetchProducts();
 
-  // Auto focus en barra de bÃºsqueda para nueva venta
+  // Auto focus en barra de búsqueda para nueva venta
   nextTick(() => {
     if (searchInputRef.value) {
       searchInputRef.value.focus();
@@ -1746,7 +1746,7 @@ onMounted(async () => {
     // 1. Verificar estado de caja obligatoriamente para evitar falsos "Caja Cerrada"
     await shiftsStore.fetchShifts();
 
-    // 2. Cargar productos desde API sin paginaciÃ³n
+    // 2. Cargar productos desde API sin paginación
     await fetchProducts();
     await fetchClients();
 
@@ -1774,7 +1774,7 @@ onMounted(async () => {
     isInitializing.value = false;
   }
 
-  // Detectar tamaÃ±o del dispositivo
+  // Detectar tamaño del dispositivo
   checkDeviceSize();
   window.addEventListener('resize', checkDeviceSize);
   document.addEventListener('click', handleFilterMenuOutsideClick);
@@ -1825,7 +1825,7 @@ onMounted(async () => {
       return; // El isLocalScan ya maneja esto, pero double-check
     }
     
-    // Evitar procesar el mismo SKU dos veces en rÃ¡pida sucesiÃ³n desde otro dispositivo
+    // Evitar procesar el mismo SKU dos veces en rápida sucesión desde otro dispositivo
     if (data && data.sku === lastScannedSku) {
       return;
     }
@@ -1834,7 +1834,7 @@ onMounted(async () => {
     console.log("[Pusher] Producto escaneado remotamente desde otro dispositivo:", data);
     
     // IMPORTANTE: Solo agregar el producto del evento de Pusher
-    // No intentar hacer otro POST ni procesamiento local simultÃ¡neo
+    // No intentar hacer otro POST ni procesamiento local simultáneo
     if (data && data.product) {
        addToCart(data.product);
        const audio = new Audio('/sounds/Fx_Scanning.wav');
@@ -1858,12 +1858,12 @@ onMounted(async () => {
 
   // Evento: INVENTORY_UPDATED
   // Enviado por backend cuando se vende, devuelve o modifica un producto
-  // Dispara automÃ¡ticamente cuando se completa una venta en otro dispositivo
+  // Dispara automáticamente cuando se completa una venta en otro dispositivo
   channel.bind('INVENTORY_UPDATED', async (data: any) => {
     console.log("[SalesModal] Evento INVENTORY_UPDATED recibido:", data);
     // Refrescar listado de productos para actualizar stock
     try {
-      // Refrescar la pÃ¡gina actual de productos
+      // Refrescar la página actual de productos
       await fetchProducts();
       console.log("[SalesModal] Productos refrescados tras evento de inventario");
     } catch (err) {
@@ -1872,30 +1872,30 @@ onMounted(async () => {
   });
 
   // Evento: SALES_COMPLETED
-  // Enviado por backend cuando otra sesiÃ³n completa una venta
+  // Enviado por backend cuando otra sesión completa una venta
   // Contenido: transaction_id, total, items_count, timestamp, device_id
   channel.bind('SALES_COMPLETED', (data: any) => {
     console.log("[SalesModal] Venta completada:", data);
     
-    // Solo mostrar snackbar si la venta fue de OTRA sesiÃ³n (diferente device_id)
+    // Solo mostrar snackbar si la venta fue de OTRA sesión (diferente device_id)
     if (data.device_id && data.device_id !== localDeviceId && data.device_id !== 'server-action') {
-      //"device_id es diferente, significa que es de otra sesiÃ³n
+      //"device_id es diferente, significa que es de otra sesión
       enqueueSnackbar({
         type: 'info',
-        title: 'Venta Completada desde Otra SesiÃ³n',
-        message: `TransacciÃ³n: ${data.transaction_id} - Total: $${data.total}`,
+        title: 'Venta Completada desde Otra Sesión',
+        message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
         duration: 4000
       });
     } else if (data.device_id === 'server-action') {
-      // AcciÃ³n desde el servidor (adminitrador completando venta)
+      // Acción desde el servidor (adminitrador completando venta)
       enqueueSnackbar({
         type: 'info',
         title: 'Venta Completada desde Servidor',
-        message: `TransacciÃ³n: ${data.transaction_id} - Total: $${data.total}`,
+        message: `Transacción: ${data.transaction_id} - Total: $${data.total}`,
         duration: 4000
       });
     }
-    // Si device_id === localDeviceId, NO mostrar (fue esta sesiÃ³n la que la hizo)
+    // Si device_id === localDeviceId, NO mostrar (fue esta sesión la que la hizo)
   });
 
   // Evento: SALES_CANCELLED
@@ -1904,16 +1904,16 @@ onMounted(async () => {
   channel.bind('SALES_CANCELLED', (data: any) => {
     console.log("[SalesModal] Venta cancelada:", data);
     
-    // Solo mostrar snackbar si la cancelaciÃ³n fue de OTRA sesiÃ³n
+    // Solo mostrar snackbar si la cancelación fue de OTRA sesión
     if (data.device_id && data.device_id !== localDeviceId) {
       enqueueSnackbar({
         type: 'warning',
-        title: 'Venta Cancelada desde Otra SesiÃ³n',
-        message: `TransacciÃ³n: ${data.transaction_id}`,
+        title: 'Venta Cancelada desde Otra Sesión',
+        message: `Transacción: ${data.transaction_id}`,
         duration: 4000
       });
     }
-    // Si device_id === localDeviceId, NO mostrar (fue esta sesiÃ³n la que la cancelÃ³)
+    // Si device_id === localDeviceId, NO mostrar (fue esta sesión la que la canceló)
   });
 
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -2386,7 +2386,7 @@ watch(
 }
 
 
-/* â”€â”€ Floating stock badge â”€â”€ */
+/* ���� Floating stock badge ���� */
 .stock-badge {
   position: absolute;
   top: 0.75rem;
@@ -2480,7 +2480,7 @@ watch(
 .add-btn svg { width: 16px; height: 16px; }
 
 /* =====================
-   Right Panel â€” Cart
+   Right Panel � Cart
    ===================== */
 .right-panel {
   background: var(--color-background-secondary);
@@ -3083,4 +3083,3 @@ watch(
   max-height: 70vh; /* max possible height */
 }
 </style>
-

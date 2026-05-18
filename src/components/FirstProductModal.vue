@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <teleport to="body">
     <transition name="modal-fade">
       <div v-if="isOpen" class="modal-overlay" @click.self="handleClose">
@@ -7,7 +7,7 @@
           <div class="modal-content">
             <!-- Header -->
             <div class="modal-header">
-              <div class="modal-icon">📦</div>
+              <div class="modal-icon">??</div>
               <h2 class="modal-title">Comienza con tu Primer Producto</h2>
               <p class="modal-subtitle">
                 Para usar el sistema completamente, necesitas crear al menos un producto en tu inventario.
@@ -16,34 +16,32 @@
 
             <!-- Body -->
             <div class="modal-body">
-              <p class="info-text">
-                ¿Cómo prefieres agregar tu primer producto?
-              </p>
+              <p class="info-text">`n                ?C?mo prefieres agregar tu primer producto?`n              </p>
 
               <!-- Opciones -->
               <div class="options-container">
                 <!-- Opción 1: Crear manualmente -->
                 <button class="option-card" @click="handleCreateProduct">
-                  <div class="option-icon">✏️</div>
+                  <div class="option-icon">??</div>
                   <div class="option-content">
                     <h3 class="option-title">Crear Producto</h3>
                     <p class="option-description">
                       Crea tu primer producto llenando un sencillo formulario
                     </p>
                   </div>
-                  <div class="option-arrow">→</div>
+                  <div class="option-arrow">â†’</div>
                 </button>
 
                 <!-- Opción 2: Cargar desde Excel -->
                 <button class="option-card" @click="handleLoadExcel">
-                  <div class="option-icon">📊</div>
+                  <div class="option-icon">??</div>
                   <div class="option-content">
                     <h3 class="option-title">Cargar desde Excel</h3>
                     <p class="option-description">
                       Importa múltiples productos desde un archivo Excel
                     </p>
                   </div>
-                  <div class="option-arrow">→</div>
+                  <div class="option-arrow">â†’</div>
                 </button>
               </div>
 
@@ -69,7 +67,7 @@
 
             <!-- Footer Info -->
             <div class="modal-footer-info">
-              <div class="info-badge">💡</div>
+              <div class="info-badge">ðŸ’¡</div>
               <p class="info-message">
                 Puedes agregar productos en cualquier momento desde la sección de Inventario
               </p>
@@ -365,3 +363,5 @@ const handleClose = () => {
   }
 }
 </style>
+
+

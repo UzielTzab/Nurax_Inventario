@@ -9,7 +9,7 @@
       />
     </aside>
 
-    <!-- Overlay para mÃ³vil -->
+    <!-- Overlay para móvil -->
     <div
       v-if="isSidebarOpen"
       class="sidebar-overlay"
@@ -26,9 +26,9 @@
         </button>
 
 
-        <!-- Ãrea derecha topbar -->
+        <!-- Área derecha topbar -->
         <div class="topbar-right">
-          <!-- BotÃ³n Vender (Acceso Global) -->
+          <!-- Botón Vender (Acceso Global) -->
           <AppButton v-if="showPosActions" variant="fill" :icon="ShoppingCartIcon" @click="salesStore.openModal()" style="margin-right: 0.5rem;">
             Vender
           </AppButton>
@@ -37,7 +37,7 @@
           <div class="topbar-notification-wrapper" ref="notificationWrapperRef">
             <!-- <button class="icon-btn" title="Notificaciones" @click="toggleNotifications">
               <BellIcon class="w-5 h-5" /> -->
-              <!-- Un pequeÃ±o badge si hay notificaciones, opcional -->
+              <!-- Un pequeño badge si hay notificaciones, opcional -->
               <!-- <span v-if="productStore.lowStockProducts.length > 0 || productStore.outOfStockProducts.length > 0" class="notification-badge"></span>
             </button> -->
 
@@ -123,7 +123,7 @@
                     Editar perfil
                   </AppButton>
                   <AppButton variant="danger" :icon="ArrowRightOnRectangleIcon" @click="handleLogout" size="sm" full-width>
-                    Cerrar sesiÃ³n
+                    Cerrar sesión
                   </AppButton>
                 </div>
               </div>
@@ -225,7 +225,7 @@
                 <AppInput
                   v-model="profileForm.email"
                   type="email"
-                  label="Correo electrÃ³nico"
+                  label="Correo electrónico"
                   placeholder="correo@empresa.com"
                 />
               </div>
@@ -251,8 +251,8 @@
                     <AppInput
                       v-model="passwordForm.current"
                       type="password"
-                      label="ContraseÃ±a actual"
-                      placeholder="Ingresa tu contraseÃ±a actual"
+                      label="Contraseña actual"
+                      placeholder="Ingresa tu contraseña actual"
                       @input="passwordErrors.current = ''"
                     />
                     <p v-if="passwordErrors.current" class="pm-field-error">{{ passwordErrors.current }}</p>
@@ -261,8 +261,8 @@
                     <AppInput
                       v-model="passwordForm.new"
                       type="password"
-                      label="Nueva contraseÃ±a"
-                      placeholder="MÃ­n. 8 caracteres Â· 1 mayÃºscula Â· 1 nÃºmero"
+                      label="Nueva contraseña"
+                      placeholder="Mín. 8 caracteres · 1 mayúscula · 1 número"
                       @input="passwordErrors.new = ''"
                     />
                     <p v-if="passwordErrors.new" class="pm-field-error">{{ passwordErrors.new }}</p>
@@ -271,8 +271,8 @@
                     <AppInput
                       v-model="passwordForm.confirm"
                       type="password"
-                      label="Confirmar nueva contraseÃ±a"
-                      placeholder="Repite tu nueva contraseÃ±a"
+                      label="Confirmar nueva contraseña"
+                      placeholder="Repite tu nueva contraseña"
                       @input="passwordErrors.confirm = ''"
                     />
                     <p v-if="passwordErrors.confirm" class="pm-field-error">{{ passwordErrors.confirm }}</p>
@@ -286,7 +286,7 @@
                     :loading="isChangingPassword"
                     :disabled="!isPasswordReady"
                   >
-                    Actualizar contraseÃ±a
+                    Actualizar contraseña
                   </AppButton>
                 </div>
               </div>
@@ -312,7 +312,7 @@
         :is-open="showUnsavedProfileChangesModal"
         type="warning"
         title="Tienes cambios sin guardar"
-        message="Modificaste datos del perfil, contraseÃ±a o imagen. Â¿Quieres guardar estos cambios antes de salir?"
+        message="Modificaste datos del perfil, contraseña o imagen. ¿Quieres guardar estos cambios antes de salir?"
         confirm-text="Guardar cambios"
         cancel-text="Descartar"
         :is-loading="isSavingProfile"
@@ -435,7 +435,7 @@ const showPosActions = computed(() => {
 
 const showUnsavedProfileChangesModal = ref(false);
 
-// Formulario de ediciÃ³n de perfil
+// Formulario de edición de perfil
 const profileForm = reactive({
   name: currentUser.value?.name ?? '',
   email: currentUser.value?.email ?? '',
@@ -484,7 +484,7 @@ const openProfileEdit = () => {
   showProfileEdit.value = true;
 };
 
-/** Cierra el modal y resetea el formulario + errores de contraseÃ±a */
+/** Cierra el modal y resetea el formulario + errores de contraseña */
 const closeProfileEdit = () => {
   profileForm.name = initialProfileSnapshot.name;
   profileForm.email = initialProfileSnapshot.email;
@@ -501,8 +501,8 @@ const closeProfileEdit = () => {
   passwordErrors.confirm = '';
 };
 
-/** Toggle de la secciÃ³n de contraseÃ±a limpiando errores al plegar */
-// â”€â”€ Profile photo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/** Toggle de la sección de contraseña limpiando errores al plegar */
+// ���� Profile photo ������������������������������������������������������������������������������������
 const profilePhotoInputRef    = ref<HTMLInputElement | null>(null);
 const profilePhotoPreview     = ref('');   // data-URL for local preview
 const profilePendingFile      = ref<File | null>(null); // file waiting to be uploaded on save
@@ -510,7 +510,7 @@ const pendingRemovePhoto      = ref(false);              // user pressed "Quitar
 
 /**
  * Comprime una imagen usando Canvas API.
- * Redimensiona a mÃ¡x maxDimÃ—maxDim y ajusta calidad JPEG hasta quedar â‰¤ maxBytes.
+ * Redimensiona a máx maxDim�maxDim y ajusta calidad JPEG hasta quedar �0� maxBytes.
  * Devuelve un File con el resultado comprimido.
  */
 const compressImage = (file: File, maxDim = 800, maxBytes = 1 * 1024 * 1024): Promise<File> => {
@@ -544,7 +544,7 @@ const compressImage = (file: File, maxDim = 800, maxBytes = 1 * 1024 * 1024): Pr
         let dataUrl = '';
         for (const q of qualities) {
           dataUrl = canvas.toDataURL('image/jpeg', q);
-          // dataUrl base64 â‰ˆ 4/3 del tamaÃ±o binario
+          // dataUrl base64 �0� 4/3 del tamaño binario
           const approxBytes = Math.round((dataUrl.length - 22) * 0.75);
           if (approxBytes <= maxBytes) break;
         }
@@ -581,21 +581,21 @@ const onProfilePhotoFile = async (e: Event) => {
 
   // Validar tipo de archivo
   if (!file.type.startsWith('image/')) {
-    enqueueSnackbar({ type: 'error', title: 'Formato invÃ¡lido', message: 'Por favor selecciona una imagen (JPG, PNG, WEBP).', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Formato inválido', message: 'Por favor selecciona una imagen (JPG, PNG, WEBP).', duration: 3000 });
     if (e.target) (e.target as HTMLInputElement).value = '';
     return;
   }
 
-  // LÃ­mite absoluto: 15 MB
+  // Límite absoluto: 15 MB
   if (file.size > 15 * 1024 * 1024) {
-    enqueueSnackbar({ type: 'error', title: 'Archivo demasiado grande', message: 'El archivo supera 15 MB. Por favor elige una imagen mÃ¡s pequeÃ±a.', duration: 4000 });
+    enqueueSnackbar({ type: 'error', title: 'Archivo demasiado grande', message: 'El archivo supera 15 MB. Por favor elige una imagen más pequeña.', duration: 4000 });
     if (e.target) (e.target as HTMLInputElement).value = '';
     return;
   }
 
   let finalFile = file;
 
-  // Comprimir si pesa mÃ¡s de 500 KB para garantizar que el upload sea fluido
+  // Comprimir si pesa más de 500 KB para garantizar que el upload sea fluido
   if (file.size > 500 * 1024) {
     try {
       finalFile = await compressImage(file);
@@ -604,7 +604,7 @@ const onProfilePhotoFile = async (e: Event) => {
         enqueueSnackbar({
           type: 'info',
           title: 'Imagen optimizada',
-          message: `Se optimizÃ³ automÃ¡ticamente (${ratio}% mÃ¡s ligera) sin perder calidad visible.`,
+          message: `Se optimizó automáticamente (${ratio}% más ligera) sin perder calidad visible.`,
           duration: 3500
         });
       }
@@ -639,7 +639,7 @@ const removeProfilePhoto = () => {
   profilePendingFile.value    = null;
   pendingRemovePhoto.value    = true;
 };
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ��������������������������������������������������������������������������������������������������������������������������
 
 const isSavingProfile = ref(false);
 
@@ -693,7 +693,7 @@ const saveProfile = async () => {
       const result = await updateAvatarUrl(profilePendingFile.value);
       if (result.success && result.url) {
         if (currentUser.value) currentUser.value.avatar_url = result.url;
-        enqueueSnackbar({ type: 'success', title: 'Foto actualizada', message: 'Tu foto de perfil se guardÃ³ correctamente.', duration: 3000 });
+        enqueueSnackbar({ type: 'success', title: 'Foto actualizada', message: 'Tu foto de perfil se guardó correctamente.', duration: 3000 });
       } else {
         enqueueSnackbar({ type: 'error', title: 'Error al subir foto', message: result.error || 'No se pudo subir la imagen.', duration: 3500 });
       }
@@ -703,7 +703,7 @@ const saveProfile = async () => {
     // 2. If user pressed "Quitar", clear avatar on backend
     if (pendingRemovePhoto.value) {
       // Pass null to signal removal (updateAvatarUrl with null or a dedicated composable call)
-      // For now, clear locally â€” backend removal can be added when the endpoint is available
+      // For now, clear locally � backend removal can be added when the endpoint is available
       if (currentUser.value) currentUser.value.avatar_url = '';
       pendingRemovePhoto.value = false;
     }
@@ -744,7 +744,7 @@ const saveProfile = async () => {
         console.error('Error updating profile:', error);
         enqueueSnackbar({
           type: 'error',
-          title: 'Error de conexiÃ³n',
+          title: 'Error de conexión',
           message: 'No se pudo conectar al servidor para actualizar el perfil.',
           duration: 3500
         });
@@ -806,11 +806,11 @@ const initPusher = async () => {
 
   const userId = currentUser.value?.id;
   if (!userId) {
-    console.warn("[Pusher] No se puede iniciar: Usuario no autenticado todavÃ­a.");
+    console.warn("[Pusher] No se puede iniciar: Usuario no autenticado todavía.");
     return;
   }
 
-  console.log(`[Pusher] Iniciando conexiÃ³n para usuario: ${userId}`);
+  console.log(`[Pusher] Iniciando conexión para usuario: ${userId}`);
   
   const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
   const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
@@ -822,22 +822,22 @@ const initPusher = async () => {
   });
 
   globalPusher.connection.bind('state_change', (states: any) => {
-    console.log(`[Pusher] Estado de conexiÃ³n: ${states.current}`);
+    console.log(`[Pusher] Estado de conexión: ${states.current}`);
   });
 
   globalPusher.connection.bind('error', (err: any) => {
-    console.error('[Pusher] Error de conexiÃ³n:', err);
+    console.error('[Pusher] Error de conexión:', err);
   });
 
   globalChannelName = `pos-user-${userId}`;
   globalChannel = globalPusher.subscribe(globalChannelName);
 
   globalChannel.bind('pusher:subscription_succeeded', () => {
-    console.log(`[Pusher] Suscrito con Ã©xito al canal: ${globalChannelName}`);
+    console.log(`[Pusher] Suscrito con éxito al canal: ${globalChannelName}`);
   });
 
   globalChannel.bind('INVENTORY_UPDATED', (data: any) => {
-    console.log("[Pusher] Â¡Evento INVENTORY_UPDATED recibido!", data);
+    console.log("[Pusher] ¡Evento INVENTORY_UPDATED recibido!", data);
     productStore.fetchProducts();
   });
   
@@ -860,18 +860,18 @@ onMounted(async () => {
   window.addEventListener('open-excel-import', handleOpenExcelImportEvent as EventListener);
 });
 
-// Vigilar al usuario por si la sesiÃ³n tarda en cargar
+// Vigilar al usuario por si la sesión tarda en cargar
 watch(currentUser, (newUser, oldUser) => {
   if (newUser && newUser.id !== oldUser?.id) {
     void initPusher();
     
-    // Cargas segÃºn el rol del usuario
+    // Cargas según el rol del usuario
     if (newUser.role === 'admin') {
-      // Admin: cargar solo datos de administraciÃ³n
-      // (clientes se cargan en AdminClients.vue cuando navega allÃ¡)
+      // Admin: cargar solo datos de administración
+      // (clientes se cargan en AdminClients.vue cuando navega allá)
     } else if (newUser.role === 'cliente') {
       // Cliente: cargar datos necesarios para vender y gestionar inventario
-      // NOTA: productos se cargan en cada vista (Inventory.vue, etc) con paginaciÃ³n
+      // NOTA: productos se cargan en cada vista (Inventory.vue, etc) con paginación
       // para evitar duplicar peticiones GET
       shiftsStore.fetchShifts();
     }
@@ -925,7 +925,7 @@ const handleSaleReverted = async (saleId: string | number, items: { id: string |
     enqueueSnackbar({
       type: 'error',
       title: 'Error al revertir',
-      message: result.error || 'OcurriÃ³ un error inesperado al intentar cancelar la venta.',
+      message: result.error || 'Ocurrió un error inesperado al intentar cancelar la venta.',
       duration: 5000
     });
   }
@@ -1299,7 +1299,7 @@ defineEmits(['quickSell']);
   margin-top: 12px;
 }
 
-/* === OVERLAY MÃ“VIL === */
+/* === OVERLAY M�VIL === */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -1608,7 +1608,7 @@ defineEmits(['quickSell']);
   gap: 0.3rem;
 }
 .pm-field-error::before {
-  content: 'âš ';
+  content: '⚠';
   font-size: 0.7rem;
 }
 
@@ -1883,4 +1883,3 @@ defineEmits(['quickSell']);
 }
 
 </style>
-

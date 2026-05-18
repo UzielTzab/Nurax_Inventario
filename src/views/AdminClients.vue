@@ -7,7 +7,7 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Clientes</h1>
-            <p class="page-subtitle">GestiÃ³n de cuentas de clientes del sistema</p>
+            <p class="page-subtitle">Gestión de cuentas de clientes del sistema</p>
           </div>
           <div class="header-actions">
             <AppButton variant="fill" @click="showAddModal = true">
@@ -95,7 +95,7 @@
                   <p style="font-weight: 600; font-size: 1.125rem; color: #1F2937; margin: 0; text-transform: capitalize;">{{ client.company || 'Sin Empresa' }}</p>
                 </td>
                 <td class="text-center">
-                  <span class="plan-badge" :class="'plan-' + (client.plan || 'basico').toLowerCase()">{{ client.plan || 'BÃ¡sico' }}</span>
+                  <span class="plan-badge" :class="'plan-' + (client.plan || 'basico').toLowerCase()">{{ client.plan || 'Básico' }}</span>
                 </td>
                 <td class="text-center">
                   <span class="status-badge" :class="client.is_active ? 'status-active' : 'status-inactive'">
@@ -163,7 +163,7 @@
       </div>
     </div>
 
-    <!-- Modal Nuevo Cliente / Ã‰xito -->
+    <!-- Modal Nuevo Cliente / Éxito -->
     <Teleport to="body">
       <transition name="modal-fade">
         <div v-if="showAddModal" class="modal-backdrop">
@@ -182,15 +182,15 @@
                 <AppInput
                   v-model="newClient.name"
                   label="Nombre completo"
-                  placeholder="Ej. Juan GarcÃ­a"
+                  placeholder="Ej. Juan García"
                   required
                 />
                 <AppInput
                   v-model="newClient.email"
                   type="email"
-                  label="Correo electrÃ³nico"
+                  label="Correo electrónico"
                   placeholder="juan@empresa.com"
-                  hint="La contraseÃ±a temporal se generarÃ¡ automÃ¡ticamente de forma segura."
+                  hint="La contraseña temporal se generará automáticamente de forma segura."
                   required
                 />
                 <AppInput
@@ -205,7 +205,7 @@
                     v-model="newClient.plan"
                     placeholder="Selecciona un plan"
                     :options="[
-                      { value: 'basico', label: 'BÃ¡sico' },
+                      { value: 'basico', label: 'Básico' },
                       { value: 'pro', label: 'Pro' }
                     ]"
                   />
@@ -224,11 +224,11 @@
                     <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 11.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
                   </svg>
                 </div>
-                <h3 class="modal-title" style="margin-bottom: 1.5rem; font-size: 1.5rem;">Â¡Negocio creado exitosamente!</h3>
+                <h3 class="modal-title" style="margin-bottom: 1.5rem; font-size: 1.5rem;">¡Negocio creado exitosamente!</h3>
                 
                 <div style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left;">
                   <p style="margin: 0; font-size: 1.125rem; color: #374151;"><strong>Correo:</strong> {{ createdClientData.email }}</p>
-                  <p style="margin: 0.5rem 0 0; font-size: 1.125rem; color: #374151;"><strong>ContraseÃ±a:</strong> {{ createdClientData.password }}</p>
+                  <p style="margin: 0.5rem 0 0; font-size: 1.125rem; color: #374151;"><strong>Contraseña:</strong> {{ createdClientData.password }}</p>
                 </div>
 
                 <AppButton variant="fill" style="width: 100%; padding: 0.875rem; font-size: 1rem; justify-content: center;" @click="copyWelcomeMessage">
@@ -249,7 +249,7 @@
       :isOpen="!!toggleTarget"
       :title="toggleTarget?.is_active ? 'Desactivar cuenta' : 'Activar cuenta'"
       type="warning"
-      :confirmText="toggleTarget?.is_active ? 'SÃ­, desactivar' : 'SÃ­, activar'"
+      :confirmText="toggleTarget?.is_active ? 'Sí, desactivar' : 'Sí, activar'"
       @close="toggleTarget = null"
       @confirm="applyToggle"
       :isLoading="isSubmitting"
@@ -267,10 +267,10 @@
         </div>
         <!-- Mensaje contextual -->
         <p v-if="toggleTarget.is_active" class="toggle-msg toggle-msg-warn">
-          Al <strong>desactivar</strong> esta cuenta, el cliente perderÃ¡ acceso al sistema hasta que sea reactivado.
+          Al <strong>desactivar</strong> esta cuenta, el cliente perderá acceso al sistema hasta que sea reactivado.
         </p>
         <p v-else class="toggle-msg toggle-msg-warn">
-          Al <strong>activar</strong> esta cuenta, el cliente recuperarÃ¡ acceso completo al sistema.
+          Al <strong>activar</strong> esta cuenta, el cliente recuperará acceso completo al sistema.
         </p>
       </div>
     </ConfirmationModal>
@@ -288,11 +288,11 @@
     >
       <div v-if="deleteTarget">
         <p class="delete-msg" style="color: #dc2626; font-weight: 500;">
-          Esta acciÃ³n borrarÃ¡ todas sus ventas e inventario y no se puede deshacer.
+          Esta acción borrará todas sus ventas e inventario y no se puede deshacer.
         </p>
         <AppInput
           v-model="deleteConfirmText"
-          :label="`Escribe el nombre del negocio ${deleteTarget?.company || deleteTarget?.name} para confirmar la eliminaciÃ³n definitiva:`"
+          :label="`Escribe el nombre del negocio ${deleteTarget?.company || deleteTarget?.name} para confirmar la eliminación definitiva:`"
           placeholder="Nombre del negocio"
         />
       </div>
@@ -362,7 +362,7 @@ const closeModalOrSuccess = () => {
 
 const copyWelcomeMessage = async () => {
   if (!createdClientData.value) return;
-  const msg = `Â¡Hola! Tu Punto de Venta Nurax estÃ¡ listo. Ingresa en app.nurax.mx con tu correo: ${createdClientData.value.email} y esta contraseÃ±a temporal: ${createdClientData.value.password}`;
+  const msg = `¡Hola! Tu Punto de Venta Nurax está listo. Ingresa en app.nurax.mx con tu correo: ${createdClientData.value.email} y esta contraseña temporal: ${createdClientData.value.password}`;
   try {
     await navigator.clipboard.writeText(msg);
     enqueueSnackbar({ type: 'success', title: 'Copiado', message: 'Mensaje de bienvenida copiado al portapapeles.', duration: 3000 });
@@ -403,13 +403,13 @@ const isCurrentAdminUser = (clientId: string | number): boolean => {
   return clientId === currentUser.value?.id && currentUser.value?.role === 'admin';
 };
 
-// Abre el modal de confirmaciÃ³n para cambiar el estado
+// Abre el modal de confirmación para cambiar el estado
 const confirmToggle = (client: Client) => {
   // No permitir desactivar/activar la cuenta del admin actual
   if (isCurrentAdminUser(client.id)) {
     enqueueSnackbar({
       type: 'error',
-      title: 'AcciÃ³n no permitida',
+      title: 'Acción no permitida',
       message: 'No puedes cambiar el estado de tu propia cuenta.',
       duration: 3000
     });
@@ -418,7 +418,7 @@ const confirmToggle = (client: Client) => {
   toggleTarget.value = client;
 };
 
-// Aplica el cambio de estado despuÃ©s de confirmar
+// Aplica el cambio de estado después de confirmar
 const applyToggle = async () => {
   if (!toggleTarget.value) return;
   const client = toggleTarget.value;
@@ -441,7 +441,7 @@ const applyToggle = async () => {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo actualizar el estado.', duration: 4000 });
     }
   } catch (error) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexiÃ³n al servidor.', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
     isSubmitting.value = false;
     toggleTarget.value = null; // Cerramos el modal solo al terminar para poder mostrar el loading antes
@@ -453,7 +453,7 @@ const confirmDelete = (client: Client) => {
   if (isCurrentAdminUser(client.id)) {
     enqueueSnackbar({
       type: 'error',
-      title: 'AcciÃ³n no permitida',
+      title: 'Acción no permitida',
       message: 'No puedes eliminar tu propia cuenta.',
       duration: 3000
     });
@@ -477,7 +477,7 @@ const deleteClient = async () => {
     }
   } catch (err) {
     console.error(err);
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexiÃ³n al servidor.', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
     isSubmitting.value = false;
     deleteTarget.value = null;
@@ -494,7 +494,7 @@ const fetchClients = async () => {
       search: searchQuery.value,
       status: statusFilter.value
     };
-    // Consumir /api/v1/accounts/users/software-clients/ â€” dueÃ±os de tienda
+    // Consumir /api/v1/accounts/users/software-clients/ � dueños de tienda
     const response = await apiClient.get<any>('/v1/accounts/users/software-clients/', { params });
     if (response.success && response.data) {
       // Manejar formato paginado DRF: {count, next, previous, results}
@@ -512,7 +512,7 @@ const fetchClients = async () => {
         is_active: Boolean(c.is_active),
         joinDate: c.created_at
           ? new Date(c.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
-          : 'â€”',
+          : '—',
         avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length] ?? '#06402B',
         company: c.store_name,
         plan: c.store_plan,
@@ -523,7 +523,7 @@ const fetchClients = async () => {
     }
   } catch (error) {
     console.error('Error fetching clients:', error);
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexiÃ³n al servidor.', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión al servidor.', duration: 3000 });
   } finally {
     isLoading.value = false;
   }
@@ -536,7 +536,7 @@ onMounted(() => {
 const addClient = async () => {
   isSubmitting.value = true;
   try {
-    const normalizedPlan = newClient.value.plan === 'bÃ¡sico' ? 'basico' : newClient.value.plan;
+    const normalizedPlan = newClient.value.plan === 'básico' ? 'basico' : newClient.value.plan;
     const payload = {
       store_name: newClient.value.company?.trim() || `Tienda de ${newClient.value.name.trim()}`,
       store_plan: normalizedPlan,
@@ -556,7 +556,7 @@ const addClient = async () => {
       enqueueSnackbar({ type: 'error', title: 'Error', message: response.error || 'No se pudo crear el cliente. Verifica los datos.', duration: 4000 });
     }
   } catch (error) {
-    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexiÃ³n con el servidor.', duration: 3000 });
+    enqueueSnackbar({ type: 'error', title: 'Error', message: 'Error de conexión con el servidor.', duration: 3000 });
   } finally {
     isSubmitting.value = false;
   }
@@ -778,7 +778,7 @@ const addClient = async () => {
   text-transform: capitalize;
 }
 
-.plan-bÃ¡sico   { background: #eff6ff; color: #1d4ed8; }
+.plan-básico   { background: #eff6ff; color: #1d4ed8; }
 .plan-pro      { background: #fef08a; color: #ca8a04; }
 .plan-enterprise { background: #faf5ff; color: #7c3aed; }
 
@@ -1196,4 +1196,3 @@ const addClient = async () => {
   }
 }
 </style>
-

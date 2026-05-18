@@ -29,7 +29,7 @@
       <div class="header flex justify-between items-start">
         <div>
           <h1 class="page-title">Corte de Caja (Turno Actual)</h1>
-          <p class="subtitle">Gestiona tu turno. AquÃ­ registrarÃ¡s tu corte sÃ³lo cuando termines tu jornada.</p>
+          <p class="subtitle">Gestiona tu turno. Aquí registrarás tu corte sólo cuando termines tu jornada.</p>
         </div>
         <AppButton variant="fill" @click="router.push('/dashboard/inventory')">
           <ArrowLeftIcon class="w-5 h-5 mr-1" />
@@ -40,7 +40,7 @@
     <!-- Turno Abierto -->
     <div class="active-shift-card card">
       <div class="card-header">
-        <h2 class="card-title">ðŸ’µ Turno en progreso: {{ currentUser?.name || currentUser?.username || 'Cajero' }}</h2>
+        <h2 class="card-title">💵 Turno en progreso: {{ currentUser?.name || currentUser?.username || 'Cajero' }}</h2>
         <span class="badge badge-success">Abierto</span>
       </div>
       <div class="card-body">
@@ -80,7 +80,7 @@
             <span v-if="!isBlindCutRole || showExpectedForBlindCut" class="stat-value stat-value-emphasis">
               ${{ formatMoney(turnKpis.expectedCash) }}
             </span>
-            <span v-else class="stat-value stat-value-hidden">â€¢â€¢â€¢â€¢â€¢â€¢</span>
+            <span v-else class="stat-value stat-value-hidden">⬢⬢⬢⬢⬢⬢</span>
           </div>
         </div>
         <p class="help-text open-time-text">Apertura: {{ formatDate(currentShift?.opened_at) }}</p>
@@ -88,7 +88,7 @@
         <div class="close-shift-action mt-6">
           <h3>Realizar Corte (Cerrar Caja)</h3>
           <p class="help-text text-sm">
-            <strong>âš ï¸ Alerta:</strong> SÃ³lo realiza esta acciÃ³n al finalizar tu dÃ­a de trabajo o terminar tu turno. NecesitarÃ¡s contar el dinero de tu caja.
+            <strong>⚠️ Alerta:</strong> Sólo realiza esta acción al finalizar tu día de trabajo o terminar tu turno. Necesitarás contar el dinero de tu caja.
           </p>
           <div class="mt-4">
              <AppButton @click="showCloseShiftModal = true" variant="fill">
@@ -100,7 +100,7 @@
     </div>
   </div>
 
-  <!-- NingÃºn Turno Abierto -->
+  <!-- Ningún Turno Abierto -->
   <div class="shifts-container" v-else>
     <div class="header flex justify-between items-start">
       <div>
@@ -178,8 +178,8 @@
                 <td>{{ shift.actual_cash ? '$'+shift.actual_cash : '-' }}</td>
                 <td>
                   <span v-if="shift.difference !== null && shift.difference !== undefined" :class="differenceToneClass(shift)">
-                    <span v-if="Number(shift.difference) < 0">â–¼</span>
-                    <span v-else-if="Number(shift.difference) > 0">â–²</span>
+                    <span v-if="Number(shift.difference) < 0">▼</span>
+                    <span v-else-if="Number(shift.difference) > 0">▲</span>
                     ${{ shift.difference }}
                   </span>
                   <span v-else>-</span>
@@ -196,7 +196,7 @@
             </template>
           </tbody>
        </table>
-       <!-- PaginaciÃ³n usando el componente reutilizable -->
+       <!-- Paginación usando el componente reutilizable -->
        <div class="px-6 pb-6">
          <Pagination
            v-model:current-page="currentPage"
@@ -208,16 +208,16 @@
   </div>
   </div>
 
-  <!-- Modal DeclaraciÃ³n de Efectivo -->
+  <!-- Modal Declaración de Efectivo -->
   <teleport to="body">
     <transition name="modal-fade">
       <div v-if="showCloseShiftModal" class="modal-overlay" @click.self="closeArqueoModal">
         <div class="modal-card">
           <div class="modal-header">
-            <h3 class="modal-title">DeclaraciÃ³n de Efectivo</h3>
+            <h3 class="modal-title">Declaración de Efectivo</h3>
           </div>
           <div class="modal-body">
-            <p class="mb-4 text-gray-700">Cuenta el dinero fÃ­sico que tienes en el cajÃ³n y escribe el monto total a continuaciÃ³n.</p>
+            <p class="mb-4 text-gray-700">Cuenta el dinero físico que tienes en el cajón y escribe el monto total a continuación.</p>
             <div class="form-group">
               <label>Real Contado</label>
               <input
@@ -234,7 +234,7 @@
                 Tienes un sobrante de ${{ Math.abs(calculatedDifference || 0).toFixed(2) }}
               </template>
               <template v-else-if="(calculatedDifference ?? 0) < 0">
-                Tienes un faltante de -${{ Math.abs(calculatedDifference || 0).toFixed(2) }}. Â¿EstÃ¡s seguro de continuar?
+                Tienes un faltante de -${{ Math.abs(calculatedDifference || 0).toFixed(2) }}. ¿Estás seguro de continuar?
               </template>
               <template v-else>
                 Caja cuadrada perfectamente
@@ -315,7 +315,7 @@
         <aside class="drawer-panel">
           <header class="drawer-header">
             <h3>Detalle de Corte</h3>
-            <button class="drawer-close" @click="showShiftDetailDrawer = false">âœ•</button>
+            <button class="drawer-close" @click="showShiftDetailDrawer = false">✕</button>
           </header>
 
           <div class="drawer-body" v-if="selectedShiftDetail">
@@ -341,7 +341,7 @@
               <h4>Ventas del turno</h4>
               <ul v-if="selectedShiftSales.length > 0" class="drawer-list">
                 <li v-for="sale in selectedShiftSales" :key="sale.id">
-                  <span>#{{ sale.sale_number ?? sale.id }} Â· {{ formatDate(sale.created_at) }}</span>
+                  <span>#{{ sale.sale_number ?? sale.id }} · {{ formatDate(sale.created_at) }}</span>
                   <strong>${{ formatMoney(Number(sale.total_amount ?? sale.total ?? 0)) }}</strong>
                 </li>
               </ul>
@@ -436,7 +436,7 @@ const openMovementModal = (type: 'in' | 'out') => {
 
 const handleCashMovement = async () => {
   if (!movementForm.value.amount || movementForm.value.amount <= 0) {
-    enqueueSnackbar({ type: 'warning', title: 'Monto invÃ¡lido', message: 'Ingresa un monto mayor a cero.' });
+    enqueueSnackbar({ type: 'warning', title: 'Monto inválido', message: 'Ingresa un monto mayor a cero.' });
     return;
   }
   if (!movementForm.value.reason.trim()) {
@@ -459,7 +459,7 @@ const handleCashMovement = async () => {
     
     await apiClient.post('/v1/expenses/cash-movements/', payload);
     
-    enqueueSnackbar({ type: 'success', title: 'Ã‰xito', message: 'Movimiento registrado correctamente.' });
+    enqueueSnackbar({ type: 'success', title: 'Éxito', message: 'Movimiento registrado correctamente.' });
     showMovementModal.value = false;
     
     // Recargar KPIs para actualizar contadores
@@ -565,14 +565,14 @@ const loadCurrentShiftKpis = async () => {
 
 const handleOpenShift = async () => {
   if (openForm.value.starting_cash === null || openForm.value.starting_cash < 0) {
-    enqueueSnackbar({ type: 'warning', title: 'Fondo de caja invÃ¡lido', message: 'Por favor, ingresa al menos 0.00' });
+    enqueueSnackbar({ type: 'warning', title: 'Fondo de caja inválido', message: 'Por favor, ingresa al menos 0.00' });
     return;
   }
   
   const result = await shiftsStore.openShift(openForm.value.starting_cash);
   
   if (result.success) {
-    enqueueSnackbar({ type: 'success', title: 'Turno Abierto', message: 'Â¡Que tengas una excelente jornada!' });
+    enqueueSnackbar({ type: 'success', title: 'Turno Abierto', message: '¡Que tengas una excelente jornada!' });
     openForm.value.starting_cash = null;
     await loadCurrentShiftKpis();
   } else {
@@ -582,7 +582,7 @@ const handleOpenShift = async () => {
 
 const handleCloseShift = async () => {
   if (closeForm.value.actual_cash === null) {
-      enqueueSnackbar({ type: 'warning', title: 'InformaciÃ³n incompleta', message: 'Por favor ingresa la cantidad real.' });
+      enqueueSnackbar({ type: 'warning', title: 'Información incompleta', message: 'Por favor ingresa la cantidad real.' });
       return;
   }
   if(!shiftsStore.currentShift) return;
@@ -594,7 +594,7 @@ const handleCloseShift = async () => {
   );
 
   if (result.success) {
-    enqueueSnackbar({ type: 'success', title: 'Turno Cerrado', message: 'El corte de caja finalizÃ³ exitosamente.' });
+    enqueueSnackbar({ type: 'success', title: 'Turno Cerrado', message: 'El corte de caja finalizó exitosamente.' });
     closeForm.value.expected_cash = null;
     closeForm.value.actual_cash = null;
     showCloseShiftModal.value = false;
@@ -1104,4 +1104,3 @@ const formatDate = (dateStr: string | undefined | null) => {
   }
 }
 </style>
-

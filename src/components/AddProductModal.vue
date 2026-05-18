@@ -21,7 +21,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    <span class="dropzone-text">AÃ±adir imagen</span>
+                    <span class="dropzone-text">Añadir imagen</span>
                   </div>
                   <img v-else :src="imagePreview" alt="Preview" class="preview-img" />
                   <input
@@ -48,9 +48,9 @@
               <div class="field-block">
                 <AppSelect
                   v-model="formData.category"
-                  label="CategorÃ­a"
+                  label="Categoría"
                   :options="filteredCategories"
-                  placeholder="Selecciona categorÃ­a"
+                  placeholder="Selecciona categoría"
                 />
                 <div class="category-select-row" style="margin-top: 0.5rem;">
                   <AppButton
@@ -60,7 +60,7 @@
                     :icon="PlusIcon"
                     iconOnly
                     class="square-icon-button"
-                    title="Agregar categorÃ­a"
+                    title="Agregar categoría"
                     @click="showCategoryModal = true"
                   />
                 </div>
@@ -105,7 +105,7 @@
               />
             </AppFormSection>
 
-            <AppFormSection title="CÃ³digos y Escaneo">
+            <AppFormSection title="Códigos y Escaneo">
 
               <div class="field-block">
                 <div class="inline-input-actions">
@@ -121,7 +121,7 @@
                   </button>
                 </div>
                 <span style="font-size: 0.8rem; color: #9ca3af; margin-top: 0.25rem; display: block;">
-                  Si lo dejas vacÃ­o, el sistema autogenerarÃ¡ un cÃ³digo Ãºnico.
+                  Si lo dejas vacío, el sistema autogenerará un código único.
                 </span>
               </div>
 
@@ -152,7 +152,7 @@
 
               <div class="field-block">
                 <label class="field-label">
-                  Stock fÃ­sico actual
+                  Stock físico actual
                   <span class="field-required">*</span>
                 </label>
                 <div class="stock-input-wrapper">
@@ -184,7 +184,7 @@
               </div>
             </AppFormSection>
 
-            <AppFormSection title="CÃ³mo se vende">
+            <AppFormSection title="Cómo se vende">
 
               <AppSelect
                 v-model="formData.baseUnitName"
@@ -397,7 +397,7 @@ const normalizeNumber = (value: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-// Calcular margen automÃ¡ticamente desde costo y precio
+// Calcular margen automáticamente desde costo y precio
 const recalcMarginFromPrices = () => {
   const base = normalizeNumber(formData.baseCost);
   const sale = normalizeNumber(formData.salePrice);
