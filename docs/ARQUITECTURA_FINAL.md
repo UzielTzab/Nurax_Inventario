@@ -84,7 +84,8 @@ Stores Pinia reales:
 - `product.store.ts`: CRUD de productos, codigos, empaques, ajustes manuales,
   kardex y metricas locales.
 - `sales.store.ts`: historial de ventas, cuentas por cobrar, pagos, cancelacion
-  y estado del modal POS.
+  y estado del modal POS. En historial, el ID visible usa `sale_number` del
+  backend; el UUID (`id`) queda como identificador tecnico.
 - `shifts.store.ts`: turnos/cortes de caja y turno abierto.
 - `expenses.store.ts`: listado y alta de gastos.
 - `onboarding.store.ts`: datos locales del wizard antes de enviarlo.
@@ -155,4 +156,3 @@ assets de build e imagenes de logo.
 - El logout en `DashboardLayout.vue` empuja a `/auth/login`; como esa ruta no
   existe, el catch-all termina redirigiendo a `/`. Funciona, pero conviene
   normalizarlo a `/` cuando se toque el layout.
-

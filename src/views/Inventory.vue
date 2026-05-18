@@ -12,7 +12,7 @@
             <p class="page-subtitle">Administración de inventario y ventas</p>
           </div>
           <div class="header-actions">
-            <AppButton variant="outline" :icon="PlusIcon" @click="handleAddProduct">
+            <AppButton variant="fill" :icon="PlusIcon" @click="handleAddProduct">
               Nuevo Producto
             </AppButton>
             <AppButton variant="outline" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">

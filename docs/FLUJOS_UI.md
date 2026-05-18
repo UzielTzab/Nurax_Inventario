@@ -88,6 +88,10 @@ Archivo: `src/views/SalesHistory.vue`.
 Usa `sales.store.ts` para listar ventas paginadas, buscar, abrir detalle y
 cancelar ventas con confirmacion.
 
+La primera columna `ID Venta` muestra `sale_number` (folio incremental visible,
+ejemplo `#1`, `#2`). El `id` UUID sigue existiendo como identificador tecnico
+para operaciones internas.
+
 ## Cuentas por cobrar
 
 Archivo: `src/views/AccountsReceivable.vue`.
@@ -180,4 +184,3 @@ El menu de perfil abre el modal de edicion. El modal actual agrupa:
 
 La intencion UX vigente es evitar que el usuario tenga que descubrir un
 desplegable para cambiar contrasena.
-

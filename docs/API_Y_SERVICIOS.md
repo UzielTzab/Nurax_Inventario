@@ -100,6 +100,12 @@ Archivo: `src/services/sales.service.ts`.
 `sales.store.ts` resuelve tienda activa con `GET /v1/accounts/stores/` cuando
 el perfil no trae `store_profile.id`.
 
+Contrato actual de `Sale`:
+
+- `id`: UUID tecnico de backend (se mantiene para operaciones y URLs).
+- `sale_number`: correlativo incremental por tienda para mostrar en UI como
+  `ID Venta` (`#1`, `#2`, ...).
+
 ## Carritos POS
 
 Archivo principal: `src/components/SalesModal.vue`.
@@ -190,4 +196,3 @@ Archivo: `src/views/Team.vue`.
    service antes de aumentar la duplicacion.
 4. Actualizar este documento en la misma tarea.
 5. Correr `npm run build`.
-
