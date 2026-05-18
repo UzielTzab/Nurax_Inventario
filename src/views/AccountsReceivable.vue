@@ -20,35 +20,6 @@
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <template v-if="activeView === 'receivables' && isLoading && sales.length === 0">
-          <div v-for="i in 3" :key="'sk-stat-'+i" class="skeleton-stat-card">
-            <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-              <AppSkeleton width="150px" height="0.75rem" />
-              <AppSkeleton width="100px" height="1.75rem" />
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <StatsCard
-            label="Total a Cobrar (Pendiente)"
-            :value="'$' + Number(totalPending).toFixed(2)"
-            subtitle=""
-          />
-          <StatsCard
-            label="Clientes con Deuda"
-            :value="uniqueDebtorsCount + ' clientes'"
-            subtitle=""
-          />
-          <StatsCard
-            label="Abonos recibidos este mes"
-            :value="'$' + Number(totalPaymentsThisMonth).toFixed(2)"
-            subtitle=""
-          />
-        </template>
-      </div>
-
       <div class="view-tabs" role="tablist" aria-label="Vista de cuentas por cobrar">
         <button
           type="button"
@@ -355,7 +326,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
-import StatsCard from '@/components/dashboard/StatsCard.vue';
 import AddClientModal from '@/components/AddClientModal.vue';
 import { useSalesStore } from '@/stores/sales.store';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -387,41 +357,6 @@ const showManualDebtModal = ref(false);
 const sales = computed(() => salesStore.sales as any[]);
 const totalSales = computed(() => salesStore.totalSales);
 const isLoading = computed(() => salesStore.isLoading);
-
-// Calculate global totals from current page (ideally backend would send this)
-const totalPending = computed(() => {
-  return sales.value.reduce((acc, sale) => {
-    return acc + Number(getBalanceDue(sale));
-  }, 0);
-});
-
-const uniqueDebtorsCount = computed(() => {
-  const customers = new Set();
-  sales.value.forEach(sale => {
-    if (!isPaid(sale)) {
-      customers.add(sale.customer || sale.customer_name || sale.id);
-    }
-  });
-  return customers.size;
-});
-
-const totalPaymentsThisMonth = computed(() => {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  let total = 0;
-  sales.value.forEach(sale => {
-    if (sale.payments) {
-      sale.payments.forEach((p: any) => {
-        const pDate = new Date(p.created_at || p.date);
-        if (pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear) {
-          total += Number(p.amount);
-        }
-      });
-    }
-  });
-  return total;
-});
 
 // Load init
 onMounted(() => {
@@ -689,13 +624,6 @@ const submitManualDebt = async () => {
 .page-subtitle {
   color: var(--color-text-secondary);
   margin-top: 0.25rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .view-tabs {
@@ -1117,4 +1045,3 @@ const submitManualDebt = async () => {
   opacity: 0;
 }
 </style>
-

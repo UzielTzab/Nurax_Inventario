@@ -294,6 +294,7 @@ onUnmounted(() => {
 
 /* Body */
 .drawer-body {
+  background: var(--color-background-secondary);
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;

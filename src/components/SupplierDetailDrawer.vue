@@ -358,6 +358,7 @@ const doDelete = async () => {
 }
 
 .panel-body {
+  background: var(--color-background-secondary);
   flex: 1;
   overflow-y: auto;
   padding: 1rem 1.25rem;
