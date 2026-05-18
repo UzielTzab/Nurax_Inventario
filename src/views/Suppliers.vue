@@ -14,23 +14,27 @@
 
       <!-- Search Bar -->
       <div class="search-bar">
-        <div class="search-input-wrapper">
-          <MagnifyingGlassIcon class="search-icon" />
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="Buscar por nombre, empresa o producto..." 
-            class="search-input"
-          />
-        </div>
+        <AppInput
+          v-model="searchQuery"
+          type="search"
+          placeholder="Buscar por nombre, empresa o producto..."
+        >
+          <template #icon>
+            <MagnifyingGlassIcon class="search-icon" />
+          </template>
+        </AppInput>
       </div>
 
       <!-- Empty State -->
-      <div v-if="!isLoading && filteredSuppliers.length === 0" class="empty-state">
-        <ArchiveBoxIcon class="empty-icon" />
-        <h3>No se encontraron proveedores</h3>
-        <p>Aún no tienes proveedores registrados. Agrégalos para agilizar tus compras y reabastecimiento.</p>
-      </div>
+      <AppEmptyState
+        v-if="!isLoading && filteredSuppliers.length === 0"
+        title="No se encontraron proveedores"
+        description="Aun no tienes proveedores registrados. Agregalos para agilizar tus compras y reabastecimiento."
+      >
+        <template #icon>
+          <ArchiveBoxIcon class="empty-icon" />
+        </template>
+      </AppEmptyState>
 
       <!-- Suppliers Table (Contact Directory) -->
       <div v-else class="directory-table-container">
@@ -87,11 +91,11 @@ import { PlusIcon } from '@heroicons/vue/24/solid';
 import WhatsAppIcon from '@/components/ui/WhatsAppIcon.vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppInput from '@/components/ui/AppInput.vue';
+import AppEmptyState from '@/components/ui/AppEmptyState.vue';
 import SupplierDetailDrawer from '@/components/SupplierDetailDrawer.vue';
-import { useSnackbar } from '@/composables/useSnackbar';
-import { useSuppliers, type Supplier } from '@/composables/useSuppliers';
-const { enqueueSnackbar } = useSnackbar();
-const { suppliers, isLoading, deleteSupplier, fetchSuppliers } = useSuppliers();
+import { useSuppliers } from '@/composables/useSuppliers';
+const { suppliers, isLoading, fetchSuppliers } = useSuppliers();
 
 onMounted(() => {
   if (suppliers.value.length === 0) {
@@ -204,67 +208,16 @@ margin: 0;
     margin-bottom: 2rem;
 }
 
-.search-input-wrapper {
-    position: relative;
-    max-width: 500px;
-}
-
 .search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     color: #9CA3AF;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 3rem;
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: all 0.2s;
-}
-
-.search-input:focus {
-    border-color: var(--color-brand-primary);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-}
-
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 16px;
-    border: 1px dashed #E5E7EB;
-    margin-top: 2rem;
 }
 
 .empty-icon {
     width: 64px;
     height: 64px;
     color: #9CA3AF;
-    margin-bottom: 1.5rem;
-}
-
-.empty-state h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
-}
-
-.empty-state p {
-    margin-top: 0.5rem;
-    color: #6B7280;
-    max-width: 400px;
 }
 
 /* Directory Table */
@@ -785,4 +738,3 @@ margin: 0;
     font-size: 0.875rem;
 }
 </style>
-
