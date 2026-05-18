@@ -54,8 +54,8 @@
               Tu inventario está vacío. Puedes crear un producto manualmente o importar un archivo Excel.
             </p>
             <div class="empty-state-actions">
-              <AppButton variant="outline" :icon="PlusIcon" @click="handleAddProduct">Crear Producto</AppButton>
-              <AppButton variant="outline" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">Cargar desde Excel</AppButton>
+              <AppButton variant="fill" :icon="PlusIcon" @click="handleAddProduct">Crear Producto</AppButton>
+              <AppButton variant="fill" :icon="ArrowUpTrayIcon" @click="handleOpenImportExcel">Cargar desde Excel</AppButton>
             </div>
           </div>
 

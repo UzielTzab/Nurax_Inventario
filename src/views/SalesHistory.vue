@@ -77,6 +77,7 @@
           <!-- Skeleton table rows -->
           <template v-if="salesStore.isLoading">
             <div v-for="i in 6" :key="'sk-sale-'+i" class="skeleton-table-row">
+              <AppSkeleton width="40px" height="0.85rem" />
               <AppSkeleton width="50px" height="0.85rem" />
               <AppSkeleton width="100px" height="0.85rem" />
               <AppSkeleton width="130px" height="0.85rem" />
@@ -88,6 +89,7 @@
           <table v-else class="transactions-table">
             <thead>
               <tr>
+                <th>ID Venta</th>
                 <th>Hora</th>
                 <th>ID Transacción</th>
                 <th>Productos</th>
@@ -100,6 +102,7 @@
               <template v-for="sale in paginatedSales" :key="sale.id">
                 <!-- Fila principal -->
                 <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
+                  <td class="font-mono text-xs trx-id sale-id font-bold">#{{ getSaleDisplayId(sale) }}</td>
                   <td>{{ formatTime(sale.created_at) }}</td>
                   <td class="font-mono text-xs trx-id font-bold" style="color: var(--color-text-product-name--color-text-main);">{{ formatSaleFolio(sale.id, sale.transaction_id) }}</td>
 
@@ -294,6 +297,13 @@ const formatDateTime = (date: Date | string) => {
   });
 };
 
+const getSaleDisplayId = (sale: Sale): string | number => {
+  if (sale.sale_number !== undefined && sale.sale_number !== null) {
+    return sale.sale_number;
+  }
+  return sale.id;
+};
+
 // ── Reimprimir ticket desde historial ──
 const printSaleTicket = (sale: Sale) => {
   const html = buildTicketHtml({
@@ -304,7 +314,7 @@ const printSaleTicket = (sale: Sale) => {
       price: item.unit_price ?? (Number(sale.total_amount) / ((sale.items || []).length || 1)),
     })),
     total: Number(sale.total_amount),
-    ticketId: sale.id,
+    ticketId: sale.sale_number ?? sale.id,
     date: formatDateTime(sale.created_at),
     paperWidth: getStoredPaperWidth(),
     isReprint: true,
@@ -399,7 +409,10 @@ const filteredSales = computed(() => {
 
     // 2. Filtro de búsqueda por ID o nombre de producto
     if (q) {
-      const matchesId = String(sale.id).toLowerCase().includes(q) || sale.transaction_id?.toLowerCase().includes(q);
+      const matchesId =
+        String(sale.id).toLowerCase().includes(q) ||
+        String(sale.sale_number ?? '').toLowerCase().includes(q) ||
+        sale.transaction_id?.toLowerCase().includes(q);
       const matchesProduct = (sale.items || []).some(item => item.product_name?.toLowerCase().includes(q));
       if (!matchesId && !matchesProduct) return false;
     }
@@ -766,6 +779,10 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
   font-size: 0.78rem;
   color: #6B7280;
   letter-spacing: 0.02em;
+}
+
+.trx-id.sale-id {
+  color: #2563EB;
 }
 
 /* ── Fila principal ── */

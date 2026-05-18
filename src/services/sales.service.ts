@@ -30,7 +30,8 @@ export interface Payment {
 }
 
 export interface Sale {
-  id: number;
+  id: string | number;
+  sale_number?: number;
   transaction_id?: string;
   user?: number;
   cashier?: {
@@ -241,7 +242,7 @@ class SalesService {
   /**
    * Registra un pago/abono a una venta
    */
-  async addPayment(saleId: number, amount: number) {
+  async addPayment(saleId: string | number, amount: number) {
     try {
       const response = await apiClient.post<Payment>('/v1/sales/payments/', {
         sale: saleId,

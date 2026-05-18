@@ -341,7 +341,7 @@
               <h4>Ventas del turno</h4>
               <ul v-if="selectedShiftSales.length > 0" class="drawer-list">
                 <li v-for="sale in selectedShiftSales" :key="sale.id">
-                  <span>#{{ sale.id }} · {{ formatDate(sale.created_at) }}</span>
+                  <span>#{{ sale.sale_number ?? sale.id }} · {{ formatDate(sale.created_at) }}</span>
                   <strong>${{ formatMoney(Number(sale.total_amount ?? sale.total ?? 0)) }}</strong>
                 </li>
               </ul>

@@ -241,7 +241,7 @@ export const useSalesStore = defineStore('sales', () => {
   /**
    * Registra un pago/abono a una venta
    */
-  const addPayment = async (saleId: number, amount: number) => {
+  const addPayment = async (saleId: string | number, amount: number) => {
     isLoading.value = true;
     error.value = null;
 
@@ -250,7 +250,7 @@ export const useSalesStore = defineStore('sales', () => {
 
       if (response.success && response.data) {
         // Actualizar historial de pagos en la venta local
-        const sale = sales.value.find(s => s.id === saleId);
+        const sale = sales.value.find(s => String(s.id) === String(saleId));
         if (sale) {
           if (!sale.payments) sale.payments = [];
           sale.payments.push(response.data);
