@@ -99,6 +99,16 @@
               </tr>
             </thead>
             <tbody>
+              <tr v-if="paginatedSales.length === 0">
+                <td colspan="7" class="empty-table-message">
+                  <div class="empty-table-state">
+                    <svg class="empty-table-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h12M3.75 16.5h14.25M7.5 12l3-3 2.25 2.25L16.5 7.5" />
+                    </svg>
+                    <span>{{ emptySalesMessage }}</span>
+                  </div>
+                </td>
+              </tr>
               <template v-for="sale in paginatedSales" :key="sale.id">
                 <!-- Fila principal -->
                 <tr class="main-row" @click="openDrawer(sale)" style="cursor: pointer;" title="Ver detalle">
@@ -432,6 +442,39 @@ const filteredSales = computed(() => {
 const paginatedSales = computed(() => filteredSales.value);
 
 const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.value : filteredSales.value.length);
+
+const formatDateLabel = (rawDate: string) => {
+  if (!rawDate) return '';
+  const date = new Date(`${rawDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return rawDate;
+  return date.toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+const emptySalesMessage = computed(() => {
+  if (selectedPeriod.value === 'today') {
+    return 'No se han realizado ventas hoy.';
+  }
+  if (selectedPeriod.value === 'yesterday') {
+    return 'No se han realizado ventas ayer.';
+  }
+  if (selectedPeriod.value === 'custom') {
+    if (customStartDate.value && customEndDate.value) {
+      return `No se han realizado ventas entre ${formatDateLabel(customStartDate.value)} y ${formatDateLabel(customEndDate.value)}.`;
+    }
+    if (customStartDate.value) {
+      return `No se han realizado ventas desde ${formatDateLabel(customStartDate.value)}.`;
+    }
+    if (customEndDate.value) {
+      return `No se han realizado ventas hasta ${formatDateLabel(customEndDate.value)}.`;
+    }
+    return 'No se han realizado ventas en el rango personalizado.';
+  }
+  return 'No se han realizado ventas en el período seleccionado.';
+});
 </script>
 
 <style scoped>
@@ -676,6 +719,27 @@ const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.v
 
 .transactions-table tr:last-child td {
   border-bottom: none;
+}
+
+.empty-table-message {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.empty-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0.5rem;
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+.empty-table-icon {
+  width: 44px;
+  height: 44px;
+  color: #9CA3AF;
 }
 
 .status-badge {
