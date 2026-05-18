@@ -26,37 +26,6 @@
         </div>
       </div>
 
-
-      <!-- Stats Cards (KPIs) -->
-      <div class="stats-grid">
-        <template v-if="salesStore.isLoading">
-          <div v-for="i in 3" :key="'sk-s-'+i" class="skeleton-stat-card">
-            <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-              <AppSkeleton width="110px" height="0.75rem" />
-              <AppSkeleton width="70px" height="1.75rem" />
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <StatsCard
-            label="Ingresos Totales"
-            :value="'$' + formatMoney(filteredIncome)"
-            subtitle=""
-            variant="brand"
-          />
-          <StatsCard
-            label="Tickets Emitidos"
-            :value="filteredSalesCount"
-            subtitle=""
-          />
-          <StatsCard
-            label="Ticket Promedio"
-            :value="'$' + formatMoney(averageTicket)"
-            subtitle=""
-          />
-        </template>
-      </div>
-
       <!-- Sales Table -->
       <div class="transactions-section">
         <div class="transactions-header">
@@ -202,7 +171,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useSalesStore } from '@/stores/sales.store';
-import StatsCard from '@/components/dashboard/StatsCard.vue';
 import ConfirmationModal from '@/components/ui/ConfirmationModal.vue';
 import SaleDetailDrawer from '@/components/SaleDetailDrawer.vue';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -305,7 +273,7 @@ const resetFilters = () => {
 
 
 // Access store state via getters or computed using storeToRefs for guaranteed reactivity
-const { sales, weeklyData, totalSales: storeTotalSales } = storeToRefs(salesStore);
+const { sales, totalSales: storeTotalSales } = storeToRefs(salesStore);
 
 // Format Helpers
 const formatMoney = (amount: number | string | undefined | null) => {
@@ -450,24 +418,7 @@ const filteredSales = computed(() => {
 // paginatedSales es lo que se muestra en la tabla
 const paginatedSales = computed(() => filteredSales.value);
 
-// Stats
-const filteredIncome = computed(() => {
-  return filteredSales.value
-      .filter(s => s.status !== 'cancelled')
-      .reduce((sum, s) => {
-        const val = Number(s.total_amount);
-        return sum + (isNaN(val) ? 0 : val);
-      }, 0);
-});
-
-// salesCount es el número de ventas después de aplicar filtros locales
-const filteredSalesCount = computed(() => filteredSales.value.length);
 const resultsCount = computed(() => searchQuery.value.trim() ? storeTotalSales.value : filteredSales.value.length);
-const averageTicket = computed(() => {
-  if (filteredSalesCount.value === 0) return 0;
-  return filteredIncome.value / filteredSalesCount.value;
-});
-
 </script>
 
 <style scoped>
@@ -514,15 +465,6 @@ const averageTicket = computed(() => {
   background-repeat: no-repeat;
   background-size: 1rem 1rem;
 }
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-
 
 .charts-grid-section {
   display: grid;
@@ -1101,11 +1043,7 @@ const averageTicket = computed(() => {
     width: 100%;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-grid, .charts-grid-section {
+  .charts-grid-section {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
