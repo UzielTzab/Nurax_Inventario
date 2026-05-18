@@ -160,6 +160,7 @@ const handleClick = (event: MouseEvent) => {
 <style scoped>
 /* Botón Base - Especificaciones Material Design + Estilo Nurax */
 .app-button {
+  --app-btn-ripple-color: var(--color-button-ripple-dark);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -230,7 +231,8 @@ const handleClick = (event: MouseEvent) => {
 
 /* Variante: Fill (MUI Contained Button adaptado) */
 .app-button--fill {
-  color: #fff;
+  --app-btn-ripple-color: var(--color-button-ripple-light);
+  color: var(--color-button-text-on-brand);
   background: var(--color-brand-main);
   border-radius: 6px;
   box-shadow: none;
@@ -250,31 +252,31 @@ const handleClick = (event: MouseEvent) => {
 
 .app-button--fill:hover::before {
   /* Al hacer hover oscurecemos ligeramente todo simulando el brillo MUI */
-  background-color: rgba(0, 0, 0, 0.08); 
+  background-color: var(--color-button-overlay-soft);
 }
 
 .app-button--fill:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  background: rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  background: var(--color-button-disabled-bg);
   box-shadow: none;
 }
 
 /* Variante: Outline (MUI Outlined Button) */
 .app-button--outline {
-  color: #000000;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
+  color: var(--color-button-outline-text);
+  background: var(--color-button-outline-bg);
+  border: 1px solid var(--color-button-outline-border);
   border-radius: 6px;
 }
 
 .app-button--outline:hover {
-  border-color: #9ca3af;
-  background-color: #f9fafb;
+  border-color: var(--color-button-outline-border-hover);
+  background-color: var(--color-button-outline-bg-hover);
 }
 
 .app-button--outline:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  border: 1px solid var(--color-button-disabled-border);
   background-color: transparent;
 }
 
@@ -292,12 +294,12 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--pill:hover:not(:disabled) {
-  background: #e5e7eb;
-  border-color: #9ca3af;
+  background: var(--color-button-pill-hover-bg);
+  border-color: var(--color-button-outline-border-hover);
 }
 
 .app-button--pill:active:not(:disabled) {
-  background: #d1d5db;
+  background: var(--color-button-pill-pressed-bg);
 }
 
 .app-button--pill.app-button--active {
@@ -308,15 +310,15 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--pill.app-button--active:hover:not(:disabled) {
-  background: #1f5d47;
-  border-color: #1f5d47;
-  box-shadow: 0 0 0 3px rgba(34, 125, 82, 0.15);
+  background: var(--color-button-pill-active-hover-bg);
+  border-color: var(--color-button-pill-active-hover-border);
+  box-shadow: 0 0 0 3px var(--color-button-pill-active-hover-ring);
 }
 
 .app-button--pill:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  background: var(--color-button-disabled-muted-bg);
+  border-color: var(--color-button-disabled-border);
 }
 
 /* Variante: Ghost (Text-only Buttons) */
@@ -332,23 +334,24 @@ const handleClick = (event: MouseEvent) => {
 
 .app-button--ghost:hover:not(:disabled) {
   color: var(--color-brand-main);
-  background: rgba(34, 125, 82, 0.05);
+  background: var(--color-button-ghost-hover-bg);
   border-radius: 8px;
 }
 
 .app-button--ghost:active:not(:disabled) {
   color: var(--color-brand-main);
-  background: rgba(34, 125, 82, 0.1);
+  background: var(--color-button-ghost-active-bg);
 }
 
 .app-button--ghost:disabled {
-  color: rgba(0, 0, 0, 0.26);
+  color: var(--color-button-disabled-text);
 }
 
 /* Variante: Danger (Botones destructivos - Rojo) */
 .app-button--danger {
-  color: #fff;
-  background: #dc2626;
+  --app-btn-ripple-color: var(--color-button-ripple-light);
+  color: var(--color-button-text-on-brand);
+  background: var(--color-button-danger-bg);
   border-radius: 6px;
   box-shadow: none;
 }
@@ -365,19 +368,20 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--danger:hover::before {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-button-overlay-strong);
 }
 
 .app-button--danger:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  background: rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  background: var(--color-button-disabled-bg);
   box-shadow: none;
 }
 
 /* Variante: Success (Verde - Ingresos/Positivo) */
 .app-button--success {
-  color: #fff;
-  background: #059669;
+  --app-btn-ripple-color: var(--color-button-ripple-light);
+  color: var(--color-button-text-on-brand);
+  background: var(--color-button-success-bg);
   border-radius: 6px;
   box-shadow: none;
 }
@@ -394,19 +398,20 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--success:hover::before {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: var(--color-button-overlay-soft);
 }
 
 .app-button--success:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  background: rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  background: var(--color-button-disabled-bg);
   box-shadow: none;
 }
 
 /* Variante: Warning (Naranja - Gastos/Negativo) */
 .app-button--warning {
-  color: #fff;
-  background: #d97706;
+  --app-btn-ripple-color: var(--color-button-ripple-light);
+  color: var(--color-button-text-on-brand);
+  background: var(--color-button-warning-bg);
   border-radius: 6px;
   box-shadow: none;
 }
@@ -423,12 +428,12 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .app-button--warning:hover::before {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-button-overlay-strong);
 }
 
 .app-button--warning:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  background: rgba(0, 0, 0, 0.12);
+  color: var(--color-button-disabled-text);
+  background: var(--color-button-disabled-bg);
   box-shadow: none;
 }
 
@@ -444,7 +449,7 @@ const handleClick = (event: MouseEvent) => {
 .app-btn-ripple {
   position: absolute;
   border-radius: 50%;
-  background: currentColor; /* Adopta blanco en Fill, verde en Outline */
+  background: var(--app-btn-ripple-color);
   opacity: 0.18; 
   transform: translate(-50%, -50%) scale(0);
   /* Animación inicial mientras dejas presionado */
