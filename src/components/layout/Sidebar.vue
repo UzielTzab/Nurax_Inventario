@@ -16,33 +16,26 @@
     </div>
     <!-- Main Menu -->
     <nav class="sidebar-nav">
-      <div 
-        v-for="section in menuSections" 
-        :key="section.label" 
-        class="nav-section"
+      <a 
+        v-for="item in menuItems"
+        :key="item.id"
+        href="#" 
+        class="nav-item"
+        :class="{ 'nav-item-active': activeItem === item.id }"
+        @click.prevent="setActive(item)"
       >
-        <div class="nav-section-label">{{ section.label }}</div>
-        <a 
-          v-for="item in section.items"
-          :key="item.id"
-          href="#" 
-          class="nav-item"
-          :class="{ 'nav-item-active': activeItem === item.id }"
-          @click.prevent="setActive(item)"
-        >
-          <!-- Icon with animated swap -->
-          <span class="nav-icon-wrapper">
-            <Transition name="icon-swap" mode="out-in">
-              <component
-                :is="activeItem === item.id ? item.iconSolid : item.iconOutline"
-                :key="activeItem === item.id ? 'solid' : 'outline'"
-                class="nav-icon"
-              />
-            </Transition>
-          </span>
-          <span class="nav-text">{{ item.label }}</span>
-        </a>
-      </div>
+        <!-- Icon with animated swap -->
+        <span class="nav-icon-wrapper">
+          <Transition name="icon-swap" mode="out-in">
+            <component
+              :is="activeItem === item.id ? item.iconSolid : item.iconOutline"
+              :key="activeItem === item.id ? 'solid' : 'outline'"
+              class="nav-icon"
+            />
+          </Transition>
+        </span>
+        <span class="nav-text">{{ item.label }}</span>
+      </a>
     </nav>
 
   </aside>
@@ -239,6 +232,8 @@ const menuSections = computed(() => {
     .filter((section) => section.items.length > 0);
 });
 
+const menuItems = computed(() => menuSections.value.flatMap((section) => section.items));
+
 const setActive = (item: MenuItem) => {
   activeItem.value = item.id;
   if (item.route) {
@@ -273,6 +268,7 @@ defineProps<{
 
 .sidebar-header {
   padding: 0 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .logo {
@@ -386,7 +382,7 @@ defineProps<{
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 0.25rem;
   overflow-y: auto;
   padding: 0 0.5rem;
 }
